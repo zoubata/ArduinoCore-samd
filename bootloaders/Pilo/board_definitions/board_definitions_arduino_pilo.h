@@ -209,12 +209,23 @@
  * CMSIS/Device/ATMEL/sam<d21|c21|l21|d11>/include/<YOUR_CHIP>.h). Use PINMUX_UNUSED
  * if not used. By default, this interface is not enabled (except with the C21).
  */
+ /*
 #define BOOT_USART_SERCOM_INSTANCE        0
 #define BOOT_USART_PAD_SETTINGS           UART_RX_PAD3_TX_PAD2
 #define BOOT_USART_PAD3                   PINMUX_PA11C_SERCOM0_PAD3
 #define BOOT_USART_PAD2                   PINMUX_PA10C_SERCOM0_PAD2
 #define BOOT_USART_PAD1                   PINMUX_UNUSED
 #define BOOT_USART_PAD0                   PINMUX_UNUSED
+*/
+
+#define BOOT_USART_SERCOM_INSTANCE        1
+#define BOOT_USART_PAD_SETTINGS           UART_RX_PAD3_TX_PAD2
+#define BOOT_USART_PAD3                   PINMUX_PA31D_SERCOM1_PAD3
+#define BOOT_USART_PAD2                   PINMUX_PA30D_SERCOM1_PAD2
+#define BOOT_USART_PAD1                   PINMUX_UNUSED
+#define BOOT_USART_PAD0                   PINMUX_UNUSED
+
+
 
 /*
  * If BOOT_DOUBLE_TAP_ENABLED is defined the bootloader is started by quickly
