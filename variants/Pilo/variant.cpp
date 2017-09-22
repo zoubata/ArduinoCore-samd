@@ -207,15 +207,56 @@ SERCOM sercom3( SERCOM3 ) ;
 SERCOM sercom4( SERCOM4 ) ;
 SERCOM sercom5( SERCOM5 ) ;
 
-Uart Serial1( &sercom0, PIN_SERIAL1_RX, PIN_SERIAL1_TX, PAD_SERIAL1_RX, PAD_SERIAL1_TX ) ;
-Uart Serial( &sercom5, PIN_SERIAL_RX, PIN_SERIAL_TX, PAD_SERIAL_RX, PAD_SERIAL_TX ) ;
+
+#if defined(ONE_UART) || defined(TWO_UART) || defined(THREE_UART) || defined(FOUR_UART) || defined(FIVE_UART) || defined(SIX_UART)
+Uart Serial1( SERCOM_INSTANCE_SERIAL1, PIN_SERIAL1_RX, PIN_SERIAL1_TX, PAD_SERIAL1_RX, PAD_SERIAL1_TX ) ;
+
 void SERCOM0_Handler()
 {
   Serial1.IrqHandler();
 }
+#endif
+#if defined(TWO_UART) || defined(THREE_UART) || defined(FOUR_UART) || defined(FIVE_UART) || defined(SIX_UART)
+Uart Serial2( SERCOM_INSTANCE_SERIAL2, PIN_SERIAL2_RX, PIN_SERIAL2_TX, PAD_SERIAL2_RX, PAD_SERIAL2_TX ) ;
+
+void SERCOM1_Handler()
+{
+  Serial2.IrqHandler();
+}
+#endif
+
+#if defined(THREE_UART) || defined(FOUR_UART) || defined(FIVE_UART) || defined(SIX_UART)
+Uart Serial3( SERCOM_INSTANCE_SERIAL3, PIN_SERIAL3_RX, PIN_SERIAL3_TX, PAD_SERIAL3_RX, PAD_SERIAL3_TX ) ;
+
+void SERCOM2_Handler()
+{
+  Serial3.IrqHandler();
+}
+#endif
+
+#if defined(FOUR_UART) || defined(FIVE_UART) || defined(SIX_UART)
+Uart Serial4( SERCOM_INSTANCE_SERIAL4, PIN_SERIAL4_RX, PIN_SERIAL4_TX, PAD_SERIAL4_RX, PAD_SERIAL4_TX ) ;
+
+void SERCOM3_Handler()
+{
+  Serial4.IrqHandler();
+}
+#endif
+#if defined(FIVE_UART) || defined(SIX_UART)
+Uart Serial5( SERCOM_INSTANCE_SERIAL5, PIN_SERIAL5_RX, PIN_SERIAL5_TX, PAD_SERIAL5_RX, PAD_SERIAL5_TX ) ;
+
+void SERCOM4_Handler()
+{
+  Serial5.IrqHandler();
+}
+#endif
+
+#if defined(SIX_UART)
+Uart Serial6( SERCOM_INSTANCE_SERIAL6, PIN_SERIAL6_RX, PIN_SERIAL6_TX, PAD_SERIAL6_RX, PAD_SERIAL6_TX ) ;
 
 void SERCOM5_Handler()
 {
-  Serial.IrqHandler();
+  Serial6.IrqHandler();
 }
+#endif
 

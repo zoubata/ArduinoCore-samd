@@ -14,12 +14,12 @@
 # License along with this library; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 
-# Arduino SAMD Core and platform.
+# Arduino SAM M0+ Core and platform.
 #
 # For more info:
 # https://github.com/arduino/Arduino/wiki/Arduino-IDE-1.5---3rd-party-Hardware-specification
 
-name=Arduino SAMD (32-bits ARM Cortex-M0+) Boards
+name=zoubworld SAMx (32-bits ARM Cortex-Mxx) Boards
 version=1.6.16
 
 # Compile variables
@@ -49,6 +49,8 @@ compiler.elf2hex.hex.flags=-O ihex -R .eeprom
 compiler.elf2hex.cmd=arm-none-eabi-objcopy
 compiler.ldflags=-mcpu={build.mcu} -mthumb -Wl,--cref -Wl,--check-sections -Wl,--gc-sections -Wl,--unresolved-symbols=report-all -Wl,--warn-common -Wl,--warn-section-align
 compiler.size.cmd=arm-none-eabi-size
+compiler.nm.cmd=arm-none-eabi-nm
+compiler.nm.flags=-B --size-sort --demangle -t d
 compiler.define=-DARDUINO=
 compiler.readelf.cmd=arm-none-eabi-readelf
 
@@ -56,11 +58,11 @@ compiler.readelf.cmd=arm-none-eabi-readelf
 build.extra_flags=
 
 # These can be overridden in platform.local.txt
-compiler.c.extra_flags=
+compiler.c.extra_flags="-I{runtime.tools.CMSIS-4.5.0.path}/CMSIS/Include/" "-I{runtime.tools.CMSIS-Atmel-1.0.0-mattairtech-1.path}/CMSIS/Device/ATMEL/" -D{build.clockconfig} -D{build.usbcom} -D{build.serialcom_uart} -D{build.serialcom_wire} -D{build.serialcom_spi} -D{build.bootloader_size}
 compiler.c.elf.extra_flags=
 #compiler.c.elf.extra_flags=-v
-compiler.cpp.extra_flags=
-compiler.S.extra_flags=
+compiler.cpp.extra_flags="-I{runtime.tools.CMSIS-4.5.0.path}/CMSIS/Include/" "-I{runtime.tools.CMSIS-Atmel-1.0.0-mattairtech-1.path}/CMSIS/Device/ATMEL/" -D{build.clockconfig} -D{build.usbcom} -D{build.serialcom_uart} -D{build.serialcom_wire} -D{build.serialcom_spi} -D{build.bootloader_size}
+compiler.S.extra_flags="-I{runtime.tools.CMSIS-4.5.0.path}/CMSIS/Include/" "-I{runtime.tools.CMSIS-Atmel-1.0.0-mattairtech-1.path}/CMSIS/Device/ATMEL/" -D{build.clockconfig} -D{build.usbcom} -D{build.serialcom_uart} -D{build.serialcom_wire} -D{build.serialcom_spi} -D{build.bootloader_size}
 compiler.ar.extra_flags=
 compiler.elf2hex.extra_flags=
 
@@ -102,6 +104,11 @@ recipe.objcopy.bin.pattern="{compiler.path}{compiler.elf2hex.cmd}" {compiler.elf
 recipe.objcopy.hex.pattern="{compiler.path}{compiler.elf2hex.cmd}" {compiler.elf2hex.hex.flags} {compiler.elf2hex.extra_flags} "{build.path}/{build.project_name}.elf" "{build.path}/{build.project_name}.hex"
 
 build.preferred_out_format=bin
+## Display Detailed Object Size Info
+recipe.objcopy.nm.pattern="{compiler.path}{compiler.nm.cmd}" {compiler.nm.flags} "{build.path}/{build.project_name}.elf"
+
+## Compute size and memory use info (Flash usage = .text + .data segments)
+recipe.objcopy.size.pattern="{compiler.path}{compiler.size.cmd}" -B "{build.path}/{build.project_name}.elf"
 
 ## Save hex
 recipe.output.tmp_file={build.project_name}.{build.preferred_out_format}
@@ -168,7 +175,7 @@ tools.openocd.erase.params.verbose=-d3
 tools.openocd.erase.params.quiet=-d0
 tools.openocd.erase.pattern=
 
-tools.openocd.bootloader.params.verbose=-d2
+tools.openocd.bootloader.params.verbose=-d3
 tools.openocd.bootloader.params.quiet=-d0
 tools.openocd.bootloader.pattern="{path}/{cmd}" {bootloader.verbose} -s "{path}/share/openocd/scripts/" -f "{runtime.platform.path}/variants/{build.variant}/{build.openocdscript}" -c "telnet_port disabled; init; halt; at91samd bootloader 0; program {{{runtime.platform.path}/bootloaders/{bootloader.file}}} verify reset; shutdown"
 

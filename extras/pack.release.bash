@@ -23,11 +23,22 @@ PWD=`pwd`
 FOLDERNAME=`basename $PWD`
 THIS_SCRIPT_NAME=`basename $0`
 
-rm -f samd-$VERSION.tar.bz2
+FILENAME=Zoubworld_sam_m0p-$VERSION.tar.bz2
+
+rm -f $FILENAME
 
 cd ..
-tar --transform "s|$FOLDERNAME|$FOLDERNAME-$VERSION|g"  --exclude=extras/** --exclude=.git* --exclude=.idea -cjf samd-$VERSION.tar.bz2 $FOLDERNAME
+tar --transform "s|$FOLDERNAME|$FOLDERNAME-$VERSION|g"  --exclude=extras/** --exclude=.git* --exclude=.idea -cjf $FILENAME $FOLDERNAME
 cd -
 
-mv ../samd-$VERSION.tar.bz2 .
+mv ../$FILENAME .
+
+CHKSUM=`sha256sum $FILENAME | awk '{ print $1 }'`
+SIZE=`wc -c $FILENAME | awk '{ print $1 }'`
+
+cat extras/package_index.json.Release.template |
+sed "s/%%VERSION%%/${VERSION}/" |
+sed "s/%%FILENAME%%/${FILENAME}/" |
+sed "s/%%CHECKSUM%%/${CHKSUM}/" |
+sed "s/%%SIZE%%/${SIZE}/" > package_Zoubworld_sam_m0p-${VERSION}_index.json
 

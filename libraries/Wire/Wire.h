@@ -22,6 +22,7 @@
 
 #include "Stream.h"
 #include "variant.h"
+#include <WVariant.h>
 
 #include "SERCOM.h"
 #include "RingBuffer.h"

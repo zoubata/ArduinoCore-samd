@@ -125,9 +125,13 @@ void loop( void ) ;
 #endif
 
 // USB Device
+#if defined(USBCON)
 #include "USB/USBDesc.h"
 #include "USB/USBCore.h"
 #include "USB/USBAPI.h"
+#if (SAMD21 || SAML21)
 #include "USB/USB_host.h"
+#endif
+#endif
 
 #endif // Arduino_h

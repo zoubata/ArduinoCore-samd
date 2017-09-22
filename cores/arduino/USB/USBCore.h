@@ -18,6 +18,13 @@
 
 #ifndef __USBCORE_H__
 #define __USBCORE_H__
+#ifdef __cplusplus
+extern "C" {
+#endif
+extern void USB_SetHandler(void (*pf_isr)(void));
+#ifdef __cplusplus
+}
+#endif
 
 //	Standard requests
 #define GET_STATUS					0
