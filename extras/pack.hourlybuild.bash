@@ -25,7 +25,7 @@ VERSION=9.9.9-Hourly
 PWD=`pwd`
 FOLDERNAME=`basename $PWD`
 THIS_SCRIPT_NAME=`basename $0`
-FILENAME=package_samd-hourly-b${BUILD_NUMBER}.tar.bz2
+FILENAME=zoubworld_sam-hourly-b${BUILD_NUMBER}.tar.bz2
 
 rm -f $FILENAME
 
@@ -47,5 +47,5 @@ sed "s/%%CURR_TIME%%/${CURR_TIME_SED}/" |
 sed "s/%%VERSION%%/${VERSION}/" |
 sed "s/%%FILENAME%%/${FILENAME}/" |
 sed "s/%%CHECKSUM%%/${CHKSUM}/" |
-sed "s/%%SIZE%%/${SIZE}/" > package_samd-hourly-build_index.json
+sed "s/%%SIZE%%/${SIZE}/" > package_zoubworld_sam-hourly-build_index.json
 
