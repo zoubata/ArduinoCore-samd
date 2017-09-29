@@ -53,7 +53,24 @@ typedef enum _EAnalogChannel
   ADC_Channel17=17,
   ADC_Channel18=18,
   ADC_Channel19=19,
-  DAC_Channel0,
+  DAC_Channel0=100,
+  
+  #if  SAMC21
+  ADC1_Channel0=20,
+  ADC1_Channel1=21,
+  ADC1_Channel2=22,
+  ADC1_Channel3=23,
+  ADC1_Channel4=24,
+  ADC1_Channel5=25,
+  ADC1_Channel6=26,
+  ADC1_Channel7=27,
+
+  ADC1_Channel8=28,
+  ADC1_Channel9=29,
+
+  ADC1_Channel10=30,
+  ADC1_Channel11=31,
+  #endif // __SAMD21J18A__
 } EAnalogChannel ;
 
 // Definitions for TC channels
