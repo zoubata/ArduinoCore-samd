@@ -12,15 +12,15 @@
         {
           "name": "zoubworld SAM M0+ Boards - Beta build",
           "architecture": "samd",
-          "version": "%%VERSION%%",
+          "version": "1.6.16-beta-b",
           "category": "Contributed",
           "help": {
             "online": "https://www.zoubworld.com/support/"
           },
-          "url": "https://www.zoubworld.com/software/arduino/beta/%%FILENAME%%",
-          "archiveFileName": "%%FILENAME%%",
-          "checksum": "SHA-256:%%CHECKSUM%%",
-          "size": "%%SIZE%%",
+          "url": "https://www.zoubworld.com/software/arduino/beta/zoubworld_sam_m0p-1.6.16-beta-b.tar.bz2",
+          "archiveFileName": "zoubworld_sam_m0p-1.6.16-beta-b.tar.bz2",
+          "checksum": "SHA-256:62a41a0bdd052816b3740b9b3111e630fb6e025cd691a4421ad6567329b04e2c",
+          "size": "1802605",
           "boards": [
             {"name": "Pilo"},
           ],

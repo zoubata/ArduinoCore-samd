@@ -1,0 +1,46 @@
+{
+	"name": "zoubworld SAM M0+ Boards",
+	"architecture": "samd",
+	"version": "1.6.16",
+	"category": "Contributed",
+	"url": "https://www.zoubworld.com/software/arduino/Zoubworld_sam_m0p-1.6.16.tar.bz2",
+	"archiveFileName": "Zoubworld_sam_m0p-1.6.16.tar.bz2",
+	"checksum": "SHA-256:46b614c182794bd7cb0158bfd1914f20fcacce6ce4f590068ec6f431364a8b88",
+	"size": "895229",
+	"boards": [
+	{"name": "MT-D21E"},
+	{"name": "MT-D11"}
+	],
+	"toolsDependencies": [
+	{
+		"packager": "arduino",
+		"name": "arm-none-eabi-gcc",
+		"version": "4.8.3-2014q1"
+	},
+	{
+		"packager": "zoubworld_Arduino",
+		"name": "bossac",
+		"version": "1.7.0-zoubworld-1"
+	},
+	{
+		"packager": "arduino",
+		"name": "openocd",
+		"version": "0.9.0-arduino"
+	},
+	{
+		"packager": "arduino",
+		"name": "CMSIS",
+		"version": "4.5.0"
+	},
+	{
+		"packager": "zoubworld_Arduino",
+		"name": "CMSIS-Atmel",
+		"version": "1.0.0-zoubworld-1"
+	},
+	{
+		"packager": "arduino",
+		"name": "arduinoOTA",
+		"version": "1.2.0"
+	}
+	]
+}

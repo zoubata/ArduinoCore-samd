@@ -121,13 +121,23 @@ extern "C"
 /*
  * Analog pins
  */
-#define PIN_A0               (14ul)
-#define PIN_A1               (15ul)
-#define PIN_A2               (16ul)
-#define PIN_A3               (17ul)
-#define PIN_A4               (18ul)
-#define PIN_A5               (19ul)
-#define PIN_DAC0             (14ul)
+#define PIN_A0               (42ul)
+#define PIN_A1               (43ul)
+#define PIN_A2               (10ul)
+#define PIN_A3               (11ul)
+#define PIN_A4               ( 6ul)
+#define PIN_A5               ( 7ul)
+#define PIN_A6               ( 8ul)
+#define PIN_A7               ( 9ul)
+#define PIN_A8               (16ul)
+#define PIN_A9               (17ul)
+#define PIN_A10              (44ul)
+#define PIN_A11              (45ul)
+#define PIN_A12              (46ul)
+#define PIN_A13              (47ul)
+#define PIN_A14              (48ul)
+#define PIN_A15              (49ul)
+#define PIN_DAC0            PIN_A12
 
 static const uint8_t A0  = PIN_A0;
 static const uint8_t A1  = PIN_A1;

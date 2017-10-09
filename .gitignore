@@ -1,4 +1,8 @@
 bootloaders/Pilo/Makefile.bak bootloaders/Pilo/board_init.bak bootloaders/Pilo/board_startup.bak bootloaders/Pilo/build_all_bootloaders.sh.bak bootloaders/Pilo/main.bak bootloaders/Pilo/sam_ba_monitor.bak bootloaders/Pilo/sam_ba_serial.bak cores/arduino/Arduino.bak cores/arduino/main.bak libraries/SPI/SPI.bak libraries/Wire/Wire.bak variants/Pilo/variant.bak
+
 *.bak
 *.tmp
+*/*/*/*/*.bak
+*/*/*/*/*/*.bak
+*.bak
 
