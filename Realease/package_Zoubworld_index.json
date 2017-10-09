@@ -1,0 +1,127 @@
+{
+  "packages": [
+    {
+      "name": "zoubworld_Arduino",
+      "maintainer": "zoubworld LLC",
+      "websiteURL": "https://www.zoubworld.com/",
+      "email": "support@zoubworld.com",
+      "help": {
+        "online": "https://www.zoubworld.com/support/"
+      },
+      "platforms": [
+        {
+          "name": "zoubworld SAM M0+ Boards - Beta build",
+          "architecture": "samd",
+          "version": "1.6.16-beta-b",
+          "category": "Contributed",
+          "help": {
+            "online": "https://www.zoubworld.com/support/"
+          },
+          "url": "https://www.zoubworld.com/software/arduino/beta/zoubworld_sam_m0p-1.6.16-beta-b.tar.bz2",
+          "archiveFileName": "zoubworld_sam_m0p-1.6.16.tar.bz2",
+          "checksum": "SHA-256:62a41a0bdd052816b3740b9b3111e630fb6e025cd691a4421ad6567329b04e2c",
+          "size": "1802605",
+          "boards": [
+            {"name": "Pilo"}
+          ],
+          "toolsDependencies": [
+            {
+              "packager": "arduino",
+              "name": "arm-none-eabi-gcc",
+              "version": "4.8.3-2014q1"
+            },
+            {
+				"packager": "MattairTech_Arduino",
+				"name": "bossac",
+				"version": "1.5-arduino-mattairtech-1"
+			},{
+				"packager": "arduino",
+				"name": "bossac",
+				"version": "1.5-arduino"
+			},
+			{
+				"packager": "arduino",
+				"name": "openocd",
+				"version": "0.9.0-arduino"
+			},
+			{
+				"packager": "arduino",
+				"name": "CMSIS",
+				"version": "4.0.0-atmel"
+			}
+          ]
+        }
+      ],
+      "tools": [
+      {
+        "name": "bossac",
+        "version": "1.7.0-zoubworld-1",
+        "systems": [
+        {
+          "host": "i686-mingw32",
+	  "url": "https://www.zoubworld.com/software/arduino/bossac-1.7.0-zoubworld-1-mingw32.tar.gz",
+	  "archiveFileName": "bossac-1.7.0-zoubworld-1-mingw32.tar.gz",
+	  "checksum": "SHA-256:1e1cf251fd4fd5260d9f000da5f2890b0f91c839fd1491af575f05339c0d136a",
+	  "size": "324086"
+        },
+        {
+          "host": "x86_64-pc-linux-gnu",
+	  "url": "https://www.zoubworld.com/software/arduino/bossac-1.7.0-zoubworld-1-x86_64-linux-gnu.tar.gz",
+	  "archiveFileName": "bossac-1.7.0-zoubworld-1-x86_64-linux-gnu.tar.gz",
+	  "checksum": "SHA-256:788315e2f8814db77efd2d32fc660471dda8336fe9341c72b60fb3052a986ebc",
+	  "size": "204696"
+        },
+        {
+          "host": "i686-pc-linux-gnu",
+	  "url": "https://www.zoubworld.com/software/arduino/bossac-1.7.0-zoubworld-1-i686-linux-gnu.tar.gz",
+	  "archiveFileName": "bossac-1.7.0-zoubworld-1-i686-linux-gnu.tar.gz",
+	  "checksum": "SHA-256:07dcd2201831813e58e06ddc0c755c88754d2b766060626f8e51fc885dd6798c",
+	  "size": "194636"
+        },
+        {
+          "host": "x86_64-apple-darwin",
+	  "url": "https://www.zoubworld.com/software/arduino/bossac-1.7.0-zoubworld-1-x86_64-apple-darwin.tar.gz",
+	  "archiveFileName": "bossac-1.7.0-zoubworld-1-x86_64-apple-darwin.tar.gz",
+	  "checksum": "SHA-256:ca57765d7c7ef94e43d316658c8b3012d888501d10ec58bc38dc2aaa173edadf",
+	  "size": "85071"
+        }
+        ]
+      },
+      {
+        "name": "CMSIS-Atmel",
+        "version": "1.0.0-zoubworld-1",
+        "systems": [
+        {
+          "host": "i686-mingw32",
+	  "url": "https://www.zoubworld.com/software/arduino/CMSIS-Atmel-1.0.0-zoubworld-1.tar.gz",
+	  "archiveFileName": "CMSIS-Atmel-1.0.0-zoubworld-1.tar.gz",
+	  "checksum": "SHA-256:ab100e3336b61f23f10759a9f0d0ffef6dd2af0615b02428ada9027dea3dba15",
+	  "size": "1386014"
+        },
+        {
+          "host": "x86_64-pc-linux-gnu",
+	  "url": "https://www.zoubworld.com/software/arduino/CMSIS-Atmel-1.0.0-zoubworld-1.tar.gz",
+	  "archiveFileName": "CMSIS-Atmel-1.0.0-zoubworld-1.tar.gz",
+	  "checksum": "SHA-256:ab100e3336b61f23f10759a9f0d0ffef6dd2af0615b02428ada9027dea3dba15",
+	  "size": "1386014"
+        },
+        {
+          "host": "i686-pc-linux-gnu",
+	  "url": "https://www.zoubworld.com/software/arduino/CMSIS-Atmel-1.0.0-zoubworld-1.tar.gz",
+	  "archiveFileName": "CMSIS-Atmel-1.0.0-zoubworld-1.tar.gz",
+	  "checksum": "SHA-256:ab100e3336b61f23f10759a9f0d0ffef6dd2af0615b02428ada9027dea3dba15",
+	  "size": "1386014"
+        },
+        {
+          "host": "x86_64-apple-darwin",
+	  "url": "https://www.zoubworld.com/software/arduino/CMSIS-Atmel-1.0.0-zoubworld-1.tar.gz",
+	  "archiveFileName": "CMSIS-Atmel-1.0.0-zoubworld-1.tar.gz",
+	  "checksum": "SHA-256:ab100e3336b61f23f10759a9f0d0ffef6dd2af0615b02428ada9027dea3dba15",
+	  "size": "1386014"
+        }
+        ]
+      }
+      ]
+    }
+  ]
+}
