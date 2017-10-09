@@ -1,7 +1,4 @@
-.bak
-boards.bak platform.bak
-extras/pack.betabuild.bak extras/pack.pullrequest.bak extras/pack.release.bak extras/package_index.json.Beta.bak extras/package_index.json.PR.bak extras/package_index.json.Release.bak
 bootloaders/Pilo/Makefile.bak bootloaders/Pilo/board_init.bak bootloaders/Pilo/board_startup.bak bootloaders/Pilo/build_all_bootloaders.sh.bak bootloaders/Pilo/main.bak bootloaders/Pilo/sam_ba_monitor.bak bootloaders/Pilo/sam_ba_serial.bak cores/arduino/Arduino.bak cores/arduino/main.bak libraries/SPI/SPI.bak libraries/Wire/Wire.bak variants/Pilo/variant.bak
-cores/arduino/USB/CDC.bak cores/arduino/USB/SAMD21_USBDevice.bak cores/arduino/USB/USBCore.bak cores/arduino/USB/samd21_host.bak libraries/SAMD_AnalogCorrection/src/SAMD_AnalogCorrection.bak
-*/*/*/*/*.bak
-*/*/*/*/*/*.bak
+*.bak
+*.tmp
+
