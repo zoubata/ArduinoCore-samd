@@ -39,17 +39,38 @@ static void __initialize()
   NVIC_EnableIRQ(EIC_IRQn);
 
   // Enable GCLK for IEC (External Interrupt Controller)
-  GCLK->CLKCTRL.reg = (uint16_t) (GCLK_CLKCTRL_CLKEN | GCLK_CLKCTRL_GEN_GCLK0 | GCLK_CLKCTRL_ID(GCM_EIC));
+#if SAMC_SERIES
+    GCLK_GENCTRL_Type genctrl_d;
 
+  // set gen_id to read genctrl[gen_id]
+  // read genctrl[gen_id]
+  genctrl_d = GCLK->GENCTRL[GCM_EIC];
+
+  genctrl_d.bit.DIVSEL = 0;
+  genctrl_d.bit.SRC = 0;//GCLK_CLKCTRL_GEN_GCLK0;
+  genctrl_d.bit.GENEN = 1;
+  genctrl_d.bit.IDC = 0;
+  genctrl_d.bit.DIV = 0;
+  // load GENCTRL
+  GCLK->GENCTRL[GCM_EIC] = genctrl_d;
+#else
+	  GCLK->CLKCTRL.reg = (uint16_t) (GCLK_CLKCTRL_CLKEN | GCLK_CLKCTRL_GEN_GCLK0 | GCLK_CLKCTRL_ID(GCM_EIC));
+
+#endif
 /* Shall we do that?
   // Do a software reset on EIC
   EIC->CTRL.SWRST.bit = 1 ;
   while ((EIC->CTRL.SWRST.bit == 1) && (EIC->STATUS.SYNCBUSY.bit == 1)) { }
 */
-
+#if SAMC_SERIES
+  EIC->CTRLA.bit.ENABLE = 1;
+    while (EIC->SYNCBUSY.bit.ENABLE == 1);
+#else
   // Enable EIC
-  EIC->CTRL.bit.ENABLE = 1;
+  EIC->CTRL.bit.ENABLE = 1;  
   while (EIC->STATUS.bit.SYNCBUSY == 1) { }
+  #endif
+
 }
 
 /*
@@ -75,10 +96,12 @@ void attachInterrupt(uint32_t pin, voidFuncPtr callback, uint32_t mode)
     enabled = 1;
   }
 
+
   // Enable wakeup capability on pin in case being used during sleep
   uint32_t inMask = 1 << in;
+#if !SAMC_SERIES
   EIC->WAKEUP.reg |= inMask;
-
+#endif
   // Assign pin to EIC
   pinPeripheral(pin, PIO_EXTINT);
 
@@ -159,8 +182,9 @@ void detachInterrupt(uint32_t pin)
   EIC->INTENCLR.reg = EIC_INTENCLR_EXTINT(inMask);
   
   // Disable wakeup capability on pin during sleep
+#if !SAMC_SERIES
   EIC->WAKEUP.reg &= ~inMask;
-
+#endif
   // Remove callback from the ISR list
   uint32_t current;
   for (current=0; current<nints; current++) {

@@ -43,6 +43,21 @@
 #define GENERIC_CLOCK_GENERATOR_OSC8M     (3u)
 // Constants for Clock multiplexers
 #define GENERIC_CLOCK_MULTIPLEXER_DFLL48M (0u)
+void waitForSync( void )
+{
+	while ( GCLK->STATUS.reg & GCLK_STATUS_SYNCBUSY )
+	{
+		/* Wait for synchronization */
+	}
+}
+
+void waitForDFLL( void )
+{
+	while ( (SYSCTRL->PCLKSR.reg & SYSCTRL_PCLKSR_DFLLRDY) == 0 )
+	{
+		/* Wait for synchronization */
+	}
+}
 
 void SystemInit( void )
 {
@@ -100,10 +115,7 @@ void SystemInit( void )
    */
   GCLK->GENDIV.reg = GCLK_GENDIV_ID( GENERIC_CLOCK_GENERATOR_XOSC32K ) ; // Generic Clock Generator 1
 
-  while ( GCLK->STATUS.reg & GCLK_STATUS_SYNCBUSY )
-  {
-    /* Wait for synchronization */
-  }
+  waitForSync();
 
   /* Write Generic Clock Generator 1 configuration */
   GCLK->GENCTRL.reg = GCLK_GENCTRL_ID( GENERIC_CLOCK_GENERATOR_OSC32K ) | // Generic Clock Generator 1
@@ -115,10 +127,7 @@ void SystemInit( void )
 //                      GCLK_GENCTRL_OE | // Output clock to a pin for tests
                       GCLK_GENCTRL_GENEN ;
 
-  while ( GCLK->STATUS.reg & GCLK_STATUS_SYNCBUSY )
-  {
-    /* Wait for synchronization */
-  }
+  waitForSync();
 
   /* ----------------------------------------------------------------------------------------------
    * 3) Put Generic Clock Generator 1 as source for Generic Clock Multiplexer 0 (DFLL48M reference)
@@ -127,10 +136,7 @@ void SystemInit( void )
                       GCLK_CLKCTRL_GEN_GCLK1 | // Generic Clock Generator 1 is source
                       GCLK_CLKCTRL_CLKEN ;
 
-  while ( GCLK->STATUS.reg & GCLK_STATUS_SYNCBUSY )
-  {
-    /* Wait for synchronization */
-  }
+  waitForSync();
 
   /* ----------------------------------------------------------------------------------------------
    * 4) Enable DFLL48M clock
@@ -141,19 +147,13 @@ void SystemInit( void )
   /* Remove the OnDemand mode, Bug http://avr32.icgroup.norway.atmel.com/bugzilla/show_bug.cgi?id=9905 */
   SYSCTRL->DFLLCTRL.reg = SYSCTRL_DFLLCTRL_ENABLE;
 
-  while ( (SYSCTRL->PCLKSR.reg & SYSCTRL_PCLKSR_DFLLRDY) == 0 )
-  {
-    /* Wait for synchronization */
-  }
+  waitForDFLL();
 
   SYSCTRL->DFLLMUL.reg = SYSCTRL_DFLLMUL_CSTEP( 31 ) | // Coarse step is 31, half of the max value
                          SYSCTRL_DFLLMUL_FSTEP( 511 ) | // Fine step is 511, half of the max value
                          SYSCTRL_DFLLMUL_MUL( (VARIANT_MCK + VARIANT_MAINOSC/2) / VARIANT_MAINOSC ) ; // External 32KHz is the reference
 
-  while ( (SYSCTRL->PCLKSR.reg & SYSCTRL_PCLKSR_DFLLRDY) == 0 )
-  {
-    /* Wait for synchronization */
-  }
+  waitForDFLL();
 
 #if defined(CRYSTALLESS)
 
@@ -203,10 +203,7 @@ void SystemInit( void )
                            SYSCTRL_DFLLCTRL_WAITLOCK |
                            SYSCTRL_DFLLCTRL_QLDIS ; /* Disable Quick lock */
 
-  while ( (SYSCTRL->PCLKSR.reg & SYSCTRL_PCLKSR_DFLLRDY) == 0 )
-  {
-    /* Wait for synchronization */
-  }
+  waitForDFLL();
 
   /* Enable the DFLL */
   SYSCTRL->DFLLCTRL.reg |= SYSCTRL_DFLLCTRL_ENABLE ;
@@ -219,20 +216,14 @@ void SystemInit( void )
 
 #endif
 
-  while ( (SYSCTRL->PCLKSR.reg & SYSCTRL_PCLKSR_DFLLRDY) == 0 )
-  {
-    /* Wait for synchronization */
-  }
+  waitForDFLL();
 
   /* ----------------------------------------------------------------------------------------------
    * 5) Switch Generic Clock Generator 0 to DFLL48M. CPU will run at 48MHz.
    */
   GCLK->GENDIV.reg = GCLK_GENDIV_ID( GENERIC_CLOCK_GENERATOR_MAIN ) ; // Generic Clock Generator 0
 
-  while ( GCLK->STATUS.reg & GCLK_STATUS_SYNCBUSY )
-  {
-    /* Wait for synchronization */
-  }
+  waitForSync();
 
   /* Write Generic Clock Generator 0 configuration */
   GCLK->GENCTRL.reg = GCLK_GENCTRL_ID( GENERIC_CLOCK_GENERATOR_MAIN ) | // Generic Clock Generator 0
@@ -241,10 +232,7 @@ void SystemInit( void )
                       GCLK_GENCTRL_IDC | // Set 50/50 duty cycle
                       GCLK_GENCTRL_GENEN ;
 
-  while ( GCLK->STATUS.reg & GCLK_STATUS_SYNCBUSY )
-  {
-    /* Wait for synchronization */
-  }
+  waitForSync();
 
   /* ----------------------------------------------------------------------------------------------
    * 6) Modify PRESCaler value of OSC8M to have 8MHz
@@ -263,10 +251,7 @@ void SystemInit( void )
 //                      GCLK_GENCTRL_OE | // Output clock to a pin for tests
                       GCLK_GENCTRL_GENEN ;
 
-  while ( GCLK->STATUS.reg & GCLK_STATUS_SYNCBUSY )
-  {
-    /* Wait for synchronization */
-  }
+  waitForSync();
 
   /*
    * Now that all system clocks are configured, we can set CPU and APBx BUS clocks.
