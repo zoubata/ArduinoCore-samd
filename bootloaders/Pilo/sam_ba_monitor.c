@@ -28,9 +28,12 @@
 #include "sam_ba_cdc.h"
 #endif
 #include "board_driver_led.h"
+#include "util.h"
 
 const char RomBOOT_Version[] = SAM_BA_VERSION;
+#if (defined ARDUINO_EXTENDED_CAPABILITIES) && (ARDUINO_EXTENDED_CAPABILITIES == 1)
 const char RomBOOT_ExtendedCapabilities[] = "[Arduino:XYZ]";
+#endif
 
 /* Provides one common interface to handle both USART and USB-CDC */
 typedef struct
@@ -91,8 +94,12 @@ volatile bool b_sam_ba_interface_usart = false;
 
 /* Pulse generation counters to keep track of the time remaining for each pulse type */
 #define TX_RX_LED_PULSE_PERIOD 100
+#if defined(BOARD_LEDTX_PORT)
 volatile uint16_t txLEDPulse = 0; // time remaining for Tx LED pulse
+#endif
+#if defined(BOARD_LEDRX_PORT)
 volatile uint16_t rxLEDPulse = 0; // time remaining for Rx LED pulse
+#endif
 
 void sam_ba_monitor_init(uint8_t com_interface)
 {
@@ -120,9 +127,11 @@ static uint32_t sam_ba_putdata(t_monitor_if* pInterface, void const* data, uint3
 	uint32_t result ;
 
 	result=pInterface->putdata(data, length);
+#if defined(BOARD_LEDTX_PORT)
 
 	LEDTX_on();
 	txLEDPulse = TX_RX_LED_PULSE_PERIOD;
+#endif
 
 	return result;
 }
@@ -135,12 +144,14 @@ static uint32_t sam_ba_getdata(t_monitor_if* pInterface, void* data, uint32_t le
 	uint32_t result ;
 
 	result=pInterface->getdata(data, length);
+#if defined(BOARD_LEDRX_PORT)
 
 	if (result)
 	{
 		LEDRX_on();
 		rxLEDPulse = TX_RX_LED_PULSE_PERIOD;
 	}
+#endif
 
 	return result;
 }
@@ -153,9 +164,11 @@ static uint32_t sam_ba_putdata_xmd(t_monitor_if* pInterface, void const* data, u
 	uint32_t result ;
 
 	result=pInterface->putdata_xmd(data, length);
+#if defined(BOARD_LEDTX_PORT)
 
 	LEDTX_on();
 	txLEDPulse = TX_RX_LED_PULSE_PERIOD;
+#endif
 
 	return result;
 }
@@ -168,12 +181,14 @@ static uint32_t sam_ba_getdata_xmd(t_monitor_if* pInterface, void* data, uint32_
 	uint32_t result ;
 
 	result=pInterface->getdata_xmd(data, length);
+#if defined(BOARD_LEDRX_PORT)
 
 	if (result)
 	{
 		LEDRX_on();
 		rxLEDPulse = TX_RX_LED_PULSE_PERIOD;
 	}
+#endif
 
 	return result;
 }
@@ -251,10 +266,9 @@ uint8_t command, *ptr_data, *ptr, data[SIZEBUFMAX];
 uint8_t j;
 uint32_t u32tmp;
 
-uint32_t PAGE_SIZE, PAGES, MAX_FLASH;
 
 // Prints a 32-bit integer in hex.
-#if ( ((defined(ARDUINO_EXTENDED_CAPABILITIES)) && (ARDUINO_EXTENDED_CAPABILITIES == 1)))
+#if ((SAM_BA_INTERFACE != SAM_BA_NONE) && ((defined(ARDUINO_EXTENDED_CAPABILITIES)) && (ARDUINO_EXTENDED_CAPABILITIES == 1)))
 static void put_uint32(uint32_t n)
 {
   char buff[8];
@@ -408,17 +422,7 @@ static void sam_ba_monitor_loop(void)
         //       Even if the starting address is the last byte of a ROW the entire
         //       ROW is erased anyway.
 
-        uint32_t dst_addr = current_number; // starting address
-
-        while (dst_addr < MAX_FLASH)
-        {
-          // Execute "ER" Erase Row
-          NVMCTRL->ADDR.reg = dst_addr / 2;
-          NVMCTRL->CTRLA.reg = NVMCTRL_CTRLA_CMDEX_KEY | NVMCTRL_CTRLA_CMD_ER;
-          while (NVMCTRL->INTFLAG.bit.READY == 0)
-            ;
-          dst_addr += PAGE_SIZE * 4; // Skip a ROW
-        }
+        flashErase(current_number);
 
         // Notify command completed
         sam_ba_putdata( ptr_monitor_if, "X\n\r", 3);
@@ -443,40 +447,7 @@ static void sam_ba_monitor_loop(void)
         }
         else
         {
-          // Write to flash
-          uint32_t size = current_number/4;
-          uint32_t *src_addr = src_buff_addr;
-          uint32_t *dst_addr = (uint32_t*)ptr_data;
-
-          // Set automatic page write
-          NVMCTRL->CTRLB.bit.MANW = 0;
-
-          // Do writes in pages
-          while (size)
-          {
-            // Execute "PBC" Page Buffer Clear
-            NVMCTRL->CTRLA.reg = NVMCTRL_CTRLA_CMDEX_KEY | NVMCTRL_CTRLA_CMD_PBC;
-            while (NVMCTRL->INTFLAG.bit.READY == 0)
-              ;
-
-            // Fill page buffer
-            uint32_t i;
-            for (i=0; i<(PAGE_SIZE/4) && i<size; i++)
-            {
-              dst_addr[i] = src_addr[i];
-            }
-
-            // Execute "WP" Write Page
-            //NVMCTRL->ADDR.reg = ((uint32_t)dst_addr) / 2;
-            NVMCTRL->CTRLA.reg = NVMCTRL_CTRLA_CMDEX_KEY | NVMCTRL_CTRLA_CMD_WP;
-            while (NVMCTRL->INTFLAG.bit.READY == 0)
-              ;
-
-            // Advance to next page
-            dst_addr += i;
-            src_addr += i;
-            size     -= i;
-          }
+          flashWrite(current_number, src_buff_addr, (uint32_t*)ptr_data);
         }
 
         // Notify command completed
@@ -546,10 +517,14 @@ static void sam_ba_monitor_loop(void)
 void sam_ba_monitor_sys_tick(void)
 {
 	/* Check whether the TX or RX LED one-shot period has elapsed.  if so, turn off the LED */
+  #if defined(BOARD_LEDTX_PORT)
 	if (txLEDPulse && !(--txLEDPulse))
 		LEDTX_off();
+  #endif
+  #if defined(BOARD_LEDRX_PORT)
 	if (rxLEDPulse && !(--rxLEDPulse))
 		LEDRX_off();
+  #endif
 }
 
 /**
@@ -557,10 +532,6 @@ void sam_ba_monitor_sys_tick(void)
  */
 void sam_ba_monitor_run(void)
 {
-  uint32_t pageSizes[] = { 8, 16, 32, 64, 128, 256, 512, 1024 };
-  PAGE_SIZE = pageSizes[NVMCTRL->PARAM.bit.PSZ];
-  PAGES = NVMCTRL->PARAM.bit.NVMP;
-  MAX_FLASH = PAGE_SIZE * PAGES;
 
   ptr_data = NULL;
   command = 'z';

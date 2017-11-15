@@ -45,8 +45,13 @@ const char devDescriptor[] =
   USB_PID_HIGH,  // idProduct H
   0x00,   // bcdDevice L, here matching SAM-BA version
   0x02,   // bcdDevice H
+#if defined USB_VENDOR_STRINGS_ENABLED
   STRING_INDEX_MANUFACTURER,   // iManufacturer
   STRING_INDEX_PRODUCT,        // iProduct
+#else
+  0x00,   // iManufacturer
+  0x00,   // iProduct
+#endif
   0x00,   // SerialNumber, should be based on product unique ID
   0x01    // bNumConfigs
 };
@@ -196,6 +201,7 @@ void sam_ba_usb_CDC_Enumerate(P_USB_CDC pCdc)
         /* Return Configuration Descriptor */
         USB_Write(pCdc->pUsb, cfgDescriptor, SAM_BA_MIN(sizeof(cfgDescriptor), wLength), USB_EP_CTRL);
       }
+#if defined USB_VENDOR_STRINGS_ENABLED
       else if (wValue>>8 == STD_GET_DESCRIPTOR_STRING)
       {
         switch ( wValue & 0xff )
@@ -220,6 +226,7 @@ void sam_ba_usb_CDC_Enumerate(P_USB_CDC pCdc)
           break;
         }
       }
+#endif
       else
       {
         /* Stall the request */
@@ -412,6 +419,7 @@ P_USB_CDC usb_init(void)
 
   return &sam_ba_cdc;
 }
+#if defined USB_VENDOR_STRINGS_ENABLED
 
 /*----------------------------------------------------------------------------
  * \brief Send a USB descriptor string.
@@ -434,3 +442,4 @@ uint32_t USB_SendString(Usb *pUsb, const char* ascii_string, uint8_t maxLength)
 
   return USB_Write(pUsb, (const char*)string_descriptor, resulting_length<<1, USB_EP_CTRL);
 }
+#endif

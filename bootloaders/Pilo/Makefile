@@ -26,7 +26,7 @@ SDCARD?=SDCARD_DISABLED
 # MT_D21E_rev_A, MT_D21E_rev_B, MT_D11
 # arduino_zero, arduino_mkrzero, arduino_mkr1000, arduino_mkrfox1200, genuino_mkr1000, genuino_zero, arduino_m0, arduino_m0_pro
 # Generic_x21E, Generic_x21G, Generic_x21J, Generic_D11D14AM, Generic_D11D14AS, Generic_D11C14A
-BOARD_ID?=arduino_zero
+BOARD_ID?=MT_D21E_rev_B
 
 # -----------------------------------------------------------------------------
 # MCU definitions:
@@ -78,13 +78,13 @@ CORE_VENDOR?=zoubworld_Arduino
 # Paths
 ifeq ($(OS),Windows_NT)
   # Are we using mingw/msys/msys2/cygwin?
-  ifeq ($(TERM),cygwin)
+  ifeq ($(TERM),xterm)
     T=$(shell cygpath -u $(LOCALAPPDATA))
     MODULE_PATH?=$(T)/Arduino15/packages/$(CORE_VENDOR)
     MODULE_PATH_ARDUINO?=$(T)/Arduino15/packages/arduino
     RM=rm
     SEP=/
-    else ifeq ($(TERM),xterm)
+  elifeq ($(TERM),cygwin)
     T=$(shell cygpath -u $(LOCALAPPDATA))
     MODULE_PATH?=$(T)/Arduino15/packages/$(CORE_VENDOR)
     MODULE_PATH_ARDUINO?=$(T)/Arduino15/packages/arduino
@@ -96,7 +96,6 @@ ifeq ($(OS),Windows_NT)
     RM=del
     SEP=\\
   endif
-
 else
   UNAME_S := $(shell uname -s)
 

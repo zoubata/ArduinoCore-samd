@@ -93,8 +93,10 @@ typedef struct _USB_CDC
 P_USB_CDC usb_init(void);
 
 void sam_ba_usb_CDC_Enumerate(P_USB_CDC pCdc);
+#if defined USB_VENDOR_STRINGS_ENABLED
 
 uint32_t USB_SendString(Usb *pUsb, const char* ascii_string, uint8_t maxLength);
+#endif
 
 extern USB_CDC sam_ba_cdc;
 

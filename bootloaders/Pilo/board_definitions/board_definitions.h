@@ -31,6 +31,7 @@
   #include "board_definitions_arduino_mkrfox1200.h"
 #elif defined(BOARD_ID_Pilo)
   #include "board_definitions_arduino_pilo.h"
+  
 #else
   #error You must define a BOARD_ID and add the corresponding definitions in board_definitions.h
 #endif

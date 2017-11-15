@@ -24,12 +24,17 @@
 #include "sam_ba_serial.h"
 #include "board_definitions/board_definitions.h"
 #include "board_driver_led.h"
+#if defined(SDCARD_ENABLED)
+#include "SDCard/sdBootloader.h"
+#endif
+#include "util.h"
 #if (SAMD21 || SAMD11 || SAML21)
 #include "sam_ba_usb.h"
 #include "sam_ba_cdc.h"
 #endif
 
 extern uint32_t __sketch_vectors_ptr; // Exported value from linker script
+extern volatile int8_t ledDirection;
 extern void board_init(void);
 
 #if (defined DEBUG) && (DEBUG == 1)
@@ -44,8 +49,6 @@ static volatile bool main_b_cdc_enable = false;
  */
 static void check_start_application(void)
 {
-//  LED_init();
-//  LED_off();
 
 #if (!defined DEBUG) || ((defined DEBUG) && (DEBUG == 0))
 uint32_t* pulSketch_Start_Address;
@@ -64,6 +67,7 @@ uint32_t* pulSketch_Start_Address;
   /*
    * Load the sketch Reset Handler address
    * __sketch_vectors_ptr is exported from linker script and point on first 32b word of sketch vector table
+   * Remember, variables exported from a linker script are different than normal variables (only address, no value)
    * First 32b word is sketch stack
    * Second 32b word is sketch entry point: Reset_Handler()
    */
@@ -93,7 +97,7 @@ uint32_t* pulSketch_Start_Address;
   }
 #endif
 
-#if defined(BOOT_DOUBLE_TAP_ADDRESS)
+#if defined(BOOT_DOUBLE_TAP_ENABLED)
   #define DOUBLE_TAP_MAGIC 0x07738135
 #if (SAMD21 || SAMD11)
   if (PM->RCAUSE.bit.POR)
@@ -118,12 +122,8 @@ uint32_t* pulSketch_Start_Address;
     /* First tap */
     BOOT_DOUBLE_TAP_DATA = DOUBLE_TAP_MAGIC;
 
-    /* Wait 0.5sec to see if the user tap reset again.
-     * The loop value is based on SAMD21 default 1MHz clock @ reset.
-     */
-    for (uint32_t i=0; i<125000; i++) /* 500ms */
-      /* force compiler to not optimize this... */
-      __asm__ __volatile__("");
+    /* Wait 0.5sec to see if the user tap reset again */
+    delayUs(500000UL);
 
     /* Timeout happened, continue boot... */
     BOOT_DOUBLE_TAP_DATA = 0;
@@ -131,8 +131,6 @@ uint32_t* pulSketch_Start_Address;
 #endif
 
 
-
-//  LED_on();
 
   /* Rebase the Stack Pointer */
   __set_MSP( (uint32_t)(__sketch_vectors_ptr) );
@@ -170,31 +168,151 @@ int main(void)
   /* System initialization */
   board_init();
   __enable_irq();
-
-#if SAM_BA_INTERFACE == SAM_BA_UART_ONLY  ||  SAM_BA_INTERFACE == SAM_BA_BOTH_INTERFACES
-  /* UART is enabled in all cases */
-  serial_open();
-#endif
-
-#if SAM_BA_INTERFACE == SAM_BA_USBCDC_ONLY  ||  SAM_BA_INTERFACE == SAM_BA_BOTH_INTERFACES
-  pCdc = usb_init();
-#endif
-
-  DEBUG_PIN_LOW;
-
   /* Initialize LEDs */
   LED_init();
+  #if !defined(BOARD_LED_FADE_ENABLED)
+  LED_on();
+  #endif
   LEDRX_init();
   LEDRX_off();
   LEDTX_init();
   LEDTX_off();
 
-  /* Start the sys tick (1 ms) */
-  SysTick_Config(1000);
+  /* Start the sys tick (20 us) */
+  SysTick_Config(VARIANT_MCK / 50000);
+
+
+/* If SDCARD_ENABLED defined, read optional external pins and run SD Card bootloader (if enabled).
+ */
+  #if defined(SDCARD_ENABLED)
+    uint8_t bootloaderMode = SD_BOOTLOADER_MODE_NO_UPDATE;
+    #if defined(SAM_BA_INTERFACE_USE_PIN)
+      uint8_t sdcardStatus = SD_BOOTLOADER_NOT_CALLED;
+    #endif
+
+    #if defined(SDCARD_USE_PIN1)
+      pinConfig(SDCARD_PIN1_PORT, SDCARD_PIN1_PIN, SDCARD_PIN1_CONFIG);
+    #endif
+    #if defined(SDCARD_USE_PIN2)
+      #if !defined(SDCARD_USE_PIN1)
+        #error "main.c: When SDCARD_USE_PIN2 is defined, SDCARD_USE_PIN1 must also be defined"
+      #endif
+      pinConfig(SDCARD_PIN2_PORT, SDCARD_PIN2_PIN, SDCARD_PIN2_CONFIG);
+    #endif
+
+    #if (defined(SDCARD_USE_PIN1) && defined(SDCARD_USE_PIN2))
+      bool pin1 = isPinActive(SDCARD_PIN1_PORT, SDCARD_PIN1_PIN, SDCARD_PIN1_POLARITY);
+      bool pin2 = isPinActive(SDCARD_PIN2_PORT, SDCARD_PIN2_PIN, SDCARD_PIN2_POLARITY);
+      if (pin1) {
+        bootloaderMode = SD_BOOTLOADER_MODE_UPDATE;
+      } else if (pin2) {
+        bootloaderMode = SD_BOOTLOADER_MODE_UPDATE2;
+      }
+    #elif defined(SDCARD_USE_PIN1)
+      if (isPinActive(SDCARD_PIN1_PORT, SDCARD_PIN1_PIN, SDCARD_PIN1_POLARITY)) {
+        bootloaderMode = SD_BOOTLOADER_MODE_UPDATE;
+      }
+    #else
+      bootloaderMode = SD_BOOTLOADER_MODE_UPDATE;
+    #endif
+
+    if (bootloaderMode != SD_BOOTLOADER_MODE_NO_UPDATE) {
+    #if defined(SAM_BA_INTERFACE_USE_PIN)
+      sdcardStatus = sdBootloader(bootloaderMode);
+    #else
+      sdBootloader(bootloaderMode);
+    #endif
+    }
+  #endif
+
+/* When using SAM_BA_INTERFACE_USE_PIN, check the pin to determine which SAM-BA interface to use.
+ */
+#if defined(SAM_BA_INTERFACE_USE_PIN)
+  uint8_t sambaInterface = SAM_BA_NONE;
+  pinConfig(SAM_BA_INTERFACE_PIN_PORT, SAM_BA_INTERFACE_PIN_PIN, SAM_BA_INTERFACE_PIN_CONFIG);
+
+  if (isPinActive(SAM_BA_INTERFACE_PIN_PORT, SAM_BA_INTERFACE_PIN_PIN, PIN_POLARITY_ACTIVE_LOW)) {      // pin is low
+  #if ((SAM_BA_INTERFACE == SAM_BA_BOTH_INTERFACES) && (SAM_BA_INTERFACE_PIN_POLARITY == PIN_POLARITY_USBCDC_LOW))
+    sambaInterface = SAM_BA_USBCDC_ONLY;
+  #elif ((SAM_BA_INTERFACE == SAM_BA_USBCDC_ONLY) && (SAM_BA_INTERFACE_PIN_POLARITY == PIN_POLARITY_ACTIVE_LOW))
+    sambaInterface = SAM_BA_USBCDC_ONLY;
+  #elif ((SAM_BA_INTERFACE == SAM_BA_UART_ONLY) && (SAM_BA_INTERFACE_PIN_POLARITY == PIN_POLARITY_ACTIVE_LOW))
+    sambaInterface = SAM_BA_UART_ONLY;
+  #endif
+  } else {      // pin is high
+  #if ((SAM_BA_INTERFACE == SAM_BA_BOTH_INTERFACES) && (SAM_BA_INTERFACE_PIN_POLARITY == PIN_POLARITY_USBCDC_HIGH))
+    sambaInterface = SAM_BA_USBCDC_ONLY;
+  #elif ((SAM_BA_INTERFACE == SAM_BA_USBCDC_ONLY) && (SAM_BA_INTERFACE_PIN_POLARITY == PIN_POLARITY_ACTIVE_HIGH))
+    sambaInterface = SAM_BA_USBCDC_ONLY;
+  #elif ((SAM_BA_INTERFACE == SAM_BA_UART_ONLY) && (SAM_BA_INTERFACE_PIN_POLARITY == PIN_POLARITY_ACTIVE_HIGH))
+    sambaInterface = SAM_BA_UART_ONLY;
+  #endif
+  }
+#endif
+
+/* Check if we should continue with a SAM-BA interface (if compiled and enabled).
+ * Only show LED_STATUS_FILE_NOT_FOUND if a SAM-BA interface is not available.
+ * LED_STATUS_FILE_NOT_FOUND occurs if there is no SD Card, no FAT16/FAT32
+ * filesystem, or no file (UPDATE.BIN or UPDATE2.BIN) in the root directory.
+ */
+#if defined(SAM_BA_INTERFACE_USE_PIN)
+  #if defined(SDCARD_ENABLED)
+  if (sambaInterface == SAM_BA_NONE) {
+    if (sdcardStatus == SD_BOOTLOADER_FILE_NOT_FOUND) {
+      LED_status(LED_STATUS_FILE_NOT_FOUND);
+    } else if (sdcardStatus == SD_BOOTLOADER_NOT_CALLED) {
+      LED_status(LED_STATUS_NO_SAM_BA_INTERFACE);
+    }
+  }
+  #else
+    #if (SAM_BA_INTERFACE == SAM_BA_NONE)
+      LED_status(LED_STATUS_NO_SAM_BA_INTERFACE);
+    #else
+    if (sambaInterface == SAM_BA_NONE) {
+      LED_status(LED_STATUS_NO_SAM_BA_INTERFACE);
+    }
+    #endif
+  #endif
+#else
+  #if (SAM_BA_INTERFACE == SAM_BA_NONE)
+    LED_status(LED_STATUS_NO_SAM_BA_INTERFACE);
+  #endif
+#endif
+
+/* Enable the appropriate SAM-BA interfaces. When using SAM_BA_INTERFACE_USE_PIN,
+ * the peripheral and pins are only setup for the selected/enabled interface.
+ */
+#if defined(SAM_BA_INTERFACE_USE_PIN)
+  if (sambaInterface == SAM_BA_UART_ONLY) {
+#endif
+
+#if SAM_BA_INTERFACE == SAM_BA_UART_ONLY  ||  SAM_BA_INTERFACE == SAM_BA_BOTH_INTERFACES
+  /* UART is enabled in all cases */
+  serial_open();
+#endif
+#if defined(SAM_BA_INTERFACE_USE_PIN)
+  } else if (sambaInterface == SAM_BA_USBCDC_ONLY) {
+#endif
+
+#if SAM_BA_INTERFACE == SAM_BA_USBCDC_ONLY  ||  SAM_BA_INTERFACE == SAM_BA_BOTH_INTERFACES
+  pCdc = usb_init();
+#endif
+#if defined(SAM_BA_INTERFACE_USE_PIN)
+  }
+#endif
+
+
+  ledDirection = 4;
+
+  DEBUG_PIN_LOW;
+
 
   /* Wait for a complete enum on usb or a '#' char on serial line */
   while (1)
   {
+#if defined(SAM_BA_INTERFACE_USE_PIN)
+    if (sambaInterface == SAM_BA_USBCDC_ONLY) {
+#endif
 #if SAM_BA_INTERFACE == SAM_BA_USBCDC_ONLY  ||  SAM_BA_INTERFACE == SAM_BA_BOTH_INTERFACES
     if (pCdc->IsConfigured(pCdc) != 0)
     {
@@ -212,6 +330,9 @@ int main(void)
       }
     }
 #endif
+#if defined(SAM_BA_INTERFACE_USE_PIN)
+    } else if (sambaInterface == SAM_BA_UART_ONLY) {
+#endif
 
 #if SAM_BA_INTERFACE == SAM_BA_UART_ONLY  ||  SAM_BA_INTERFACE == SAM_BA_BOTH_INTERFACES
     /* Check if a '#' has been received */
@@ -225,12 +346,17 @@ int main(void)
       }
     }
 #endif
+#if defined(SAM_BA_INTERFACE_USE_PIN)
+    }
+#endif
   }
 }
 
 void SysTick_Handler(void)
 {
+#if (defined(BOARD_LED_FADE_ENABLED) && defined(BOARD_LED_PORT))
   LED_pulse();
+#endif
 
   sam_ba_monitor_sys_tick();
 }

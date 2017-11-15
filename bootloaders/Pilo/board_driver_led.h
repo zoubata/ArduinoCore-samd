@@ -22,11 +22,26 @@
 
 #include "sam.h"
 #include "board_definitions/board_definitions.h"
+#include "util.h"
+#define LED_STATUS_SUCCESS                      1000
+#define LED_STATUS_FILE_ALREADY_MATCHES         500
+#define LED_STATUS_FILE_NOT_FOUND               250
+#define LED_STATUS_NO_SAM_BA_INTERFACE          125
+#define LED_STATUS_FILE_TOO_LARGE               63
+#define LED_STATUS_VERIFICATION_FAILURE         31
+
+void LED_pulse(void);
+void LED_status(uint32_t periodMS);
 
 #if defined(BOARD_LED_PORT)
-inline void LED_init(void) { PORT->Group[BOARD_LED_PORT].DIRSET.reg = (1<<BOARD_LED_PIN); }
+  #if ((defined BOARD_LED_POLARITY) && BOARD_LED_POLARITY == LED_POLARITY_LOW_ON)
+    inline void LED_on(void) { PORT->Group[BOARD_LED_PORT].OUTCLR.reg = (1<<BOARD_LED_PIN); }
+    inline void LED_off(void) { PORT->Group[BOARD_LED_PORT].OUTSET.reg = (1<<BOARD_LED_PIN); }
+  #else
 inline void LED_on(void) { PORT->Group[BOARD_LED_PORT].OUTSET.reg = (1<<BOARD_LED_PIN); }
 inline void LED_off(void) { PORT->Group[BOARD_LED_PORT].OUTCLR.reg = (1<<BOARD_LED_PIN); }
+  #endif
+  inline void LED_init(void) { PORT->Group[BOARD_LED_PORT].DIRSET.reg = (1<<BOARD_LED_PIN); LED_off(); }
 inline void LED_toggle(void) { PORT->Group[BOARD_LED_PORT].OUTTGL.reg = (1<<BOARD_LED_PIN); }
 #else
 inline void LED_init(void) { }
@@ -37,9 +52,14 @@ inline void LED_toggle(void) { }
 void LED_pulse();
 
 #if defined(BOARD_LEDRX_PORT)
-inline void LEDRX_init(void) { PORT->Group[BOARD_LEDRX_PORT].DIRSET.reg = (1<<BOARD_LEDRX_PIN); }
+  #if ((defined BOARD_LEDRX_POLARITY) && BOARD_LEDRX_POLARITY == LED_POLARITY_LOW_ON)
 inline void LEDRX_on(void) { PORT->Group[BOARD_LEDRX_PORT].OUTCLR.reg = (1<<BOARD_LEDRX_PIN); }
 inline void LEDRX_off(void) { PORT->Group[BOARD_LEDRX_PORT].OUTSET.reg = (1<<BOARD_LEDRX_PIN); }
+  #else
+    inline void LEDRX_on(void) { PORT->Group[BOARD_LEDRX_PORT].OUTSET.reg = (1<<BOARD_LEDRX_PIN); }
+    inline void LEDRX_off(void) { PORT->Group[BOARD_LEDRX_PORT].OUTCLR.reg = (1<<BOARD_LEDRX_PIN); }
+  #endif
+inline void LEDRX_init(void) { PORT->Group[BOARD_LEDRX_PORT].DIRSET.reg = (1<<BOARD_LEDRX_PIN); LED_off(); }
 inline void LEDRX_toggle(void) { PORT->Group[BOARD_LEDRX_PORT].OUTTGL.reg = (1<<BOARD_LEDRX_PIN); }
 #else
 inline void LEDRX_init(void) { }
@@ -49,9 +69,14 @@ inline void LEDRX_toggle(void) { }
 #endif
 
 #if defined(BOARD_LEDTX_PORT)
-inline void LEDTX_init(void) { PORT->Group[BOARD_LEDTX_PORT].DIRSET.reg = (1<<BOARD_LEDTX_PIN); }
+  #if ((defined BOARD_LEDTX_POLARITY) && BOARD_LEDTX_POLARITY == LED_POLARITY_LOW_ON)
 inline void LEDTX_on(void) { PORT->Group[BOARD_LEDTX_PORT].OUTCLR.reg = (1<<BOARD_LEDTX_PIN); }
 inline void LEDTX_off(void) { PORT->Group[BOARD_LEDTX_PORT].OUTSET.reg = (1<<BOARD_LEDTX_PIN); }
+  #else
+    inline void LEDTX_on(void) { PORT->Group[BOARD_LEDTX_PORT].OUTSET.reg = (1<<BOARD_LEDTX_PIN); }
+    inline void LEDTX_off(void) { PORT->Group[BOARD_LEDTX_PORT].OUTCLR.reg = (1<<BOARD_LEDTX_PIN); }
+  #endif
+inline void LEDTX_init(void) { PORT->Group[BOARD_LEDTX_PORT].DIRSET.reg = (1<<BOARD_LEDTX_PIN); LED_off(); }
 inline void LEDTX_toggle(void) { PORT->Group[BOARD_LEDTX_PORT].OUTTGL.reg = (1<<BOARD_LEDTX_PIN); }
 #else
 inline void LEDTX_init(void) { }

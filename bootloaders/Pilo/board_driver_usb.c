@@ -22,12 +22,25 @@
 #include "sam_ba_usb.h"
 #include "sam_ba_cdc.h"
 
+#define USB_PAD_TRANSN_REG_POS            (6)
 #define NVM_USB_PAD_TRANSN_POS            (45)
 #define NVM_USB_PAD_TRANSN_SIZE           (5)
+#define USB_PAD_TRANSP_REG_POS            (0)
 #define NVM_USB_PAD_TRANSP_POS            (50)
 #define NVM_USB_PAD_TRANSP_SIZE           (5)
+#define USB_PAD_TRIM_REG_POS              (12)
 #define NVM_USB_PAD_TRIM_POS              (55)
 #define NVM_USB_PAD_TRIM_SIZE             (3)
+
+/* Generic Clock Multiplexer IDs */
+#if (SAMD21 || SAMD11)
+  #define GCM_USB                   (0x06U)
+#elif (SAML21)
+  #define GCM_USB                   (0x04U)
+#else
+  #error "board_driver_usb.c: Missing dependency or unsupported chip. Please install CMSIS-Atmel from MattairTech (see Prerequisites for Building in README.md)."
+#endif
+
 
 __attribute__((__aligned__(4))) UsbDeviceDescriptor usb_endpoint_table[MAX_EP]; // Initialized to zero in USB_Init
 __attribute__((__aligned__(4))) uint8_t udd_ep_out_cache_buffer[2][64]; //1 for CTRL, 1 for BULK
@@ -47,7 +60,7 @@ P_USB_CDC USB_Open(P_USB_CDC pCdc, Usb *pUsb)
 //  pCdc->Write        = USB_Write;
 //  pCdc->Read         = USB_Read;
 
-  pCdc->pUsb->HOST.CTRLA.bit.ENABLE = true;
+  pCdc->pUsb->DEVICE.CTRLA.bit.ENABLE = true;
 
   return pCdc;
 }
@@ -57,40 +70,41 @@ P_USB_CDC USB_Open(P_USB_CDC pCdc, Usb *pUsb)
  */
 void USB_Init(void)
 {
-  uint32_t pad_transn, pad_transp, pad_trim;
+  uint8_t pad_transn, pad_transp, pad_trim;
 
   /* Enable USB clock */
+#if (SAMD21 || SAMD11)
   PM->APBBMASK.reg |= PM_APBBMASK_USB;
+#elif (SAML21)
+  MCLK->APBBMASK.reg |= MCLK_APBBMASK_USB;
+#endif
 
   /* Set up the USB DP/DN pins */
-  PORT->Group[0].PINCFG[PIN_PA24G_USB_DM].bit.PMUXEN = 1;
-  PORT->Group[0].PMUX[PIN_PA24G_USB_DM/2].reg &= ~(0xF << (4 * (PIN_PA24G_USB_DM & 0x01u)));
-  PORT->Group[0].PMUX[PIN_PA24G_USB_DM/2].reg |= MUX_PA24G_USB_DM << (4 * (PIN_PA24G_USB_DM & 0x01u));
-  PORT->Group[0].PINCFG[PIN_PA25G_USB_DP].bit.PMUXEN = 1;
-  PORT->Group[0].PMUX[PIN_PA25G_USB_DP/2].reg &= ~(0xF << (4 * (PIN_PA25G_USB_DP & 0x01u)));
-  PORT->Group[0].PMUX[PIN_PA25G_USB_DP/2].reg |= MUX_PA25G_USB_DP << (4 * (PIN_PA25G_USB_DP & 0x01u));
+  pinMux(PINMUX_PA24G_USB_DM);
+  pinMux(PINMUX_PA25G_USB_DP);
 
   /* ----------------------------------------------------------------------------------------------
    * Put Generic Clock Generator 0 as source for Generic Clock Multiplexer 6 (USB reference)
    */
-  GCLK->CLKCTRL.reg = GCLK_CLKCTRL_ID( 6 ) | // Generic Clock Multiplexer 6
-              GCLK_CLKCTRL_GEN_GCLK0 | // Generic Clock Generator 0 is source
-              GCLK_CLKCTRL_CLKEN ;
-
-  while ( GCLK->STATUS.reg & GCLK_STATUS_SYNCBUSY )
-  {
-    /* Wait for synchronization */
-  }
+#if (SAMD21 || SAMD11)
+  GCLK->CLKCTRL.reg = ( GCLK_CLKCTRL_ID( GCM_USB ) | GCLK_CLKCTRL_GEN_GCLK0 | GCLK_CLKCTRL_CLKEN );
+  waitForSync();
+#else
+  GCLK->PCHCTRL[GCM_USB].reg = ( GCLK_PCHCTRL_CHEN | GCLK_PCHCTRL_GEN_GCLK0 );
+  waitForSync();
+#endif
 
   /* Reset */
+#if defined(PARANOIA)
   USB->DEVICE.CTRLA.bit.SWRST = 1;
   while (USB->DEVICE.SYNCBUSY.bit.SWRST)
   {
     /* Sync wait */
   }
+#endif
 
   /* Load Pad Calibration */
-  pad_transn =( *((uint32_t *)(NVMCTRL_OTP4)
+  pad_transn =(uint8_t)( *((uint32_t *)(NVMCTRL_OTP4)
       + (NVM_USB_PAD_TRANSN_POS / 32))
     >> (NVM_USB_PAD_TRANSN_POS % 32))
     & ((1 << NVM_USB_PAD_TRANSN_SIZE) - 1);
@@ -100,9 +114,7 @@ void USB_Init(void)
     pad_transn = 5;
   }
 
-  USB->HOST.PADCAL.bit.TRANSN = pad_transn;
-
-  pad_transp =( *((uint32_t *)(NVMCTRL_OTP4)
+  pad_transp =(uint8_t)( *((uint32_t *)(NVMCTRL_OTP4)
       + (NVM_USB_PAD_TRANSP_POS / 32))
       >> (NVM_USB_PAD_TRANSP_POS % 32))
       & ((1 << NVM_USB_PAD_TRANSP_SIZE) - 1);
@@ -112,8 +124,7 @@ void USB_Init(void)
     pad_transp = 29;
   }
 
-  USB->HOST.PADCAL.bit.TRANSP = pad_transp;
-  pad_trim =( *((uint32_t *)(NVMCTRL_OTP4)
+  pad_trim =(uint8_t)( *((uint32_t *)(NVMCTRL_OTP4)
       + (NVM_USB_PAD_TRIM_POS / 32))
       >> (NVM_USB_PAD_TRIM_POS % 32))
       & ((1 << NVM_USB_PAD_TRIM_SIZE) - 1);
@@ -123,15 +134,15 @@ void USB_Init(void)
     pad_trim = 3;
   }
 
-  USB->HOST.PADCAL.bit.TRIM = pad_trim;
+  USB->DEVICE.PADCAL.reg = (uint16_t)((pad_trim << USB_PAD_TRIM_REG_POS) | (pad_transn << USB_PAD_TRANSN_REG_POS) | (pad_transp << USB_PAD_TRANSP_REG_POS));
 
   /* Set the configuration */
   /* Set mode to Device mode */
-  USB->HOST.CTRLA.bit.MODE = 0;
+  USB->DEVICE.CTRLA.bit.MODE = 0;
   /* Enable Run in Standby */
-  USB->HOST.CTRLA.bit.RUNSTDBY = true;
+  USB->DEVICE.CTRLA.bit.RUNSTDBY = true;
   /* Set the descriptor address */
-  USB->HOST.DESCADD.reg = (uint32_t)(&usb_endpoint_table[0]);
+  USB->DEVICE.DESCADD.reg = (uint32_t)(&usb_endpoint_table[0]);
   /* Set speed configuration to Full speed */
   USB->DEVICE.CTRLB.bit.SPDCONF = USB_DEVICE_CTRLB_SPDCONF_FS_Val;
   /* Attach to the USB host */

@@ -51,54 +51,12 @@ uint8_t mode_of_transfer;
  */
 void serial_open(void)
 {
-	uint32_t port;
-	uint32_t pin;
 
 	/* Configure the port pins for SERCOM_USART */
 	pinMux(BOOT_USART_PAD0);
         pinMux(BOOT_USART_PAD1);
         pinMux(BOOT_USART_PAD2);
         pinMux(BOOT_USART_PAD3);
-/*
-	if (BOOT_USART_PAD0 != PINMUX_UNUSED)
-  {
-		// Mask 6th bit in pin number to check whether it is greater than 32 i.e., PORTB pin 
-		port = (BOOT_USART_PAD0 & 0x200000) >> 21;
-		pin = (BOOT_USART_PAD0 >> 16);
-		PORT->Group[port].PINCFG[(pin - (port*32))].bit.PMUXEN = 1;
-		PORT->Group[port].PMUX[(pin - (port*32))/2].reg &= ~(0xF << (4 * (pin & 0x01u)));
-		PORT->Group[port].PMUX[(pin - (port*32))/2].reg |= (BOOT_USART_PAD0 & 0xFF) << (4 * (pin & 0x01u));
-	}
-
-	if (BOOT_USART_PAD1 != PINMUX_UNUSED)
-  {
-		// Mask 6th bit in pin number to check whether it is greater than 32 i.e., PORTB pin 
-		port = (BOOT_USART_PAD1 & 0x200000) >> 21;
-		pin = BOOT_USART_PAD1 >> 16;
-		PORT->Group[port].PINCFG[(pin - (port*32))].bit.PMUXEN = 1;
-		PORT->Group[port].PMUX[(pin - (port*32))/2].reg &= ~(0xF << (4 * (pin & 0x01u)));
-		PORT->Group[port].PMUX[(pin - (port*32))/2].reg |= (BOOT_USART_PAD1 & 0xFF) << (4 * (pin & 0x01u));
-	}
-
-	if (BOOT_USART_PAD2 != PINMUX_UNUSED)
-  {
-		// Mask 6th bit in pin number to check whether it is greater than 32 i.e., PORTB pin 
-		port = (BOOT_USART_PAD2 & 0x200000) >> 21;
-		pin = BOOT_USART_PAD2 >> 16;
-		PORT->Group[port].PINCFG[(pin - (port*32))].bit.PMUXEN = 1;
-		PORT->Group[port].PMUX[(pin - (port*32))/2].reg &= ~(0xF << (4 * (pin & 0x01u)));
-		PORT->Group[port].PMUX[(pin - (port*32))/2].reg |= (BOOT_USART_PAD2 & 0xFF) << (4 * (pin & 0x01u));
-	}
-
-	if (BOOT_USART_PAD3 != PINMUX_UNUSED)
-  {
-		// Mask 6th bit in pin number to check whether it is greater than 32 i.e., PORTB pin 
-		port = (BOOT_USART_PAD3 & 0x200000) >> 21;
-		pin = BOOT_USART_PAD3 >> 16;
-		PORT->Group[port].PINCFG[(pin - (port*32))].bit.PMUXEN = 1;
-		PORT->Group[port].PMUX[(pin - (port*32))/2].reg &= ~(0xF << (4 * (pin & 0x01u)));
-		PORT->Group[port].PMUX[(pin - (port*32))/2].reg |= (BOOT_USART_PAD3 & 0xFF) << (4 * (pin & 0x01u));
-	}*/
 
 	/* Enable clock for BOOT_USART_MODULE */
 #if (SAMD21 || SAMD11)
