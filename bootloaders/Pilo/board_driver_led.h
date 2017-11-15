@@ -20,7 +20,7 @@
 #ifndef _BOARD_DRIVER_LED_
 #define _BOARD_DRIVER_LED_
 
-#include <sam.h>
+#include "sam.h"
 #include "board_definitions/board_definitions.h"
 
 #if defined(BOARD_LED_PORT)
