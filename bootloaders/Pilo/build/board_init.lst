@@ -1,0 +1,99 @@
+   1              		.cpu cortex-m0plus
+   2              		.fpu softvfp
+   3              		.eabi_attribute 20, 1
+   4              		.eabi_attribute 21, 1
+   5              		.eabi_attribute 23, 3
+   6              		.eabi_attribute 24, 1
+   7              		.eabi_attribute 25, 1
+   8              		.eabi_attribute 26, 1
+   9              		.eabi_attribute 30, 4
+  10              		.eabi_attribute 34, 0
+  11              		.eabi_attribute 18, 4
+  12              		.code	16
+  13              		.file	"board_init.c"
+  14              		.section	.text.waitForPLL,"ax",%progbits
+  15              		.align	1
+  16              		.global	waitForPLL
+  17              		.code	16
+  18              		.thumb_func
+  20              	waitForPLL:
+  21              	.L3:
+  22 0000 024B     		ldr	r3, .L5
+  23 0002 1A78     		ldrb	r2, [r3]
+  24 0004 0E23     		mov	r3, #14
+  25 0006 1A42     		tst	r2, r3
+  26 0008 FAD1     		bne	.L3
+  27              		@ sp needed
+  28 000a 7047     		bx	lr
+  29              	.L6:
+  30              		.align	2
+  31              	.L5:
+  32 000c 2C100040 		.word	1073745964
+  34              		.section	.text.board_init,"ax",%progbits
+  35              		.align	1
+  36              		.global	board_init
+  37              		.code	16
+  38              		.thumb_func
+  40              	board_init:
+  41 0000 114B     		ldr	r3, .L18
+  42 0002 8022     		mov	r2, #128
+  43 0004 5968     		ldr	r1, [r3, #4]
+  44 0006 0420     		mov	r0, #4
+  45 0008 1143     		orr	r1, r2
+  46 000a 5960     		str	r1, [r3, #4]
+  47 000c 5968     		ldr	r1, [r3, #4]
+  48 000e 0143     		orr	r1, r0
+  49 0010 5960     		str	r1, [r3, #4]
+  50 0012 0E4B     		ldr	r3, .L18+4
+  51 0014 5969     		ldr	r1, [r3, #20]
+  52 0016 0A43     		orr	r2, r1
+  53 0018 5A61     		str	r2, [r3, #20]
+  54 001a 0D4A     		ldr	r2, .L18+8
+  55 001c 0121     		mov	r1, #1
+  56 001e 1170     		strb	r1, [r2]
+  57              	.L9:
+  58 0020 1178     		ldrb	r1, [r2]
+  59 0022 C807     		lsl	r0, r1, #31
+  60 0024 04D5     		bpl	.L8
+  61 0026 0A49     		ldr	r1, .L18+8
+  62 0028 4868     		ldr	r0, [r1, #4]
+  63 002a 0A49     		ldr	r1, .L18+12
+  64 002c 0842     		tst	r0, r1
+  65 002e F7D1     		bne	.L9
+  66              	.L8:
+  67 0030 094A     		ldr	r2, .L18+16
+  68 0032 0021     		mov	r1, #0
+  69 0034 5175     		strb	r1, [r2, #21]
+  70              	.L11:
+  71 0036 9169     		ldr	r1, [r2, #24]
+  72 0038 4807     		lsl	r0, r1, #29
+  73 003a FCD4     		bmi	.L11
+  74 003c 074A     		ldr	r2, .L18+20
+  75 003e 0849     		ldr	r1, .L18+24
+  76              		@ sp needed
+  77 0040 1160     		str	r1, [r2]
+  78 0042 0122     		mov	r2, #1
+  79 0044 1A71     		strb	r2, [r3, #4]
+  80 0046 7047     		bx	lr
+  81              	.L19:
+  82              		.align	2
+  83              	.L18:
+  84 0048 00400041 		.word	1090535424
+  85 004c 00080040 		.word	1073743872
+  86 0050 001C0040 		.word	1073748992
+  87 0054 FD070000 		.word	2045
+  88 0058 00100040 		.word	1073745920
+  89 005c 00000000 		.word	SystemCoreClock
+  90 0060 006CDC02 		.word	48000000
+  92              		.ident	"GCC: (GNU Tools for ARM Embedded Processors) 4.8.3 20140228 (release) [ARM/embedded-4_8-br
+DEFINED SYMBOLS
+                            *ABS*:00000000 board_init.c
+C:\cygwin\tmp\ccHhdUY2.s:15     .text.waitForPLL:00000000 $t
+C:\cygwin\tmp\ccHhdUY2.s:20     .text.waitForPLL:00000000 waitForPLL
+C:\cygwin\tmp\ccHhdUY2.s:32     .text.waitForPLL:0000000c $d
+C:\cygwin\tmp\ccHhdUY2.s:35     .text.board_init:00000000 $t
+C:\cygwin\tmp\ccHhdUY2.s:40     .text.board_init:00000000 board_init
+C:\cygwin\tmp\ccHhdUY2.s:84     .text.board_init:00000048 $d
+
+UNDEFINED SYMBOLS
+SystemCoreClock

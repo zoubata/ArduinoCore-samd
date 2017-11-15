@@ -31,19 +31,21 @@ typedef enum _EAnalogChannel
   No_ADC_Channel=-1,
   ADC_Channel0=0,
   ADC_Channel1=1,
+  #if !(defined __SAMC21E18A__) && !(defined __SAMC21E17A__) && !(defined __SAMC21E16A__) &&  !(defined __SAMD21E18A__) && !(defined __SAMD20E18A__) && !(defined __SAMD21E17A__) && !(defined __SAMD20E17A__) && !(defined __SAMD21E16A__) && !(defined __SAMD20E16A__)
   ADC_Channel2=2,
   ADC_Channel3=3,
+  #endif
   ADC_Channel4=4,
   ADC_Channel5=5,
   ADC_Channel6=6,
   ADC_Channel7=7,
-#if (defined __SAMC21J18A__) || (defined __SAMD21C18A__)
+#if !(defined __SAMD21E18A__) && !(defined __SAMD20E18A__) && !(defined __SAMD21E17A__) && !(defined __SAMD20E17A__) && !(defined __SAMD21E16A__) && !(defined __SAMD20E16A__)
+
   ADC_Channel8=8,
   ADC_Channel9=9,
-#endif // __SAMD21J18A__
   ADC_Channel10=10,
   ADC_Channel11=11,
-#if (defined __SAMC21J18A__) ||(defined __SAMD21C18A__)
+
   ADC_Channel12=12,
   ADC_Channel13=13,
   ADC_Channel14=14,
@@ -56,6 +58,7 @@ typedef enum _EAnalogChannel
   DAC_Channel0=100,
   
   #if  SAMC21
+    #if !(defined __SAMC21E18A__) 
   ADC1_Channel0=20,
   ADC1_Channel1=21,
   ADC1_Channel2=22,
@@ -67,7 +70,7 @@ typedef enum _EAnalogChannel
 
   ADC1_Channel8=28,
   ADC1_Channel9=29,
-
+  #endif
   ADC1_Channel10=30,
   ADC1_Channel11=31
 
@@ -75,45 +78,53 @@ typedef enum _EAnalogChannel
   #endif // __SAMD21J18A__
 } EAnalogChannel ;
 
+
 // Definitions for TC channels
 typedef enum _ETCChannel
 {
   NOT_ON_TIMER=-1,
+  #if !( SAMD20_SERIES)
   TCC0_CH0 = (0<<8)|(0),
   TCC0_CH1 = (0<<8)|(1),
   TCC0_CH2 = (0<<8)|(2),
   TCC0_CH3 = (0<<8)|(3),
-  TCC0_CH4 = (0<<8)|(0), // Channel 4 is 0!
-  TCC0_CH5 = (0<<8)|(1), // Channel 5 is 1!
-  TCC0_CH6 = (0<<8)|(2), // Channel 6 is 2!
-  TCC0_CH7 = (0<<8)|(3), // Channel 7 is 3!
+  TCC0_CH4 = (0<<8)|(4), 
+  TCC0_CH5 = (0<<8)|(5), 
+  TCC0_CH6 = (0<<8)|(6), 
+  TCC0_CH7 = (0<<8)|(7), 
   TCC1_CH0 = (1<<8)|(0),
   TCC1_CH1 = (1<<8)|(1),
-  TCC1_CH2 = (1<<8)|(0), // Channel 2 is 0!
-  TCC1_CH3 = (1<<8)|(1), // Channel 3 is 1!
+  TCC1_CH2 = (1<<8)|(2), 
+  TCC1_CH3 = (1<<8)|(3), 
   TCC2_CH0 = (2<<8)|(0),
   TCC2_CH1 = (2<<8)|(1),
-  TCC2_CH2 = (2<<8)|(0), // Channel 2 is 0!
-  TCC2_CH3 = (2<<8)|(1), // Channel 3 is 1!
-  TC3_CH0  = (3<<8)|(0),
-  TC3_CH1  = (3<<8)|(1),
+  TCC2_CH2 = (2<<8)|(2), 
+  TCC2_CH3 = (2<<8)|(3), 
+  #endif
+  TC0_CH0  = (3<<8)|(0),
+  TC0_CH1  = (3<<8)|(1),
+  TC1_CH0  = (4<<8)|(0),
+  TC1_CH1  = (4<<8)|(1),
+  TC2_CH0  = (5<8)|(0),
+  TC2_CH1  = (5<8)|(1),
+  TC3_CH0  = (6<<8)|(0),
+  TC3_CH1  = (6<<8)|(1),
 
-  TC4_CH0  = (4<<8)|(0),
-  TC4_CH1  = (4<<8)|(1),
-  TC5_CH0  = (5<<8)|(0),
-  TC5_CH1  = (5<<8)|(1),
-#if  (defined __SAMD21C18A__)//(defined __SAMC21J18A__) ||
-  TC6_CH0  = (6<<8)|(0),
-  TC6_CH1  = (6<<8)|(1),
-  TC7_CH0  = (7<<8)|(0),
-  TC7_CH1  = (7<<8)|(1),
-#endif // __SAMD21J18A__
-#if (defined __SAMC21J18A__) || (defined __SAMD21C18A__)
-  TC0_CH0  = (8<<8)|(0),
-  TC0_CH1  = (8<<8)|(1),
-  TC1_CH0  = (9<<8)|(0),
-  TC1_CH1  = (9<<8)|(1),
-#endif // __SAMD21J18A__
+  TC4_CH0  = (7<<8)|(0),
+  TC4_CH1  = (7<<8)|(1),
+
+ #if !( SAMC_SERIES)
+  TC5_CH0  = (8<<8)|(0),
+  TC5_CH1  = (8<<8)|(1),
+  TC6_CH0  = (9<<8)|(0),
+  TC6_CH1  = (9<<8)|(1),
+  TC7_CH0  = (10<<8)|(0),
+  TC7_CH1  = (10<<8)|(1),
+#endif 
+
+  
+  
+
 
 } ETCChannel ;
 
@@ -122,47 +133,147 @@ extern const void* g_apTCInstances[TCC_INST_NUM+TC_INST_NUM] ;
 #define GetTCNumber( x ) ( (x) >> 8 )
 #define GetTCChannelNumber( x ) ( (x) & 0xff )
 #define GetTC( x ) ( g_apTCInstances[(x) >> 8] )
-
+/*
 // Definitions for PWM channels
 typedef enum _EPWMChannel
 {
   NOT_ON_PWM=-1,
-  PWM0_CH0=TCC0_CH0,
-  PWM0_CH1=TCC0_CH1,
-  PWM0_CH2=TCC0_CH2,
-  PWM0_CH3=TCC0_CH3,
-  PWM0_CH4=TCC0_CH4,
-  PWM0_CH5=TCC0_CH5,
-  PWM0_CH6=TCC0_CH6,
-  PWM0_CH7=TCC0_CH7,
-  PWM1_CH0=TCC1_CH0,
-  PWM1_CH1=TCC1_CH1,
-  PWM1_CH2=TCC1_CH2,
-  PWM1_CH3=TCC1_CH3,
-  PWM2_CH0=TCC2_CH0,
-  PWM2_CH1=TCC2_CH1,
-  PWM2_CH2=TCC2_CH2,
-  PWM2_CH3=TCC2_CH3,
+  PWM0_CH0=TC0_CH0,
+  PWM0_CH1=TC0_CH1,
+  PWM1_CH0=TC1_CH0,
+  PWM1_CH1=TC1_CH1,
+  PWM2_CH0=TC2_CH0,
+  PWM2_CH1=TC2_CH1,
   PWM3_CH0=TC3_CH0,
   PWM3_CH1=TC3_CH1,
-#if (defined __SAMD21J18A__) ||(defined __SAMD21G18A__)||(defined __SAMD21C18A__)
   PWM4_CH0=TC4_CH0,
   PWM4_CH1=TC4_CH1,
+   #if !( SAMC_SERIES)
   PWM5_CH0=TC5_CH0,
   PWM5_CH1=TC5_CH1,
-  #endif
-#if (defined __SAMD21J18A__)
   PWM6_CH0=TC6_CH0,
   PWM6_CH1=TC6_CH1,
   PWM7_CH0=TC7_CH0,
   PWM7_CH1=TC7_CH1,
-#endif // __SAMD21J18A__
-#if defined __SAMC21J18A__
-  PWM8_CH0=TC0_CH0,
-  PWM8_CH1=TC0_CH1,
-  PWM9_CH0=TC1_CH0,
-  PWM9_CH1=TC1_CH1,
-#endif // __SAMC21J18A__
+  #endif
+#if  !SAMD20_SERIES
+  PWM8_CH0=TCC0_CH0,
+  PWM8_CH1=TCC0_CH1,
+  PWM8_CH2=TCC0_CH2,
+  PWM8_CH3=TCC0_CH3,
+  PWM8_CH4=TCC0_CH4,
+  PWM8_CH5=TCC0_CH5,
+  PWM8_CH6=TCC0_CH6,
+  PWM8_CH7=TCC0_CH7,
+  PWM9_CH0=TCC1_CH0,
+  PWM9_CH1=TCC1_CH1,
+  PWM9_CH2=TCC1_CH2,
+  PWM9_CH3=TCC1_CH2,
+  PWM10_CH0=TCC2_CH0,
+  PWM10_CH1=TCC2_CH1,
+#endif 
+} EPWMChannel ;
+*/
+
+typedef enum _EPWMChannel
+{
+  PCOM_NOT_ON_PWM=-1,
+  #if  SAMD20_SERIES
+  PCOM_PWM0_CH0=TC0_CH0,
+  PCOM_PWM0_CH1=TC0_CH1,
+  PCOM_PWM0_CH2=TC1_CH0,
+  PCOM_PWM0_CH3=TC1_CH1,
+  #else
+  PCOM_PWM0_CH0=TCC0_CH0,
+  PCOM_PWM0_CH1=TCC0_CH1,
+  PCOM_PWM0_CH2=TCC1_CH0,
+  PCOM_PWM0_CH3=TCC1_CH1,
+  #endif
+  
+  #if  SAMD20_SERIES
+  PCOM_PWM0BIS_CH0=TC0_CH0,
+  PCOM_PWM0BIS_CH1=TC0_CH1,
+  PCOM_PWM0BIS_CH2=TC1_CH0,
+  PCOM_PWM0BIS_CH3=TC1_CH1,
+  #else
+  PCOM_PWM0BIS_CH0=TCC0_CH0,
+  PCOM_PWM0BIS_CH1=TCC0_CH1,
+  PCOM_PWM0BIS_CH2=TCC1_CH0,
+  PCOM_PWM0BIS_CH3=TCC1_CH1,
+  #endif
+  
+  #if  SAMD20_SERIES
+  PCOM_PWM1_CH0=TC2_CH0,
+  PCOM_PWM1_CH1=TC2_CH1,
+  PCOM_PWM1_CH2=TC1_CH0,
+  PCOM_PWM1_CH3=TC1_CH1,
+  #else
+  PCOM_PWM1_CH0=TCC2_CH0,
+  PCOM_PWM1_CH1=TCC2_CH1,
+  PCOM_PWM1_CH2=TCC1_CH0,
+  PCOM_PWM1_CH3=TCC1_CH1,
+  #endif
+  
+  #if  SAMD20_SERIES
+  PCOM_PWM2_CH0=TC2_CH0,
+  PCOM_PWM2_CH1=TC2_CH1,
+  PCOM_PWM2_CH2=TC3_CH0,
+  PCOM_PWM2_CH3=TC3_CH1
+  #else
+  PCOM_PWM2_CH0=TCC2_CH0,
+  PCOM_PWM2_CH1=TCC2_CH1,
+  #if  SAMC21_SERIES
+  PCOM_PWM2_CH2=TC4_CH0,
+  PCOM_PWM2_CH3=TC4_CH1,
+  #else
+  PCOM_PWM2_CH2=TC3_CH0,
+  PCOM_PWM2_CH3=TC3_CH1,
+  #endif
+  #endif
+  
+  
+  
+  #if  SAMD20_SERIES || SAMD21_SERIES
+  PCOM_PWM3_CH0=TC4_CH0,
+  PCOM_PWM3_CH1=TC4_CH1,
+  PCOM_PWM3_CH2=TC5_CH0,
+  PCOM_PWM3_CH3=TC5_CH1,
+  #else
+  PCOM_PWM3_CH0=TCC0_CH4,
+  PCOM_PWM3_CH1=TCC0_CH5,
+  PCOM_PWM3_CH2=TCC1_CH2,
+  PCOM_PWM3_CH3=TCC1_CH3,
+  #endif  
+  
+  #if  SAMD20_SERIES || SAMD21_SERIES
+  PCOM_PWM4_CH0=TC4_CH0,
+  PCOM_PWM4_CH1=TC4_CH1,
+  PCOM_PWM4_CH2=TC5_CH0,
+  PCOM_PWM4_CH3=TC5_CH1,
+  #else
+  PCOM_PWM4_CH0=TCC0_CH6,
+  PCOM_PWM4_CH1=TCC0_CH7,
+  PCOM_PWM4_CH2=TC1_CH0,
+  PCOM_PWM4_CH3=TC1_CH1,
+  #endif
+  
+  
+  #if  SAMC21_SERIES 
+  PCOM_PWM5_CH2=TC3_CH0,
+  PCOM_PWM5_CH3=TC3_CH1,
+  #else
+  PCOM_PWM5_CH2=TC7_CH0,
+  PCOM_PWM5_CH3=TC7_CH1,
+  #endif
+  #if  SAMD20_SERIES 
+  PCOM_PWM5_CH0=TC0_CH0,
+  PCOM_PWM5_CH1=TC0_CH1,
+  #else
+  PCOM_PWM5_CH0=TCC0_CH6,
+  PCOM_PWM5_CH1=TCC0_CH7,
+  #endif
+  
+  
 } EPWMChannel ;
 
 typedef enum _EPortType

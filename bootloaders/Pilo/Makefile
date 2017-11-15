@@ -84,6 +84,12 @@ ifeq ($(OS),Windows_NT)
     MODULE_PATH_ARDUINO?=$(T)/Arduino15/packages/arduino
     RM=rm
     SEP=/
+  elifeq ($(TERM),cygwin)
+    T=$(shell cygpath -u $(LOCALAPPDATA))
+    MODULE_PATH?=$(T)/Arduino15/packages/$(CORE_VENDOR)
+    MODULE_PATH_ARDUINO?=$(T)/Arduino15/packages/arduino
+    RM=rm
+    SEP=/
   else
     MODULE_PATH?=$(LOCALAPPDATA)/Arduino15/packages/$(CORE_VENDOR)
     MODULE_PATH_ARDUINO?=$(LOCALAPPDATA)/Arduino15/packages/arduino
@@ -225,10 +231,10 @@ print_info:
 	@echo Compiling bootloader using
 	@echo BASE PATH = $(MODULE_PATH)
 	@echo GCC  PATH = $(ARM_GCC_PATH)
-#	@echo OS        = $(OS)
-#	@echo SHELL     = $(SHELL)
-#	@echo TERM      = $(TERM)
-#	"$(CC)" -v
+	@echo OS        = $(OS)
+	@echo SHELL     = $(SHELL)
+	@echo TERM      = $(TERM)
+	"$(CC)" -v
 #	env
 
 copy_for_atmel_studio: $(BIN) $(HEX)

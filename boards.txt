@@ -78,6 +78,27 @@ zoubworld_Pilo.menu.cpu.samd21j15a.build.extra_flags=-D__SAMD21J15A__ -D__8KB_BO
 zoubworld_Pilo.menu.cpu.samd21j15a.build.ldscript=linker_scripts/gcc/flash_32KB_with_8KB_bootloader.ld
 zoubworld_Pilo.menu.cpu.samd21j15a.build.openocdscript=openocd_scripts/SAMD21J15A.cfg
 
+zoubworld_Pilo.menu.cpu.samd20j18a=SAMD20J18A
+zoubworld_Pilo.menu.cpu.samd20j18a.upload.maximum_size=253952
+zoubworld_Pilo.menu.cpu.samd20j18a.build.extra_flags=-D__SAMD20J18A__ -D__8KB_BOOTLOADER__ {build.usb_flags}
+zoubworld_Pilo.menu.cpu.samd20j18a.build.ldscript=linker_scripts/gcc/flash_256KB_with_8KB_bootloader.ld
+zoubworld_Pilo.menu.cpu.samd20j18a.build.openocdscript=openocd_scripts/SAMD20J18A.cfg
+zoubworld_Pilo.menu.cpu.samd20j17a=SAMD20J17A
+zoubworld_Pilo.menu.cpu.samd20j17a.upload.maximum_size=122880
+zoubworld_Pilo.menu.cpu.samd20j17a.build.extra_flags=-D__SAMD20J17A__ -D__8KB_BOOTLOADER__ {build.usb_flags}
+zoubworld_Pilo.menu.cpu.samd20j17a.build.ldscript=linker_scripts/gcc/flash_128KB_with_8KB_bootloader.ld
+zoubworld_Pilo.menu.cpu.samd20j17a.build.openocdscript=openocd_scripts/SAMD20J17A.cfg
+zoubworld_Pilo.menu.cpu.samd20j16a=SAMD20J16A
+zoubworld_Pilo.menu.cpu.samd20j16a.upload.maximum_size=57344
+zoubworld_Pilo.menu.cpu.samd20j16a.build.extra_flags=-D__SAMD20J16A__ -D__8KB_BOOTLOADER__ {build.usb_flags}
+zoubworld_Pilo.menu.cpu.samd20j16a.build.ldscript=linker_scripts/gcc/flash_64KB_with_8KB_bootloader.ld
+zoubworld_Pilo.menu.cpu.samd20j16a.build.openocdscript=openocd_scripts/SAMD20J16A.cfg
+zoubworld_Pilo.menu.cpu.samd20j15a=SAMD20J15A
+zoubworld_Pilo.menu.cpu.samd20j15a.upload.maximum_size=24576
+zoubworld_Pilo.menu.cpu.samd20j15a.build.extra_flags=-D__SAMD20J15A__ -D__8KB_BOOTLOADER__ {build.usb_flags}
+zoubworld_Pilo.menu.cpu.samd20j15a.build.ldscript=linker_scripts/gcc/flash_32KB_with_8KB_bootloader.ld
+zoubworld_Pilo.menu.cpu.samd20j15a.build.openocdscript=openocd_scripts/SAMD20J15A.cfg
+
 zoubworld_Pilo.menu.cpu.samc21j17a=SAMC21J17A
 zoubworld_Pilo.menu.cpu.samc21j17a.upload.maximum_size=122880
 zoubworld_Pilo.menu.cpu.samc21j17a.build.extra_flags=-D__SAMC21J17A__ {build.usb_flags}
