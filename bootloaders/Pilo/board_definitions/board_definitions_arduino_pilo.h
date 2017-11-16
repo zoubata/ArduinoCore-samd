@@ -232,15 +232,21 @@
 #define BOOT_USART_PAD1                   PINMUX_UNUSED
 #define BOOT_USART_PAD0                   PINMUX_UNUSED
 */
-
+/* PILO ****/
 #define BOOT_USART_SERCOM_INSTANCE        1
 #define BOOT_USART_PAD_SETTINGS           UART_RX_PAD3_TX_PAD2
 #define BOOT_USART_PAD3                   PINMUX_PA31D_SERCOM1_PAD3
 #define BOOT_USART_PAD2                   PINMUX_PA30D_SERCOM1_PAD2
 #define BOOT_USART_PAD1                   PINMUX_UNUSED
 #define BOOT_USART_PAD0                   PINMUX_UNUSED
-
-
+/**/
+/* engi
+#define BOOT_USART_SERCOM_INSTANCE        1
+#define BOOT_USART_PAD_SETTINGS           UART_RX_PAD3_TX_PAD2
+#define BOOT_USART_PAD3                   PINMUX_PA19C_SERCOM1_PAD3
+#define BOOT_USART_PAD2                   PINMUX_PA18C_SERCOM1_PAD2
+#define BOOT_USART_PAD1                   PINMUX_UNUSED
+#define BOOT_USART_PAD0                   PINMUX_UNUSED
 
 /*
  * If BOOT_DOUBLE_TAP_ENABLED is defined the bootloader is started by quickly

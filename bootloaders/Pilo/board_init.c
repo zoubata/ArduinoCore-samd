@@ -91,6 +91,13 @@ void board_init(void)
   PM->APBAMASK.reg |= PM_APBAMASK_GCLK;
 #elif (SAML21 || SAMC21)
   MCLK->APBAMASK.reg |= MCLK_APBAMASK_GCLK ;
+
+  MCLK->AHBMASK.reg |=MCLK_AHBMASK_MASK;// enable all
+  MCLK->APBAMASK.reg |=MCLK_APBAMASK_MASK;// enable all
+  MCLK->APBBMASK.reg |=MCLK_APBBMASK_MASK;// enable all
+  MCLK->APBCMASK.reg |=MCLK_APBCMASK_MASK;// enable all
+  
+
 #endif
 
 #if (SAML21)

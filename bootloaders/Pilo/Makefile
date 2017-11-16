@@ -135,9 +135,9 @@ BOARD_ID?=arduino_zero
 CFLAGS_EXTRA=-D$(SDCARD) -D__$(MCU)__ -DBOARD_ID_$(BOARD_ID) -DPARANOIA
 CFLAGS=-mthumb -mcpu=cortex-m0plus -Wall -c -std=gnu99 -ffunction-sections -fdata-sections -nostdlib -nostartfiles --param max-inline-insns-single=500 -Wa,-adhlns=$(<:%.c=$(BUILD_DIR)/%.lst)
 ifdef DEBUG
-  CFLAGS+=-g3 -O1 -DDEBUG=1
+  CFLAGS+= -g3 -O0 -DDEBUG=1
 else
-  CFLAGS+=-Os -DDEBUG=0
+  CFLAGS+= -g3 -O0 -DDEBUG=1
 endif
 
 ELF=$(NAME).elf
@@ -252,6 +252,10 @@ clean: $(AS_CLEAN)
 	@echo Cleaning project
 	-$(RM) $(BIN)
 	-$(RM) $(HEX)
+	-$(RM) $(OBJECTS)
+	-$(RM) *.o
+	-$(RM) *.d	
+	-$(RM) $(DEPS)
 	-$(RM) $(BUILD_DIR)$(PATHSEP)SDCard$(PATHSEP)*.*
 	-$(RM) $(BUILD_DIR)$(PATHSEP)*.*
 	-rmdir $(BUILD_DIR)$(PATHSEP)SDCard

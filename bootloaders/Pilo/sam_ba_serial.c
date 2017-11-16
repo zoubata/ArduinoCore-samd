@@ -69,6 +69,8 @@ void serial_open(void)
   MCLK->APBCMASK.reg |= MCLK_APBCMASK_SERCOM0 | MCLK_APBCMASK_SERCOM1 | MCLK_APBCMASK_SERCOM2 | MCLK_APBCMASK_SERCOM3 ;
   #elif (SAMC21G) || (SAMC21J)
   MCLK->APBCMASK.reg |= MCLK_APBCMASK_SERCOM0 | MCLK_APBCMASK_SERCOM1 | MCLK_APBCMASK_SERCOM2 | MCLK_APBCMASK_SERCOM3 | MCLK_APBCMASK_SERCOM4 | MCLK_APBCMASK_SERCOM5 ;
+#else
+  #error "sam_ba_serial.c: Missing dependency or unsupported chip. Please install CMSIS-Atmel from MattairTech (see Prerequisites for Building in README.md)."
   #endif
 #else
   #error "sam_ba_serial.c: Missing dependency or unsupported chip. Please install CMSIS-Atmel from MattairTech (see Prerequisites for Building in README.md)."
@@ -81,6 +83,8 @@ void serial_open(void)
 #elif (SAML21 || SAMC21)
   GCLK->PCHCTRL[BOOT_USART_PER_CLOCK_INDEX].reg = ( GCLK_PCHCTRL_CHEN | GCLK_PCHCTRL_GEN_GCLK0 );
   waitForSync();
+#else
+  #error "sam_ba_serial.c: Missing dependency or unsupported chip. Please install CMSIS-Atmel from MattairTech (see Prerequisites for Building in README.md)."
 #endif
 
 	/* Baud rate 115200 - clock 48MHz -> BAUD value-63018 */
@@ -92,6 +96,14 @@ void serial_open(void)
 	idx_rx_write = 0;
 	idx_tx_read = 0;
 	idx_tx_write = 0;
+
+	uart_write_byte(BOOT_USART_MODULE, 0x55);
+uart_write_byte(BOOT_USART_MODULE, 0x55);
+uart_write_byte(BOOT_USART_MODULE, 0x55);
+uart_write_byte(BOOT_USART_MODULE, 0x55);
+uart_write_byte(BOOT_USART_MODULE, 0x55);
+uart_write_byte(BOOT_USART_MODULE, 0x55);
+uart_write_byte(BOOT_USART_MODULE, 0x55);
 
 	error_timeout = 0;
 }
