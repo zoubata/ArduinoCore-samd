@@ -25,13 +25,27 @@ extern "C" {
 
 #define NVM_MEMORY ((volatile uint16_t *)0x000000)
 
-#if (ARDUINO_SAMD_VARIANT_COMPLIANCE >= 10610)
+/* The definitions here need the MattairTech SAMD core >=1.6.8.
+ * The format is different than the stock Arduino SAMD core,
+ * which uses ARDUINO_SAMD_VARIANT_COMPLIANCE instead.
+ */
+#if (MATTAIRTECH_ARDUINO_SAMD_VARIANT_COMPLIANCE >= 10608)
 
 extern const uint32_t __text_start__;
 #define APP_START ((volatile uint32_t)(&__text_start__) + 4)
 
 #else
-#define APP_START 0x00002004
+#if defined(__NO_BOOTLOADER__)
+	#define APP_START 0x00000004
+#elif defined(__4KB_BOOTLOADER__)
+	#define APP_START 0x00001004
+#elif defined(__8KB_BOOTLOADER__)
+	#define APP_START 0x00002004
+#elif defined(__16KB_BOOTLOADER__)
+	#define APP_START 0x00004004
+#else
+	#error "Reset.cpp: You must define bootloader size in boards.txt build.extra_flags (ie: -D__8KB_BOOTLOADER__)"
+#endif
 #endif
 
 static inline bool nvmReady(void) {
@@ -39,7 +53,7 @@ static inline bool nvmReady(void) {
 }
 
 __attribute__ ((long_call, section (".ramfunc")))
-static void banzai() {
+void banzai() {
 	// Disable all interrupts
 	__disable_irq();
 

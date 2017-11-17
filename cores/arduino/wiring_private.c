@@ -1,5 +1,6 @@
 /*
   Copyright (c) 2015 Arduino LLC.  All right reserved.
+  Copyright (c) 2017 MattairTech LLC. All right reserved.
 
   This library is free software; you can redistribute it and/or
   modify it under the terms of the GNU Lesser General Public
@@ -19,100 +20,248 @@
 #include "Arduino.h"
 #include "wiring_private.h"
 
-int pinPeripheral( uint32_t ulPin, EPioType ulPeripheral )
+bool dacEnabled[] = {false, false};
+
+// Wait for synchronization of registers between the clock domains
+static __inline__ void syncDAC() __attribute__((always_inline, unused));
+static void syncDAC() {
+#if (SAMD)
+  while ( DAC->STATUS.bit.SYNCBUSY == 1 );
+#elif (SAML21 || SAMC21)
+  while ( DAC->SYNCBUSY.reg & DAC_SYNCBUSY_MASK );
+#endif
+}
+
+int pinPeripheral( uint32_t ulPin, uint32_t ulPeripheral )
 {
-  // Handle the case the pin isn't usable as PIO
-  if ( g_APinDescription[ulPin].ulPinType == PIO_NOT_A_PIN )
+  // Prevent out of bounds access
+  if (ulPin >= NUM_PIN_DESCRIPTION_ENTRIES)
   {
     return -1 ;
   }
 
+  uint32_t pinAttribute = g_APinDescription[ulPin].ulPinAttribute;
+  uint8_t peripheralAttribute = g_APinDescription[ulPin].ulPeripheralAttribute;
+  uint8_t pinType = g_APinDescription[ulPin].ulPinType;
+
+  // Handle the case the pin isn't usable as PIO
+  if ( pinType == PIO_NOT_A_PIN )
+  {
+    return -1 ;
+  }
+
+  // If pinType is not PIO_MULTI or PIO_STARTUP in the pinDescription table, then it must match ulPeripheral
+  if ( pinType != PIO_MULTI && pinType != PIO_STARTUP && pinType != ulPeripheral )
+  {
+    return -1 ;
+  }
+
+  // Make sure ulPeripheral is listed in the attributes
+  if ( !(pinAttribute & (1UL << ulPeripheral)) && pinType != PIO_STARTUP )
+  {
+    return -1 ;
+  }
+
+  // Determine hardware peripheral to use
+  EPioPeripheral peripheral = PER_PORT;
   switch ( ulPeripheral )
   {
-    case PIO_DIGITAL:
-    case PIO_INPUT:
-    case PIO_INPUT_PULLUP:
-    case PIO_OUTPUT:
-      // Disable peripheral muxing, done in pinMode
-//			PORT->Group[g_APinDescription[ulPin].ulPort].PINCFG[g_APinDescription[ulPin].ulPin].bit.PMUXEN = 0 ;
-
-      // Configure pin mode, if requested
-      if ( ulPeripheral == PIO_INPUT )
+    case PIO_EXTINT:
+      if ( digitalPinToInterrupt( ulPin ) == NOT_AN_INTERRUPT )
       {
-        pinMode( ulPin, INPUT ) ;
+        return -1 ;
+      }
+      peripheral = PER_EXTINT;
+    break ;
+
+    case PIO_ANALOG_ADC:
+      if ( g_APinDescription[ulPin].ulADCChannelNumber == No_ADC_Channel )
+      {
+        return -1 ;
+      }
+      peripheral = PER_ANALOG;
+    break ;
+
+    case PIO_ANALOG_DAC:
+    case PIO_ANALOG_REF:
+      peripheral = PER_ANALOG;
+    break ;
+
+    case PIO_TIMER_PWM:
+    case PIO_TIMER_CAPTURE:
+      if ( g_APinDescription[ulPin].ulTCChannel == NOT_ON_TIMER )
+      {
+        return -1 ;
+      }
+
+      if ( (peripheralAttribute & PER_ATTR_TIMER_MASK) == PER_ATTR_TIMER_STD )
+      {
+        peripheral = PER_TIMER;
       }
       else
       {
-        if ( ulPeripheral == PIO_INPUT_PULLUP )
-        {
-          pinMode( ulPin, INPUT_PULLUP ) ;
-        }
-        else
-        {
-          if ( ulPeripheral == PIO_OUTPUT )
-          {
-            pinMode( ulPin, OUTPUT ) ;
-          }
-          else
-          {
-            // PIO_DIGITAL, do we have to do something as all cases are covered?
-          }
-        }
+        peripheral = PER_TIMER_ALT;
       }
     break ;
 
-    case PIO_ANALOG:
     case PIO_SERCOM:
-    case PIO_SERCOM_ALT:
-    case PIO_TIMER:
-    case PIO_TIMER_ALT:
-    case PIO_EXTINT:
-    case PIO_COM:
-    case PIO_AC_CLK:
-#if 0
-      // Is the pio pin in the lower 16 ones?
-      // The WRCONFIG register allows update of only 16 pin max out of 32
-      if ( g_APinDescription[ulPin].ulPin < 16 )
+      if ( (peripheralAttribute & PER_ATTR_SERCOM_MASK) == PER_ATTR_SERCOM_STD )
       {
-        PORT->Group[g_APinDescription[ulPin].ulPort].WRCONFIG.reg = PORT_WRCONFIG_WRPMUX | PORT_WRCONFIG_PMUXEN | PORT_WRCONFIG_PMUX( ulPeripheral ) |
-                                                                    PORT_WRCONFIG_WRPINCFG |
-                                                                    PORT_WRCONFIG_PINMASK( g_APinDescription[ulPin].ulPin ) ;
+        peripheral = PER_SERCOM;
       }
       else
       {
-        PORT->Group[g_APinDescription[ulPin].ulPort].WRCONFIG.reg = PORT_WRCONFIG_HWSEL |
-                                                                    PORT_WRCONFIG_WRPMUX | PORT_WRCONFIG_PMUXEN | PORT_WRCONFIG_PMUX( ulPeripheral ) |
-                                                                    PORT_WRCONFIG_WRPINCFG |
-                                                                    PORT_WRCONFIG_PINMASK( g_APinDescription[ulPin].ulPin - 16 ) ;
+        peripheral = PER_SERCOM_ALT;
       }
-#else
-      if ( g_APinDescription[ulPin].ulPin & 1 ) // is pin odd?
+    break ;
+
+    case PIO_COM:
+      peripheral = PER_COM;
+    break ;
+
+    case PIO_AC_GCLK:
+      peripheral = PER_AC_CLK;
+    break ;
+
+    case PIO_CCL:
+      peripheral = PER_CCL;
+    break ;
+
+    case PIO_NOT_A_PIN:
+    case PIO_MULTI:
+      return -1l ;
+    break ;
+
+    default:
+    break ;
+  }
+
+  uint8_t pinPort = g_APinDescription[ulPin].ulPort;
+  uint8_t pinNum = g_APinDescription[ulPin].ulPin;
+  uint8_t pinCfg = PORT_PINCFG_INEN;	// INEN should be enabled for both input and output (but not analog)
+
+  // Disable DAC, if analogWrite() used previously the DAC is enabled
+  // Note that on the L21, the DAC output would interfere with other peripherals if left enabled, even if the anaolog peripheral is not selected
+  if ((pinAttribute & PIN_ATTR_DAC) && !((1UL << ulPeripheral) & PIN_ATTR_DAC))
+  {
+#if (SAMD || SAMC21)
+    if (dacEnabled[0]) {
+      dacEnabled[0] = false;
+      syncDAC();
+      DAC->CTRLA.bit.ENABLE = 0x00; // Disable DAC
+      //DAC->CTRLB.bit.EOEN = 0x00; // The DAC output is turned off.
+      syncDAC();
+    }
+#elif (SAML21)
+    uint8_t DACNumber = 0x00;
+
+    if ( (pinPort == 0) && (pinNum == 5) ) {
+      DACNumber = 0x01;
+    }
+
+    if (dacEnabled[DACNumber]) {
+      dacEnabled[DACNumber] = false;
+      syncDAC();
+      DAC->CTRLA.bit.ENABLE = 0x00; // Disable DAC controller (so that DACCTRL can be modified)
+      delayMicroseconds(40);	// Must delay for at least 30us when turning off while refresh is on due to DAC errata
+
+      DAC->DACCTRL[DACNumber].bit.ENABLE = 0x00; // The DACx output is turned off.
+
+      if (dacEnabled[0] || dacEnabled[1]) {
+        DAC->CTRLA.bit.ENABLE = 0x01;     // Enable DAC controller, so that the other DAC can function
+        syncDAC();
+        if (DACNumber == 0) {
+          while ( (DAC->STATUS.reg & (1 << 1)) == 0 );   // Must wait for DACx to start
+        } else {
+          while ( (DAC->STATUS.reg & (1 << 0)) == 0 );   // Must wait for DACx to start
+        }
+      }
+    }
+#endif
+  }
+
+  noInterrupts(); // Avoid possible invalid interim pin state
+
+  switch ( ulPeripheral )
+  {
+    case PIO_STARTUP:
+      PORT->Group[pinPort].PINCFG[pinNum].reg=(uint8_t)pinCfg ; // Enable INEN. If pin is floating, you should enable pull resistor to minimize input buffer power consumption
+      PORT->Group[pinPort].OUTSET.reg = (uint32_t)(1<<pinNum) ;	// set default pull direction to pullup (will not be enabled)
+    break;
+    
+    // Set pin mode according to chapter '22.6.3 I/O Pin Configuration', the out register stores the pull direction
+    case PIO_INPUT:
+    case PIO_INPUT_PULLUP:
+    case PIO_INPUT_PULLDOWN:
+      PORT->Group[pinPort].DIRCLR.reg = (uint32_t)(1<<pinNum) ;
+      PORT->Group[pinPort].PINCFG[pinNum].reg=(uint8_t)pinCfg ;
+      
+      if (ulPeripheral == PIO_INPUT_PULLUP || ulPeripheral == PIO_INPUT)	// default pull direction for PIO_INPUT is pullup
+      {
+        // Enable pull level (cf '22.6.3.2 Input Configuration' and '22.8.7 Data Output Value Set')
+        PORT->Group[pinPort].OUTSET.reg = (uint32_t)(1<<pinNum) ;
+      }
+      else
+      {
+        // Enable pull level (cf '22.6.3.2 Input Configuration' and '22.8.6 Data Output Value Clear')
+        PORT->Group[pinPort].OUTCLR.reg = (uint32_t)(1<<pinNum) ;
+      }
+      if (ulPeripheral != PIO_INPUT)
+      {
+	      PORT->Group[pinPort].PINCFG[pinNum].reg=(uint8_t)(pinCfg | PORT_PINCFG_PULLEN) ;
+      }
+    break ;
+
+    case PIO_OUTPUT:
+      if ( (peripheralAttribute & PER_ATTR_DRIVE_MASK) == PER_ATTR_DRIVE_STRONG )
+      {
+        pinCfg |= PORT_PINCFG_DRVSTR;
+      }
+      // Set pin to output mode, set pin drive strength, disable the port mux, INEN will be set
+      PORT->Group[pinPort].PINCFG[pinNum].reg = (uint8_t)pinCfg ;
+      PORT->Group[pinPort].DIRSET.reg = (uint32_t)(1<<pinNum) ;
+    break ;
+
+
+    case PIO_ANALOG_ADC:
+    case PIO_ANALOG_DAC:
+    case PIO_ANALOG_REF:
+	pinCfg = 0;	// Disable INEN with analog
+	
+    case PIO_EXTINT:
+    case PIO_TIMER_PWM:
+    case PIO_TIMER_CAPTURE:
+    case PIO_SERCOM:
+    case PIO_COM:
+    case PIO_AC_GCLK:
+    case PIO_CCL:
+
+      if ( pinNum & 1 ) // is pin odd?
       {
         uint32_t temp ;
 
         // Get whole current setup for both odd and even pins and remove odd one
-        temp = (PORT->Group[g_APinDescription[ulPin].ulPort].PMUX[g_APinDescription[ulPin].ulPin >> 1].reg) & PORT_PMUX_PMUXE( 0xF ) ;
+	temp = (PORT->Group[pinPort].PMUX[pinNum >> 1].reg) & PORT_PMUX_PMUXE( 0xF ) ;
         // Set new muxing
-        PORT->Group[g_APinDescription[ulPin].ulPort].PMUX[g_APinDescription[ulPin].ulPin >> 1].reg = temp|PORT_PMUX_PMUXO( ulPeripheral ) ;
+	PORT->Group[pinPort].PMUX[pinNum >> 1].reg = temp|PORT_PMUX_PMUXO( peripheral ) ;
         // Enable port mux
-        PORT->Group[g_APinDescription[ulPin].ulPort].PINCFG[g_APinDescription[ulPin].ulPin].reg |= PORT_PINCFG_PMUXEN ;
+	PORT->Group[pinPort].PINCFG[pinNum].reg |= PORT_PINCFG_PMUXEN ;
       }
       else // even pin
       {
         uint32_t temp ;
 
-        temp = (PORT->Group[g_APinDescription[ulPin].ulPort].PMUX[g_APinDescription[ulPin].ulPin >> 1].reg) & PORT_PMUX_PMUXO( 0xF ) ;
-        PORT->Group[g_APinDescription[ulPin].ulPort].PMUX[g_APinDescription[ulPin].ulPin >> 1].reg = temp|PORT_PMUX_PMUXE( ulPeripheral ) ;
-        PORT->Group[g_APinDescription[ulPin].ulPort].PINCFG[g_APinDescription[ulPin].ulPin].reg |= PORT_PINCFG_PMUXEN ; // Enable port mux
+	temp = (PORT->Group[pinPort].PMUX[pinNum >> 1].reg) & PORT_PMUX_PMUXO( 0xF ) ;
+	PORT->Group[pinPort].PMUX[pinNum >> 1].reg = temp|PORT_PMUX_PMUXE( peripheral ) ;
+	PORT->Group[pinPort].PINCFG[pinNum].reg |= PORT_PINCFG_PMUXEN ; // Enable port mux
       }
-#endif
+
     break ;
 
-    case PIO_NOT_A_PIN:
-      return -1l ;
+    default:
     break ;
   }
 
+  interrupts();
   return 0l ;
 }
-

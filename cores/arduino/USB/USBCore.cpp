@@ -15,6 +15,7 @@
   License along with this library; if not, write to the Free Software
   Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 */
+
 #include "sam.h"
 
 #if (!SAMC)
@@ -79,6 +80,7 @@ const uint8_t STRING_MANUFACTURER[] = USB_MANUFACTURER;
 //	DEVICE DESCRIPTOR
 const DeviceDescriptor USB_DeviceDescriptor = D_DEVICE(0x00, 0x00, 0x00, 64, USB_VID, USB_PID, 0x100, IMANUFACTURER, IPRODUCT, ISERIAL, 1);
 const DeviceDescriptor USB_DeviceDescriptorB = D_DEVICE(0xEF, 0x02, 0x01, 64, USB_VID, USB_PID, 0x100, IMANUFACTURER, IPRODUCT, ISERIAL, 1);
+const DeviceDescriptor USB_DeviceDescriptorC = D_DEVICE(0x02, 0x00, 0x00, 64, USB_VID, USB_PID, 0x100, IMANUFACTURER, IPRODUCT, ISERIAL, 1);
 
 //==================================================================
 
@@ -140,7 +142,7 @@ uint8_t USBDeviceClass::SendInterfaces(uint32_t* total)
 {
 	uint8_t interfaces = 0;
 
-#if defined(CDC_ENABLED)  ||defined(CDC_ONLY) || defined(CDC_HID) || defined(WITH_CDC)
+#if defined(CDC_ONLY) || defined(CDC_HID) || defined(WITH_CDC)
 	total[0] += CDC_GetInterface(&interfaces);
 #endif
 
@@ -195,7 +197,7 @@ bool USBDeviceClass::sendDescriptor(USBSetup &setup)
 {
 	uint8_t t = setup.wValueH;
 	uint8_t desc_length = 0;
-	bool _cdcComposite;
+	//bool _cdcComposite;
 	int ret;
 	const uint8_t *desc_addr = 0;
 
@@ -213,10 +215,13 @@ bool USBDeviceClass::sendDescriptor(USBSetup &setup)
 
 	if (t == USB_DEVICE_DESCRIPTOR_TYPE)
 	{
-		if (setup.wLength == 8)
-			_cdcComposite = 1;
-
-		desc_addr = _cdcComposite ?  (const uint8_t*)&USB_DeviceDescriptorB : (const uint8_t*)&USB_DeviceDescriptor;
+#if defined(CDC_ONLY)
+		desc_addr = (const uint8_t*)&USB_DeviceDescriptorC;
+#elif defined(HID_ONLY)
+		desc_addr = (const uint8_t*)&USB_DeviceDescriptor;
+#else
+		desc_addr = (const uint8_t*)&USB_DeviceDescriptorB;
+#endif
 
 		if (*desc_addr > setup.wLength) {
 			desc_length = setup.wLength;
@@ -282,7 +287,7 @@ void USBDeviceClass::standby() {
 
 void USBDeviceClass::handleEndpoint(uint8_t ep)
 {
-#if defined(CDC_ENABLED)|| defined(CDC_ONLY) || defined(CDC_HID) || defined(WITH_CDC)
+#if defined(CDC_ONLY) || defined(CDC_HID) || defined(WITH_CDC)
 	if (ep == CDC_ENDPOINT_IN)
 	{
 		// NAK on endpoint IN, the bank is not yet filled in.
@@ -316,7 +321,6 @@ void USBDeviceClass::init()
 	digitalWrite(PIN_LED_RXL, HIGH);
 #endif
 
-	// Enable USB clock
 	// Enable USB clock
 #if (SAMD21 || SAMD11)
 	PM->APBBMASK.reg |= PM_APBBMASK_USB;
@@ -408,7 +412,7 @@ bool USBDeviceClass::handleClassInterfaceSetup(USBSetup& setup)
 {
 	uint8_t i = setup.wIndex;
 
-	#if defined(CDC_ENABLED)|| defined(CDC_ONLY) || defined(CDC_HID) || defined(WITH_CDC)
+	#if defined(CDC_ONLY) || defined(CDC_HID) || defined(WITH_CDC)
 	if (CDC_ACM_INTERFACE == i)
 	{
 		if (CDC_Setup(setup) == false) {
@@ -433,7 +437,7 @@ uint32_t EndPoints[] =
 {
 	USB_ENDPOINT_TYPE_CONTROL,
 
-#ifdef CDC_ENABLED|| defined(CDC_ONLY) || defined(CDC_HID) || defined(WITH_CDC)
+#if defined(CDC_ONLY) || defined(CDC_HID) || defined(WITH_CDC)
 	USB_ENDPOINT_TYPE_INTERRUPT | USB_ENDPOINT_IN(0),           // CDC_ENDPOINT_ACM
 	USB_ENDPOINT_TYPE_BULK      | USB_ENDPOINT_OUT(0),               // CDC_ENDPOINT_OUT
 	USB_ENDPOINT_TYPE_BULK | USB_ENDPOINT_IN(0),                // CDC_ENDPOINT_IN
@@ -844,7 +848,7 @@ bool USBDeviceClass::handleStandardSetup(USBSetup &setup)
 			initEndpoints();
 			_usbConfiguration = setup.wValueL;
 
-			#if defined(CDC_ENABLED)|| defined(CDC_ONLY) || defined(CDC_HID) || defined(WITH_CDC)
+			#if defined(CDC_ONLY) || defined(CDC_HID) || defined(WITH_CDC)
 			// Enable interrupt for CDC reception from host (OUT packet)
 			usbd.epBank1EnableTransferComplete(CDC_ENDPOINT_ACM);
 			usbd.epBank0EnableTransferComplete(CDC_ENDPOINT_OUT);
@@ -983,4 +987,3 @@ void USBDeviceClass::ISRHandler()
 USBDeviceClass USBDevice;
 
 #endif
-

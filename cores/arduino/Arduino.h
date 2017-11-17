@@ -20,6 +20,8 @@
 #ifndef Arduino_h
 #define Arduino_h
 
+#define MATTAIRTECH_CORE
+
 #include <stdbool.h>
 #include <stdint.h>
 #include <stdlib.h>
@@ -63,8 +65,6 @@ void init( void );
 void setup( void ) ;
 void loop( void ) ;
 
-#include "WVariant.h"
-
 #ifdef __cplusplus
 } // extern "C"
 #endif
@@ -73,6 +73,11 @@ void loop( void ) ;
 #ifdef __cplusplus
   #include "WCharacter.h"
   #include "WString.h"
+
+extern "C"{
+#include "WVariant.h"
+} // extern "C"
+
   #include "Tone.h"
   #include "WMath.h"
   #include "HardwareSerial.h"
@@ -119,10 +124,8 @@ void loop( void ) ;
 
 #define bit(b) (1UL << (b))
 
-#if (ARDUINO_SAMD_VARIANT_COMPLIANCE >= 10606)
 // Interrupts
 #define digitalPinToInterrupt(P)   ( P )
-#endif
 
 // USB Device
 #if defined(USBCON)
@@ -130,7 +133,7 @@ void loop( void ) ;
 #include "USB/USBCore.h"
 #include "USB/USBAPI.h"
 #if (SAMD21 || SAML21)
-#include "USB/USB_host.h"
+  #include "USB/USB_host.h"
 #endif
 #endif
 

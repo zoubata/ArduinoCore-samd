@@ -23,9 +23,8 @@
 #include <stdio.h>
 #include <stdint.h>
 
-
 #if (!SAMC)
-#if defined(CDC_ONLY) || defined(CDC_HID) || defined(WITH_CDC) || defined(CDC_ENABLED)
+#if defined(CDC_ONLY) || defined(CDC_HID) || defined(WITH_CDC)
 
 #define CDC_SERIAL_BUFFER_SIZE	256
 
@@ -55,7 +54,9 @@ static volatile LineInfo _usbLineInfo = {
 static volatile int32_t breakValue = -1;
 
 static CDCDescriptor _cdcInterface = {
+#if !defined(CDC_ONLY)
 	D_IAD(0, 2, CDC_COMMUNICATION_INTERFACE_CLASS, CDC_ABSTRACT_CONTROL_MODEL, 0),
+#endif
 
 	// CDC communication interface
 	D_INTERFACE(CDC_ACM_INTERFACE, 1, CDC_COMMUNICATION_INTERFACE_CLASS, CDC_ABSTRACT_CONTROL_MODEL, 0),
@@ -290,6 +291,6 @@ bool Serial_::rts() {
 }
 
 Serial_ SerialUSB(USBDevice);
-#endif
 
+#endif
 #endif

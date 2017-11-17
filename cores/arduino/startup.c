@@ -24,17 +24,6 @@
 
 /**
  * \brief SystemInit() configures the needed clocks and according Flash Read Wait States.
- * At reset:
- * - OSC8M clock source is enabled with a divider by 8 (1MHz).
- * - Generic Clock Generator 0 (GCLKMAIN) is using OSC8M as source.
- * We need to:
- * 1) Enable XOSC32K clock (External on-board 32.768Hz oscillator), will be used as DFLL48M reference.
- * 2) Put XOSC32K as source of Generic Clock Generator 1
- * 3) Put Generic Clock Generator 1 as source for Generic Clock Multiplexer 0 (DFLL48M reference)
- * 4) Enable DFLL48M clock
- * 5) Switch Generic Clock Generator 0 to DFLL48M. CPU will run at 48MHz.
- * 6) Modify PRESCaler value of OSCM to have 8MHz
- * 7) Put OSC8M as source for Generic Clock Generator 3
  */
 
 // Constants for Clock generators
@@ -178,7 +167,6 @@ void SystemInit( void )
 #endif
 
 #elif defined(CLOCKCONFIG_HS_CRYSTAL)
-
   /* ----------------------------------------------------------------------------------------------
    * Enable XOSC clock (External on-board high speed crystal oscillator)
    */
@@ -275,7 +263,6 @@ void SystemInit( void )
 #endif
 
 #elif (defined(CLOCKCONFIG_INTERNAL) || defined(CLOCKCONFIG_INTERNAL_USB))
-
   /* ----------------------------------------------------------------------------------------------
    * Enable DFLL48M clock (D21/L21) or RC oscillator (C21)
    */
@@ -299,12 +286,9 @@ void SystemInit( void )
                              SYSCTRL_DFLLCTRL_CCDIS ;
     waitForDFLL();
   #endif
-
-
+  
   /* Enable the DFLL */
   SYSCTRL->DFLLCTRL.reg |= SYSCTRL_DFLLCTRL_ENABLE ;
-
-
   waitForDFLL();
   
   /* Switch Generic Clock Generator 0 to DFLL48M. CPU will run at 48MHz */
@@ -333,7 +317,6 @@ void SystemInit( void )
   uint32_t calib = (*((uint32_t *) FUSES_DFLL48M_COARSE_CAL_ADDR) & FUSES_DFLL48M_COARSE_CAL_Msk) >> FUSES_DFLL48M_COARSE_CAL_Pos;
   OSCCTRL->DFLLVAL.reg = OSCCTRL_DFLLVAL_COARSE(calib) | OSCCTRL_DFLLVAL_FINE(512);
   
-
   /* Write full configuration to DFLL control register */
   #if defined(CLOCKCONFIG_INTERNAL_USB)
     OSCCTRL->DFLLMUL.reg = OSCCTRL_DFLLMUL_CSTEP( 31 ) | // Coarse step is 31, half of the max value
@@ -343,16 +326,13 @@ void SystemInit( void )
     OSCCTRL->DFLLCTRL.reg =  OSCCTRL_DFLLCTRL_USBCRM | /* USB correction */
                              OSCCTRL_DFLLCTRL_MODE | /* Closed loop mode */
                              OSCCTRL_DFLLCTRL_CCDIS ;
-  waitForDFLL();
-
- 
-
-#endif
+    waitForDFLL();
+  #endif
+  
   /* Enable the DFLL */
   OSCCTRL->DFLLCTRL.reg |= OSCCTRL_DFLLCTRL_ENABLE ;
-
   waitForDFLL();
-
+  
   /* Switch Generic Clock Generator 0 to DFLL48M. CPU will run at 48MHz */
   GCLK->GENCTRL[GENERIC_CLOCK_GENERATOR_MAIN].reg = ( GCLK_GENCTRL_DIV(1) | GCLK_GENCTRL_SRC_DFLL48M | GCLK_GENCTRL_IDC | GCLK_GENCTRL_GENEN );
   waitForSync();
@@ -391,7 +371,8 @@ void SystemInit( void )
   GCLK->GENCTRL[GENERIC_CLOCK_GENERATOR_OSC_HS].reg = ( GCLK_GENCTRL_DIV(1) | GCLK_GENCTRL_SRC_OSC16M | GCLK_GENCTRL_GENEN );
   waitForSync();
 #endif
- SystemCoreClock=VARIANT_MCK ;
+
+  SystemCoreClock=VARIANT_MCK ;
 
   #if (SAMD)
     PM->CPUSEL.reg  = PM_CPUSEL_CPUDIV_DIV1 ;
@@ -401,21 +382,6 @@ void SystemInit( void )
   #elif (SAML21 || SAMC21)
     MCLK->CPUDIV.reg  = MCLK_CPUDIV_CPUDIV_DIV1 ;
   #endif
-
-  /* ----------------------------------------------------------------------------------------------
-   * 8) Load ADC factory calibration values
-   */
-
-  // ADC Bias Calibration
-  uint32_t bias = (*((uint32_t *) ADC_FUSES_BIASCAL_ADDR) & ADC_FUSES_BIASCAL_Msk) >> ADC_FUSES_BIASCAL_Pos;
-
-  // ADC Linearity bits 4:0
-  uint32_t linearity = (*((uint32_t *) ADC_FUSES_LINEARITY_0_ADDR) & ADC_FUSES_LINEARITY_0_Msk) >> ADC_FUSES_LINEARITY_0_Pos;
-
-  // ADC Linearity bits 7:5
-  linearity |= ((*((uint32_t *) ADC_FUSES_LINEARITY_1_ADDR) & ADC_FUSES_LINEARITY_1_Msk) >> ADC_FUSES_LINEARITY_1_Pos) << 5;
-
-  ADC->CALIB.reg = ADC_CALIB_BIAS_CAL(bias) | ADC_CALIB_LINEARITY_CAL(linearity);
 
   /*
    * Disable automatic NVM write operations (errata reference 13134, applies to D21/D11/L21, but not C21)

@@ -36,8 +36,8 @@ void Uart::begin(unsigned long baudrate)
 
 void Uart::begin(unsigned long baudrate, uint16_t config)
 {
-  pinPeripheral(uc_pinRX, g_APinDescription[uc_pinRX].ulPinType);
-  pinPeripheral(uc_pinTX, g_APinDescription[uc_pinTX].ulPinType);
+  pinPeripheral(uc_pinRX, PIO_SERCOM);
+  pinPeripheral(uc_pinTX, PIO_SERCOM);
 
   sercom->initUART(UART_INT_CLOCK, SAMPLE_RATE_x16, baudrate);
   sercom->initFrame(extractCharSize(config), LSB_FIRST, extractParity(config), extractNbStopBit(config));

@@ -24,6 +24,7 @@ extern "C" {
 #endif
 
 extern __attribute__((__aligned__(4))) volatile UsbHostDescriptor usb_pipe_table[USB_EPT_NUM];
+
 #ifndef USB_HOST_PINTFLAG_TRCPT_Pos
 #define USB_HOST_PINTFLAG_TRCPT_Pos 0            /**< \brief (USB_HOST_PINTFLAG) Transfer Complete 0/1 Interrupt Flag */
 #define USB_HOST_PINTFLAG_TRCPT_Msk (0x3u << USB_HOST_PINTFLAG_TRCPT_Pos)

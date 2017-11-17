@@ -1,5 +1,6 @@
 /*
   Copyright (c) 2015 Arduino LLC.  All right reserved.
+  Copyright (c) 2017 MattairTech LLC. All right reserved.
 
   This library is free software; you can redistribute it and/or
   modify it under the terms of the GNU Lesser General Public
@@ -18,8 +19,15 @@
 
 #include "Tone.h"
 #include "variant.h"
+#include "sam.h"
 
+#if (SAMD21 || SAMD11)
 #define WAIT_TC16_REGS_SYNC(x) while(x->COUNT16.STATUS.bit.SYNCBUSY);
+#elif (SAML21 || SAMC21)
+#define WAIT_TC16_REGS_SYNC(x) while(x->COUNT16.SYNCBUSY.reg);
+#else
+#error "Tone.cpp: Unsupported chip"
+#endif
 
 uint32_t toneMaxFrequency = F_CPU / 2;
 uint32_t lastOutputPin = 0xFFFFFFFF;
@@ -31,12 +39,29 @@ volatile int64_t toggleCount;
 volatile bool toneIsActive = false;
 volatile bool firstTimeRunning = false;
 
+/* TC5 does not exist on the D11. Using TC2 instead (TC1 on the D11C14 as TC2 is not routed to pins). It will conflict with the 2 associated TC analogWrite() pins. */
+#if (SAMD11D)
+#define TONE_TC         TC2
+#define TONE_TC_IRQn    TC2_IRQn
+void TC2_Handler (void) __attribute__ ((alias("Tone_Handler")));
+#elif (SAMD11C)
+#define TONE_TC         TC1
+#define TONE_TC_IRQn    TC1_IRQn
+void TC1_Handler (void) __attribute__ ((alias("Tone_Handler")));
+/* TC5 does not exist on the SAML or SAMC. Using TC1 instead. */
+#elif (SAML || SAMC)
+#define TONE_TC         TC1
+#define TONE_TC_IRQn    TC1_IRQn
+void TC1_Handler (void) __attribute__ ((alias("Tone_Handler")));
+#else
 #define TONE_TC         TC5
 #define TONE_TC_IRQn    TC5_IRQn
+void TC5_Handler (void) __attribute__ ((alias("Tone_Handler")));
+#endif
+
 #define TONE_TC_TOP     0xFFFF
 #define TONE_TC_CHANNEL 0
 
-void TC5_Handler (void) __attribute__ ((weak, alias("Tone_Handler")));
 
 static inline void resetTC (Tc* TCx)
 {
@@ -66,10 +91,18 @@ void tone (uint32_t outputPin, uint32_t frequency, uint32_t duration)
     firstTimeRunning = true;
     
     NVIC_SetPriority(TONE_TC_IRQn, 0);
-      
-    // Enable GCLK for TC4 and TC5 (timer counter input clock)
-    GCLK->CLKCTRL.reg = (uint16_t) (GCLK_CLKCTRL_CLKEN | GCLK_CLKCTRL_GEN_GCLK0 | GCLK_CLKCTRL_ID(GCM_TC4_TC5));
-    while (GCLK->STATUS.bit.SYNCBUSY);
+    
+    // Enable GCLK for timer used
+#if (SAMD11_SERIES)
+    GCLK->CLKCTRL.reg = (uint16_t) ( GCLK_CLKCTRL_CLKEN | GCLK_CLKCTRL_GEN_GCLK0 | GCLK_CLKCTRL_ID( GCM_TC1_TC2 ));
+    while ( GCLK->STATUS.reg & GCLK_STATUS_SYNCBUSY );
+#elif (SAML_SERIES || SAMC_SERIES)
+    GCLK->PCHCTRL[GCM_TC2_TC3].reg = ( GCLK_PCHCTRL_CHEN | GCLK_PCHCTRL_GEN_GCLK0 );
+    while ( GCLK->SYNCBUSY.reg & GCLK_SYNCBUSY_MASK );
+#else
+    GCLK->CLKCTRL.reg = (uint16_t) ( GCLK_CLKCTRL_CLKEN | GCLK_CLKCTRL_GEN_GCLK0 | GCLK_CLKCTRL_ID( GCM_TC4_TC5 ));
+    while ( GCLK->STATUS.reg & GCLK_STATUS_SYNCBUSY );
+#endif
   }
   
   if (toneIsActive && (outputPin != lastOutputPin))
@@ -120,10 +153,17 @@ void tone (uint32_t outputPin, uint32_t frequency, uint32_t duration)
 
   uint16_t tmpReg = 0;
   tmpReg |= TC_CTRLA_MODE_COUNT16;  // Set Timer counter Mode to 16 bits
+#if (SAMD21 || SAMD11)
   tmpReg |= TC_CTRLA_WAVEGEN_MFRQ;  // Set TONE_TC mode as match frequency
+#endif
   tmpReg |= prescalerConfigBits;
   TONE_TC->COUNT16.CTRLA.reg |= tmpReg;
   WAIT_TC16_REGS_SYNC(TONE_TC)
+
+#if (SAML21 || SAMC21)
+  TONE_TC->COUNT16.WAVE.reg = TC_WAVE_WAVEGEN_MFRQ;
+  WAIT_TC16_REGS_SYNC(TONE_TC)
+#endif
 
   TONE_TC->COUNT16.CC[TONE_TC_CHANNEL].reg = (uint16_t) ccValue;
   WAIT_TC16_REGS_SYNC(TONE_TC)

@@ -18,6 +18,7 @@
 
 #ifndef __USBCORE_H__
 #define __USBCORE_H__
+
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -234,7 +235,9 @@ typedef struct
 typedef struct
 {
 	//	IAD
+#if !defined(CDC_ONLY)
 	IADDescriptor				iad;	// Only needed on compound device
+#endif
 	//	Control
 	InterfaceDescriptor			cif;
 	CDCCSInterfaceDescriptor	header;
@@ -259,7 +262,7 @@ typedef struct
 _Pragma("pack()")
 
 #define D_DEVICE(_class,_subClass,_proto,_packetSize0,_vid,_pid,_version,_im,_ip,_is,_configs) \
-	{ 18, 1, 0x200, _class,_subClass,_proto,_packetSize0,_vid,_pid,_version,_im,_ip,_is,_configs }
+	{ 18, 1, 0x110, _class,_subClass,_proto,_packetSize0,_vid,_pid,_version,_im,_ip,_is,_configs }
 /* Table 9-8. Standard Device Descriptor
  * bLength, bDescriptorType, bcdUSB, bDeviceClass, bDeviceSubClass, bDeviceProtocol, bMaxPacketSize0,
  *    idVendor, idProduct, bcdDevice, iManufacturer, iProduct, iSerialNumber, bNumConfigurations */

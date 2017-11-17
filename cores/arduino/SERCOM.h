@@ -21,7 +21,12 @@
 
 #include "sam.h"
 
-#define SERCOM_FREQ_REF 48000000
+#define SERCOM_FREQ_REF F_CPU
+
+// Not defined in CMSIS for SAML or SAMC
+#ifndef SERCOM_SPI_CTRLA_MODE_SPI_MASTER
+#define SERCOM_SPI_CTRLA_MODE_SPI_MASTER	(0x3ul << SERCOM_SPI_CTRLA_MODE_Pos)
+#endif
 
 typedef enum
 {
@@ -211,7 +216,7 @@ class SERCOM
 
 	private:
 		Sercom* sercom;
-		uint8_t calculateBaudrateSynchronous(uint32_t baudrate) ;
+		uint32_t calculateBaudrateSynchronous(uint32_t baudrate) ;
 		uint32_t division(uint32_t dividend, uint32_t divisor) ;
 		void initClockNVIC( void ) ;
 };

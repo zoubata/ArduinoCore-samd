@@ -24,12 +24,45 @@ SERCOM::SERCOM(Sercom* s)
   sercom = s;
 }
 
+#if 0
+// From https://en.wikipedia.org/wiki/Division_algorithm
+static uint64_t divide64(uint64_t n, uint64_t d)
+{
+  uint64_t q = 0, r = 0;
+
+  for (int8_t i = 63; i >= 0; i--) {
+    r = r << 1;
+
+    // set the LSB of r equal to bit i of n
+    // because r was just shifted right by one, we don't need to explicitly set r to 0 if bit i of n is 0.
+    if (n & ((uint64_t)1 << i)) {
+      r |= 0x01;
+    }
+
+    if (r >= d) {
+      r = r - d;
+      q |= ((uint64_t)1 << i);
+    }
+  }
+
+  return q;
+}
+#endif
+
 /* 	=========================
  *	===== Sercom UART
  *	=========================
 */
 void SERCOM::initUART(SercomUartMode mode, SercomUartSampleRate sampleRate, uint32_t baudrate)
 {
+#if (SAML21)
+  // On the SAML21, SERCOM5 is on PD0, which is a low power domain on a different bridge than the other SERCOMs.
+  // SERCOM5 does not support SAMPLE_RATE_x8 or SAMPLE_RATE_x3.
+  if (sercom == SERCOM5) {
+    sampleRate = SAMPLE_RATE_x16;
+  }
+#endif
+
   initClockNVIC();
   resetUART();
 
@@ -51,6 +84,18 @@ void SERCOM::initUART(SercomUartMode mode, SercomUartSampleRate sampleRate, uint
       sampleRateValue = 8;
     }
 
+#if 0
+    // Asynchronous arithmetic mode
+    // 65535 * ( 1 - sampleRateValue * baudrate / SystemCoreClock);
+    // 65535 - 65535 * (sampleRateValue * baudrate / SystemCoreClock));
+    // sercom->USART.BAUD.reg = 65535.0f * ( 1.0f - (float)(sampleRateValue) * (float)(baudrate) / (float)(SystemCoreClock));  // this pulls in 3KB of floating point math code
+    // make numerator much larger than denominator so result is integer (avoid floating point).
+    uint64_t numerator = ((sampleRateValue * (uint64_t)baudrate) << 32); // 32 bits of shifting ensures no loss of precision.
+    uint64_t ratio = divide64(numerator, SystemCoreClock);
+    uint64_t scale = ((uint64_t)1 << 32) - ratio;
+    uint64_t baudValue = (65536 * scale) >> 32;
+    sercom->USART.BAUD.reg = baudValue;
+#endif
     // Asynchronous fractional mode (Table 24-2 in datasheet)
     //   BAUD = fref / (sampleRateValue * fbaud)
     // (multiply by 8, to calculate fractional piece)
@@ -283,7 +328,7 @@ void SERCOM::setBaudrateSPI(uint8_t divider)
   //Register enable-protected
   disableSPI();
 
-  sercom->SPI.BAUD.reg = calculateBaudrateSynchronous( SERCOM_FREQ_REF / divider );
+  sercom->SPI.BAUD.reg = calculateBaudrateSynchronous( SystemCoreClock / divider );
 
   enableSPI();
 }
@@ -345,9 +390,9 @@ bool SERCOM::isDataRegisterEmptySPI()
 //	return sercom->SPI.INTFLAG.bit.RXC;
 //}
 
-uint8_t SERCOM::calculateBaudrateSynchronous(uint32_t baudrate)
+uint32_t SERCOM::calculateBaudrateSynchronous(uint32_t baudrate)
 {
-  return SERCOM_FREQ_REF / (2 * baudrate) - 1;
+  return ((SystemCoreClock / (2 * baudrate)) - 1);
 }
 
 
@@ -442,7 +487,7 @@ void SERCOM::initMasterWIRE( uint32_t baudrate )
 //  sercom->I2CM.INTENSET.reg = SERCOM_I2CM_INTENSET_MB | SERCOM_I2CM_INTENSET_SB | SERCOM_I2CM_INTENSET_ERROR ;
 
   // Synchronous arithmetic baudrate
-  sercom->I2CM.BAUD.bit.BAUD = SystemCoreClock / ( 2 * baudrate) - 1 ;
+  sercom->I2CM.BAUD.bit.BAUD = calculateBaudrateSynchronous(baudrate) ;
 }
 
 void SERCOM::prepareNackBitWIRE( void )
@@ -652,16 +697,21 @@ void SERCOM::initClockNVIC( void )
     clockId = GCM_SERCOM1_CORE;
     IdNvic = SERCOM1_IRQn;
   }
+#if !(SAMD11C14)
   else if(sercom == SERCOM2)
   {
     clockId = GCM_SERCOM2_CORE;
     IdNvic = SERCOM2_IRQn;
   }
+#endif
+#if !(SAMD11_SERIES)
   else if(sercom == SERCOM3)
   {
     clockId = GCM_SERCOM3_CORE;
     IdNvic = SERCOM3_IRQn;
   }
+#endif
+#if !(SAMD11_SERIES) && !(SAMD21E) && !(SAMC21E)
   else if(sercom == SERCOM4)
   {
     clockId = GCM_SERCOM4_CORE;
@@ -672,6 +722,7 @@ void SERCOM::initClockNVIC( void )
     clockId = GCM_SERCOM5_CORE;
     IdNvic = SERCOM5_IRQn;
   }
+#endif
 
   if ( IdNvic == PendSV_IRQn )
   {
@@ -684,12 +735,13 @@ void SERCOM::initClockNVIC( void )
   NVIC_SetPriority (IdNvic, (1<<__NVIC_PRIO_BITS) - 1);  /* set Priority */
 
   //Setting clock
-  GCLK->CLKCTRL.reg = GCLK_CLKCTRL_ID( clockId ) | // Generic Clock 0 (SERCOMx)
-                      GCLK_CLKCTRL_GEN_GCLK0 | // Generic Clock Generator 0 is source
-                      GCLK_CLKCTRL_CLKEN ;
-
-  while ( GCLK->STATUS.reg & GCLK_STATUS_SYNCBUSY )
-  {
-    /* Wait for synchronization */
-  }
+#if (SAMD21 || SAMD11)
+  GCLK->CLKCTRL.reg = ( GCLK_CLKCTRL_ID( clockId ) | GCLK_CLKCTRL_GEN_GCLK0 | GCLK_CLKCTRL_CLKEN );
+  while ( GCLK->STATUS.reg & GCLK_STATUS_SYNCBUSY );
+#elif (SAML21 || SAMC21)
+  GCLK->PCHCTRL[clockId].reg = ( GCLK_PCHCTRL_CHEN | GCLK_PCHCTRL_GEN_GCLK0 );
+  while ( GCLK->SYNCBUSY.reg & GCLK_SYNCBUSY_MASK );
+#else
+  #error "SERCOM.cpp: Unsupported chip"
+#endif
 }

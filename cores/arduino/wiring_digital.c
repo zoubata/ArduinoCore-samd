@@ -1,5 +1,6 @@
 /*
   Copyright (c) 2015 Arduino LLC.  All right reserved.
+  Copyright (c) 2017 MattairTech LLC. All right reserved.
 
   This library is free software; you can redistribute it and/or
   modify it under the terms of the GNU Lesser General Public
@@ -24,51 +25,8 @@
 
 void pinMode( uint32_t ulPin, uint32_t ulMode )
 {
-  // Handle the case the pin isn't usable as PIO
-  if ( g_APinDescription[ulPin].ulPinType == PIO_NOT_A_PIN )
-  {
-    return ;
-  }
-
   // Set pin mode according to chapter '22.6.3 I/O Pin Configuration'
-  switch ( ulMode )
-  {
-    case INPUT:
-      // Set pin to input mode
-      PORT->Group[g_APinDescription[ulPin].ulPort].PINCFG[g_APinDescription[ulPin].ulPin].reg=(uint8_t)(PORT_PINCFG_INEN) ;
-      PORT->Group[g_APinDescription[ulPin].ulPort].DIRCLR.reg = (uint32_t)(1<<g_APinDescription[ulPin].ulPin) ;
-    break ;
-
-    case INPUT_PULLUP:
-      // Set pin to input mode with pull-up resistor enabled
-      PORT->Group[g_APinDescription[ulPin].ulPort].PINCFG[g_APinDescription[ulPin].ulPin].reg=(uint8_t)(PORT_PINCFG_INEN|PORT_PINCFG_PULLEN) ;
-      PORT->Group[g_APinDescription[ulPin].ulPort].DIRCLR.reg = (uint32_t)(1<<g_APinDescription[ulPin].ulPin) ;
-
-      // Enable pull level (cf '22.6.3.2 Input Configuration' and '22.8.7 Data Output Value Set')
-      PORT->Group[g_APinDescription[ulPin].ulPort].OUTSET.reg = (uint32_t)(1<<g_APinDescription[ulPin].ulPin) ;
-    break ;
-
-    case INPUT_PULLDOWN:
-      // Set pin to input mode with pull-down resistor enabled
-      PORT->Group[g_APinDescription[ulPin].ulPort].PINCFG[g_APinDescription[ulPin].ulPin].reg=(uint8_t)(PORT_PINCFG_INEN|PORT_PINCFG_PULLEN) ;
-      PORT->Group[g_APinDescription[ulPin].ulPort].DIRCLR.reg = (uint32_t)(1<<g_APinDescription[ulPin].ulPin) ;
-
-      // Enable pull level (cf '22.6.3.2 Input Configuration' and '22.8.6 Data Output Value Clear')
-      PORT->Group[g_APinDescription[ulPin].ulPort].OUTCLR.reg = (uint32_t)(1<<g_APinDescription[ulPin].ulPin) ;
-    break ;
-
-    case OUTPUT:
-      // enable input, to support reading back values, with pullups disabled
-      PORT->Group[g_APinDescription[ulPin].ulPort].PINCFG[g_APinDescription[ulPin].ulPin].reg=(uint8_t)(PORT_PINCFG_INEN) ;
-
-      // Set pin to output mode
-      PORT->Group[g_APinDescription[ulPin].ulPort].DIRSET.reg = (uint32_t)(1<<g_APinDescription[ulPin].ulPin) ;
-    break ;
-
-    default:
-      // do nothing
-    break ;
-  }
+  pinPeripheral(ulPin, ulMode);
 }
 
 void digitalWrite( uint32_t ulPin, uint32_t ulVal )
@@ -79,24 +37,41 @@ void digitalWrite( uint32_t ulPin, uint32_t ulVal )
     return ;
   }
 
-  EPortType port = g_APinDescription[ulPin].ulPort;
-  uint32_t pin = g_APinDescription[ulPin].ulPin;
-  uint32_t pinMask = (1ul << pin);
+  uint32_t pinAttribute = g_APinDescription[ulPin].ulPinAttribute;
+  uint8_t pinPort = g_APinDescription[ulPin].ulPort;
+  uint8_t pinNum = g_APinDescription[ulPin].ulPin;
+  uint8_t pinConfig = PORT->Group[pinPort].PINCFG[pinNum].reg;
+  uint8_t pinDir = (PORT->Group[pinPort].DIR.reg && (1ul << pinNum));
+  uint8_t pinOut = (PORT->Group[pinPort].OUT.reg && (1ul << pinNum));
 
-  if ( (PORT->Group[port].DIRSET.reg & pinMask) == 0 ) {
-    // the pin is not an output, disable pull-up if val is LOW, otherwise enable pull-up
-    PORT->Group[port].PINCFG[pin].bit.PULLEN = ((ulVal == LOW) ? 0 : 1) ;
+  // Enable pull resistor if pin attributes allow and only if pin is not configured as output
+  // Note that most pins should use PIN_ATTR_DIGITAL, which includes both PIN_ATTR_INPUT_PULLUP and PIN_ATTR_INPUT_PULLDOWN.
+  if ( pinDir == 0 ) { // pin DIR is input
+     if ( ulVal == HIGH )
+     {
+       if ( (pinOut == 1 && (pinAttribute & PIN_ATTR_INPUT_PULLUP)) || (pinOut == 0 && (pinAttribute & PIN_ATTR_INPUT_PULLDOWN)) )
+       {
+         pinConfig |= (uint8_t)(PORT_PINCFG_PULLEN) ;
+       }
+     }
+     else
+     {
+       pinConfig &= ~(uint8_t)(PORT_PINCFG_PULLEN) ;
+     }
+     
+     PORT->Group[pinPort].PINCFG[pinNum].reg = pinConfig ;
   }
-
-  switch ( ulVal )
+  // Set or clear OUT register only when pin DIR is set to output.
+  // Pull direction (pullup or pulldown) is now set with pinMode only (defaults to pullup if pinMode never called).
+  else
   {
-    case LOW:
-      PORT->Group[port].OUTCLR.reg = pinMask;
-    break ;
-
-    default:
-      PORT->Group[port].OUTSET.reg = pinMask;
-    break ;
+    if ( ulVal == HIGH ) {
+      PORT->Group[pinPort].OUTSET.reg = (1ul << pinNum) ;
+    }
+    else
+    {
+      PORT->Group[pinPort].OUTCLR.reg = (1ul << pinNum) ;
+    }
   }
 
   return ;
@@ -109,7 +84,7 @@ int digitalRead( uint32_t ulPin )
   {
     return LOW ;
   }
-
+  
   if ( (PORT->Group[g_APinDescription[ulPin].ulPort].IN.reg & (1ul << g_APinDescription[ulPin].ulPin)) != 0 )
   {
     return HIGH ;
