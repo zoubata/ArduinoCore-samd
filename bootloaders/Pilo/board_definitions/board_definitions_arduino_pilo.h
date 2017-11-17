@@ -247,7 +247,7 @@
 #define BOOT_USART_PAD2                   PINMUX_PA18C_SERCOM1_PAD2
 #define BOOT_USART_PAD1                   PINMUX_UNUSED
 #define BOOT_USART_PAD0                   PINMUX_UNUSED
-
+*/
 /*
  * If BOOT_DOUBLE_TAP_ENABLED is defined the bootloader is started by quickly
  * tapping two times on the reset button (within 1/2 second).

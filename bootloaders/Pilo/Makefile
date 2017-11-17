@@ -15,6 +15,8 @@
 # License along with this library; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 # Begin Config ###############################
+MSG_EXTENDED_LISTING  = Creating extended listing to \`$@\'.
+MSG_SYMBOL_TABLE      = Creating symbol table to \`$@\'.
 
 # -----------------------------------------------------------------------------
 # SD Card support. This can also be set in the relevant board_definitions file.
@@ -93,7 +95,7 @@ ifeq ($(OS),Windows_NT)
   else
     MODULE_PATH?=$(LOCALAPPDATA)/Arduino15/packages/$(CORE_VENDOR)
     MODULE_PATH_ARDUINO?=$(LOCALAPPDATA)/Arduino15/packages/arduino
-    RM=del
+    RM=rm
     SEP=\\
   endif
 else
@@ -137,13 +139,13 @@ CFLAGS=-mthumb -mcpu=cortex-m0plus -Wall -c -std=gnu99 -ffunction-sections -fdat
 ifdef DEBUG
   CFLAGS+= -g3 -O0 -DDEBUG=1
 else
-  CFLAGS+= -g3 -O0 -DDEBUG=1
+  CFLAGS+= -g3 -Os -DDEBUG=0
 endif
 
 ELF=$(NAME).elf
 BIN=$(NAME).bin
 HEX=$(NAME).hex
-
+SYM= $(NAME).sym
 
 INCLUDES=-I"$(MODULE_PATH_ARDUINO)/tools/CMSIS/4.5.0/CMSIS/Include/" -I"$(MODULE_PATH)/tools/CMSIS-Atmel/CMSIS/Device/ATMEL/"
 
@@ -195,7 +197,11 @@ else
 endif
 
 
-all: print_info $(SOURCES) $(BIN) $(HEX) $(AS_BUILD)
+lss: $(LSS)
+
+
+sym: $(SYM)
+all: print_info $(SOURCES) $(BIN) sym lss $(SYM) $(AS_BUILD)
 
 $(ELF): Makefile $(BUILD_DIR) $(OBJECTS)
 	@echo ----------------------------------------------------------
@@ -219,7 +225,16 @@ $(BUILD_DIR)/%.o: %.c
 	@echo Compiling $< to $@
 	"$(CC)" $(CFLAGS) $(CFLAGS_EXTRA) $(INCLUDES) $< -o $@
 	@echo ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-
+# Create symbol table from target output file.
+$(SYM): $(ELF)
+	@echo $(MSG_SYMBOL_TABLE)
+	"$(NM)" -n $(BUILD_DIR)/$< > $@
+	 
+# Create extended listing from target output file.
+$(LSS): $(ELF)
+	@echo $(MSG_EXTENDED_LISTING)
+	"$(OBJDUMP)" -h -S $(BUILD_DIR)/$< > $@
+	
 $(BUILD_DIR):
 	@echo ----------------------------------------------------------
 	@echo Creating build folder
@@ -267,6 +282,8 @@ mostly_clean: $(AS_CLEAN)
 	-$(RM) $(HEX)
 	-$(RM) $(BUILD_DIR)$(PATHSEP)SDCard$(PATHSEP)*.*
 	-$(RM) $(BUILD_DIR)$(PATHSEP)*.*
+	-$(RM) $(OBJECTS)
+	-$(RM) $(DEPS)  $(LSS)  $(SYM)
 	-rmdir $(BUILD_DIR)$(PATHSEP)SDCard
 	-rmdir $(BUILD_DIR)
 

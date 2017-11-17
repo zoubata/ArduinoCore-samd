@@ -96,7 +96,7 @@ void serial_open(void)
 	idx_rx_write = 0;
 	idx_tx_read = 0;
 	idx_tx_write = 0;
-
+/*
 	uart_write_byte(BOOT_USART_MODULE, 0x55);
 uart_write_byte(BOOT_USART_MODULE, 0x55);
 uart_write_byte(BOOT_USART_MODULE, 0x55);
@@ -104,7 +104,7 @@ uart_write_byte(BOOT_USART_MODULE, 0x55);
 uart_write_byte(BOOT_USART_MODULE, 0x55);
 uart_write_byte(BOOT_USART_MODULE, 0x55);
 uart_write_byte(BOOT_USART_MODULE, 0x55);
-
+*/
 	error_timeout = 0;
 }
 

@@ -1,7 +1,7 @@
 {
   "packages": [
     {
-      "name": "zoubworld_Arduino",
+      "name": "Zoubworld_Arduino",
       "maintainer": "zoubworld LLC",
       "websiteURL": "https://www.zoubworld.com/",
       "email": "support@zoubworld.com",
@@ -31,7 +31,7 @@
               "version": "4.8.3-2014q1"
             },
             {
-				"packager": "MattairTech_Arduino",
+				"packager": "Zoubworld_Arduino",
 				"name": "bossac",
 				"version": "1.5-arduino-mattairtech-1"
 			},{

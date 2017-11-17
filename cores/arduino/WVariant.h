@@ -273,17 +273,10 @@ typedef struct _PinDescription
   uint8_t         ulPinType ;	                // Must be 8 bits
   uint8_t         ulPeripheralAttribute ;	// Must be 8 bit bitfield
   uint32_t        ulPinAttribute ;	        // Must be 32 bit bitfield
-#if defined(MATTAIRTECH_ARDUINO_SAMD_VARIANT_COMPLIANCE) && (MATTAIRTECH_ARDUINO_SAMD_VARIANT_COMPLIANCE >= 10608)
   uint8_t         ulTCChannel ;	                // Must be 8 bits
   uint8_t         ulADCChannelNumber ;	        // Must be 8 bits
   uint8_t         ulExtInt ;	                // Must be 8 bits
   uint8_t         ulGCLKCCL ;	                // Must be 8 bits
-#else
-#error "The PinDescription table in the variant.cpp file of your board variant must be updated so that MATTAIRTECH_ARDUINO_SAMD_VARIANT_COMPLIANCE >= 10608. See VARIANT_COMPLIANCE_CHANGELOG."
-//  uint16_t        ulTCChannel ;	        	// Must be 16 bits
-//  uint8_t         ulADCChannelNumber ;	        // Must be 8 bits
-//  uint8_t         ulExtInt ;	                // Must be 8 bits
-#endif
 } PinDescription ;
 
 /* Pins table to be instantiated into variant.cpp */

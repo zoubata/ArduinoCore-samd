@@ -40,8 +40,11 @@ extern uint32_t SystemCoreClock;
 // Constants for Clock generators
 #define GENERIC_CLOCK_GENERATOR_MAIN      (0u)
 #define GENERIC_CLOCK_GENERATOR_XOSC32K   (1u)
+#define GENERIC_CLOCK_GENERATOR_XOSC      (1u)
 #define GENERIC_CLOCK_GENERATOR_OSCULP32K (2u) /* Initialized at reset for WDT */
 #define GENERIC_CLOCK_GENERATOR_OSC8M     (3u)
+#define GENERIC_CLOCK_GENERATOR_OSC_HS    (3u)
+
 // Constants for Clock multiplexers
 #if (SAMD_SERIES || SAML21_SERIES)
   #define GENERIC_CLOCK_MULTIPLEXER_DFLL    (0u)

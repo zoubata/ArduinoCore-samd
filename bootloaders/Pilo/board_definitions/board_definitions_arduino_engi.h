@@ -240,6 +240,7 @@
 #define BOOT_USART_PAD1                   PINMUX_UNUSED
 #define BOOT_USART_PAD0                   PINMUX_UNUSED
 */
+
 /* engi*/
 #define BOOT_USART_SERCOM_INSTANCE        1
 #define BOOT_USART_PAD_SETTINGS           UART_RX_PAD3_TX_PAD2
