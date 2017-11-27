@@ -152,7 +152,9 @@ INCLUDES=-I"$(MODULE_PATH_ARDUINO)/tools/CMSIS/4.5.0/CMSIS/Include/" -I"$(MODULE
 # -----------------------------------------------------------------------------
 # Linker options
 LDFLAGS=-mthumb -mcpu=cortex-m0plus -Wall -Wl,--cref -Wl,--check-sections -Wl,--gc-sections -Wl,--unresolved-symbols=report-all
-LDFLAGS+=-Wl,--warn-common -Wl,--warn-section-align -Wl,--warn-unresolved-symbols --specs=nano.specs --specs=nosys.specs
+LDFLAGS+=-Wl,--warn-common -Wl,--warn-section-align -Wl,--warn-unresolved-symbols --specs=nano.specs --specs=nosys.specs  
+##debug
+LDFLAGS+=-Wl,--cref -Wl,-Map,$(NAME).map
 
 # -----------------------------------------------------------------------------
 # Source files and objects
@@ -288,3 +290,7 @@ mostly_clean: $(AS_CLEAN)
 	-rmdir $(BUILD_DIR)
 
 .phony: print_info $(BUILD_DIR)
+%.lss: %.elf
+	@echo
+	@echo $(MSG_EXTENDED_LISTING) $@
+	$(OBJDUMP) -h -S -z $< > $@

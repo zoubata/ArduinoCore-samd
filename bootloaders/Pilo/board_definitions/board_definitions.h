@@ -89,7 +89,7 @@
  */
 #if (SAMD21 || SAMD11)
   #define BOOT_DOUBLE_TAP_ADDRESS           (HMCRAMC0_ADDR + HMCRAMC0_SIZE - 4)
-#elif (SAML21 || SAMC21)
+#elif (SAML21 || SAMC21 || SAMD20)
   #define BOOT_DOUBLE_TAP_ADDRESS           (HSRAM_ADDR + HSRAM_SIZE - 4)
 #else
   #error "board_definitions.h: Missing dependency or unsupported chip. Please install CMSIS-Atmel from MattairTech (see Prerequisites for Building in README.md)."

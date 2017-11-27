@@ -267,7 +267,7 @@
 //#define BOOT_LOAD_PIN_ENABLED
 #define BOOT_LOAD_PIN_POLARITY            PIN_POLARITY_ACTIVE_LOW
 #define BOOT_LOAD_PIN_PORT                (0)
-#define BOOT_LOAD_PIN                     (21)
+#define BOOT_LOAD_PIN                     (4)
 #define BOOT_LOAD_PIN_CONFIG              INPUT_PULLUP
 
 /*
@@ -284,7 +284,7 @@
  * By default, only BOARD_LED is enabled.
  */
 #define BOARD_LED_PORT                    (0)
-#define BOARD_LED_PIN                     (17)
+#define BOARD_LED_PIN                     (5)
 #define BOARD_LED_POLARITY	LED_POLARITY_HIGH_ON
 
 //#define BOARD_LEDRX_PORT                  (1)

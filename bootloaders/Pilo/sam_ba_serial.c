@@ -130,6 +130,7 @@ int serial_putc(int value)
 	return 1;
 }
 
+
 int serial_getc(void)
 {
 	uint16_t retval;
