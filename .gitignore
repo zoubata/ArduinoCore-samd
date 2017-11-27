@@ -6,3 +6,32 @@ bootloaders/Pilo/Makefile.bak bootloaders/Pilo/board_init.bak bootloaders/Pilo/b
 */*/*/*/*/*.bak
 *.bak
 
+bootloaders/Pilo/sam_ba_Pilo_SAMC21J16A.sym bootloaders/Pilo/sam_ba_Pilo_SAMC21J17A.sym bootloaders/Pilo/sam_ba_Pilo_SAMC21J18A.sym bootloaders/Pilo/sam_ba_Pilo_SAMD21J16A.sym bootloaders/Pilo/sam_ba_Pilo_SAMD21J17A.sym bootloaders/Pilo/sam_ba_Pilo_SAMD21J18A.sym
+bootloaders/Pilo/sam_ba_Pilo_SAMC21J18A.elf
+cores/src/
+bootloaders/Pilo/settings/
+
+
+bootloaders/Pilo/All_seq.dep
+bootloaders/Pilo/All_seq.ewd
+bootloaders/Pilo/All_seq.ewp
+bootloaders/Pilo/All_seq.ewt
+bootloaders/Pilo/All_seq.eww
+bootloaders/Pilo/ObjProject10/
+bootloaders/Pilo/build/
+bootloaders/Pilo/mainold.c
+bootloaders/Pilo/prog.jl
+bootloaders/Pilo/sam_ba_Pilo_SAMC21J16A.sym
+bootloaders/Pilo/sam_ba_Pilo_SAMC21J17A.sym
+bootloaders/Pilo/sam_ba_Pilo_SAMC21J18A.sym
+bootloaders/Pilo/sam_ba_Pilo_SAMD21J16A.sym
+bootloaders/Pilo/sam_ba_Pilo_SAMD21J17A.sym
+bootloaders/Pilo/sam_ba_Pilo_SAMD21J18A.sym
+bootloaders/Pilo/sam_ba_engi_SAMC21J16A.sym
+bootloaders/Pilo/sam_ba_engi_SAMC21J17A.sym
+bootloaders/Pilo/sam_ba_engi_SAMC21J18A.elf/
+bootloaders/Pilo/sam_ba_engi_SAMC21J18A.sym
+bootloaders/Pilo/sam_ba_engi_SAMD21J16A.sym
+ootloaders/Pilo/sam_ba_engi_SAMD21J17A.sym
+bootloaders/Pilo/sam_ba_engi_SAMD21J18A.sym
+bootloaders/Pilo/sam_ba_engi_SAMD21J17A.sym
