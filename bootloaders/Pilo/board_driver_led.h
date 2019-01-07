@@ -32,57 +32,62 @@
 
 void LED_pulse(void);
 void LED_status(uint32_t periodMS);
-
+#ifdef __ICCARM__
+#define __inline__           inline
+#endif
 #if defined(BOARD_LED_PORT)
   #if ((defined BOARD_LED_POLARITY) && BOARD_LED_POLARITY == LED_POLARITY_LOW_ON)
-    inline void LED_on(void) { PORT->Group[BOARD_LED_PORT].OUTCLR.reg = (1<<BOARD_LED_PIN); }
-    inline void LED_off(void) { PORT->Group[BOARD_LED_PORT].OUTSET.reg = (1<<BOARD_LED_PIN); }
+   static inline void LED_on(void) { PORT->Group[BOARD_LED_PORT].OUTCLR.reg = (1<<BOARD_LED_PIN); }
+   static inline void LED_off(void) { PORT->Group[BOARD_LED_PORT].OUTSET.reg = (1<<BOARD_LED_PIN); }
   #else
-inline void LED_on(void) { PORT->Group[BOARD_LED_PORT].OUTSET.reg = (1<<BOARD_LED_PIN); }
-inline void LED_off(void) { PORT->Group[BOARD_LED_PORT].OUTCLR.reg = (1<<BOARD_LED_PIN); }
+  
+static __inline__  void LED_on(void) { PORT->Group[BOARD_LED_PORT].OUTSET.reg = (1<<BOARD_LED_PIN); }
+static __inline__  void LED_off(void) { PORT->Group[BOARD_LED_PORT].OUTCLR.reg = (1<<BOARD_LED_PIN); }
   #endif
-  inline void LED_init(void) { PORT->Group[BOARD_LED_PORT].DIRSET.reg = (1<<BOARD_LED_PIN); LED_off(); }
-inline void LED_toggle(void) { PORT->Group[BOARD_LED_PORT].OUTTGL.reg = (1<<BOARD_LED_PIN); }
+
+  static __inline__  void LED_init(void) { PORT->Group[BOARD_LED_PORT].DIRSET.reg = (1<<BOARD_LED_PIN); LED_off(); }
+static __inline__  void LED_toggle(void) { PORT->Group[BOARD_LED_PORT].OUTTGL.reg = (1<<BOARD_LED_PIN); }
 #else
-inline void LED_init(void) { }
-inline void LED_on(void) { }
-inline void LED_off(void) { }
-inline void LED_toggle(void) { }
+static __inline__  void LED_init(void) { }
+static __inline__  void LED_on(void) { }
+
+static __inline__  void LED_off(void) { }
+static __inline__  void LED_toggle(void) { }
 #endif
 void LED_pulse();
-
+void LED_setSpeed(uint8_t s);
 #if defined(BOARD_LEDRX_PORT)
   #if ((defined BOARD_LEDRX_POLARITY) && BOARD_LEDRX_POLARITY == LED_POLARITY_LOW_ON)
-inline void LEDRX_on(void) { PORT->Group[BOARD_LEDRX_PORT].OUTCLR.reg = (1<<BOARD_LEDRX_PIN); }
-inline void LEDRX_off(void) { PORT->Group[BOARD_LEDRX_PORT].OUTSET.reg = (1<<BOARD_LEDRX_PIN); }
+static __inline__  void LEDRX_on(void) { PORT->Group[BOARD_LEDRX_PORT].OUTCLR.reg = (1<<BOARD_LEDRX_PIN); }
+static __inline__  void LEDRX_off(void) { PORT->Group[BOARD_LEDRX_PORT].OUTSET.reg = (1<<BOARD_LEDRX_PIN); }
   #else
-    inline void LEDRX_on(void) { PORT->Group[BOARD_LEDRX_PORT].OUTSET.reg = (1<<BOARD_LEDRX_PIN); }
-    inline void LEDRX_off(void) { PORT->Group[BOARD_LEDRX_PORT].OUTCLR.reg = (1<<BOARD_LEDRX_PIN); }
+    static inline void LEDRX_on(void) { PORT->Group[BOARD_LEDRX_PORT].OUTSET.reg = (1<<BOARD_LEDRX_PIN); }
+    static inline void LEDRX_off(void) { PORT->Group[BOARD_LEDRX_PORT].OUTCLR.reg = (1<<BOARD_LEDRX_PIN); }
   #endif
-inline void LEDRX_init(void) { PORT->Group[BOARD_LEDRX_PORT].DIRSET.reg = (1<<BOARD_LEDRX_PIN); LED_off(); }
-inline void LEDRX_toggle(void) { PORT->Group[BOARD_LEDRX_PORT].OUTTGL.reg = (1<<BOARD_LEDRX_PIN); }
+static __inline__  void LEDRX_init(void) { PORT->Group[BOARD_LEDRX_PORT].DIRSET.reg = (1<<BOARD_LEDRX_PIN); LEDRX_off();  }
+static __inline__  void LEDRX_toggle(void) { PORT->Group[BOARD_LEDRX_PORT].OUTTGL.reg = (1<<BOARD_LEDRX_PIN); }
 #else
-inline void LEDRX_init(void) { }
-inline void LEDRX_on(void) { }
-inline void LEDRX_off(void) { }
-inline void LEDRX_toggle(void) { }
+static __inline__  void LEDRX_init(void) { }
+static __inline__  void LEDRX_on(void) { }
+static __inline__  void LEDRX_off(void) { }
+static __inline__  void LEDRX_toggle(void) { }
 #endif
 
 #if defined(BOARD_LEDTX_PORT)
   #if ((defined BOARD_LEDTX_POLARITY) && BOARD_LEDTX_POLARITY == LED_POLARITY_LOW_ON)
-inline void LEDTX_on(void) { PORT->Group[BOARD_LEDTX_PORT].OUTCLR.reg = (1<<BOARD_LEDTX_PIN); }
-inline void LEDTX_off(void) { PORT->Group[BOARD_LEDTX_PORT].OUTSET.reg = (1<<BOARD_LEDTX_PIN); }
+static __inline__  void LEDTX_on(void) { PORT->Group[BOARD_LEDTX_PORT].OUTCLR.reg = (1<<BOARD_LEDTX_PIN); }
+static __inline__  void LEDTX_off(void) { PORT->Group[BOARD_LEDTX_PORT].OUTSET.reg = (1<<BOARD_LEDTX_PIN); }
   #else
-    inline void LEDTX_on(void) { PORT->Group[BOARD_LEDTX_PORT].OUTSET.reg = (1<<BOARD_LEDTX_PIN); }
-    inline void LEDTX_off(void) { PORT->Group[BOARD_LEDTX_PORT].OUTCLR.reg = (1<<BOARD_LEDTX_PIN); }
+    static __inline__  void LEDTX_on(void) { PORT->Group[BOARD_LEDTX_PORT].OUTSET.reg = (1<<BOARD_LEDTX_PIN); }
+    static __inline__  void LEDTX_off(void) { PORT->Group[BOARD_LEDTX_PORT].OUTCLR.reg = (1<<BOARD_LEDTX_PIN); }
   #endif
-inline void LEDTX_init(void) { PORT->Group[BOARD_LEDTX_PORT].DIRSET.reg = (1<<BOARD_LEDTX_PIN); LED_off(); }
-inline void LEDTX_toggle(void) { PORT->Group[BOARD_LEDTX_PORT].OUTTGL.reg = (1<<BOARD_LEDTX_PIN); }
+static __inline__  void LEDTX_init(void) { PORT->Group[BOARD_LEDTX_PORT].DIRSET.reg = (1<<BOARD_LEDTX_PIN); LEDTX_off(); }
+static __inline__  void LEDTX_toggle(void) { PORT->Group[BOARD_LEDTX_PORT].OUTTGL.reg = (1<<BOARD_LEDTX_PIN); }
 #else
-inline void LEDTX_init(void) { }
-inline void LEDTX_on(void) { }
-inline void LEDTX_off(void) { }
-inline void LEDTX_toggle(void) { }
+static __inline__  void LEDTX_init(void) { }
+static __inline__  void LEDTX_on(void) { }
+static __inline__  void LEDTX_off(void) { }
+static __inline__  void LEDTX_toggle(void) { }
 #endif
 
 #endif // _BOARD_DRIVER_LED_

@@ -18,7 +18,7 @@
 
 #include "sam.h"
 
-#if (SAMD21 || SAML21)
+#if (SAMD21 || SAML21) && (!defined(USB_DISABLED))
 #include <stdio.h>
 #include <stdint.h>
 #include <string.h>

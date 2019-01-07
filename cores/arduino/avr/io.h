@@ -25,6 +25,11 @@
 #ifndef _IO_H_
 #define _IO_H_
 
+#include <stddef.h>
+#include <stdint.h>
+#include <stdbool.h>
+#include <parts.h>
+
 #define RAMSTART (HMCRAMC0_ADDR)
 #define RAMSIZE  (HMCRAMC0_SIZE)
 #define RAMEND   (RAMSTART + RAMSIZE - 1)

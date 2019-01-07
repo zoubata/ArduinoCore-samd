@@ -959,8 +959,6 @@ typedef struct
 #endif
 #define PASS      0
 #define FAIL      1
-#define LOW       0
-#define HIGH      1
 
 typedef int8_t                  S8 ;  //!< 8-bit signed integer.
 typedef uint8_t                 U8 ;  //!< 8-bit unsigned integer.

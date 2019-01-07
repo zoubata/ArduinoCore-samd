@@ -1,15 +1,19 @@
 {
 	"name": "zoubworld SAM M0+ Boards",
-	"architecture": "samd",
+	"architecture": "sam",
 	"version": "%%VERSION%%",
 	"category": "Contributed",
-	"url": "https://www.zoubworld.com/software/arduino/%%FILENAME%%",
+	"help": {
+            "online": "https://www.zoubworld.com/support/"
+          },
+	"url": "http://lfbn-1-14132-125.w90-12.abo.wanadoo.fr/~zoubworld_Arduino/files/Release/%%FILENAME%%",
 	"archiveFileName": "%%FILENAME%%",
 	"checksum": "SHA-256:%%CHECKSUM%%",
 	"size": "%%SIZE%%",
 	"boards": [
-	{"name": "MT-D21E"},
-	{"name": "MT-D11"}
+	 {"name": "Pilo"},
+	 {"name": "Captor"},
+	 {"name": "line"}
 	],
 	"toolsDependencies": [
 	{
@@ -20,23 +24,28 @@
 	{
 		"packager": "zoubworld_Arduino",
 		"name": "bossac",
-		"version": "1.7.0-zoubworld-1"
+		"version": "%%VERSION_BOSSAC%%"
 	},
 	{
 		"packager": "arduino",
 		"name": "openocd",
 		"version": "0.9.0-arduino"
 	},
-	{
-		"packager": "arduino",
-		"name": "CMSIS",
-		"version": "4.5.0"
-	},
+		{
+				"packager": "arduino",
+				"name": "CMSIS",
+				"version": "4.0.0-atmel"
+			},
 	{
 		"packager": "zoubworld_Arduino",
 		"name": "CMSIS-Atmel",
-		"version": "1.0.0-zoubworld-1"
+		"version": "%%VERSION_CMSIS%%"
 	},
+	{
+		"packager": "zoubworld_Arduino",
+		"name": "UsbDriver",
+		"version": "%%VERSION_USBDRIVER%%"
+	},	
 	{
 		"packager": "arduino",
 		"name": "arduinoOTA",

@@ -18,7 +18,7 @@
 
 #include "sam.h"
 
-#if (!SAMC)
+#if (!SAMC) && (!SAMD20) && (!defined(USB_DISABLED))
 
 #include <Arduino.h>
 
@@ -48,10 +48,12 @@ static char isEndpointHalt = 0;
 extern void (*gpf_isr)(void);
 
 // USB_Handler ISR
-extern "C" void UDD_Handler(void) {
+extern "C" 
+{
+	void UDD_Handler(void) {
 	USBDevice.ISRHandler();
 }
-
+}// extern "C" {
 const uint16_t STRING_LANGUAGE[2] = {
 	(3<<8) | (2+2),
 	0x0409	// English

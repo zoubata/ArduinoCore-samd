@@ -22,8 +22,10 @@
 
 #include <stdio.h>
 #include <stdbool.h>
-#include <sam.h>
 
+#include "cores\arduino\WVariant.h"
+#include "Variant.h"
+#include <sam.h>
 #define PINMUX_UNUSED          0xFFFFFFFF
 
 /* SERCOM UART available pad settings */

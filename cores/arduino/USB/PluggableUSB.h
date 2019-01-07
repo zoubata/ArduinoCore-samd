@@ -29,7 +29,8 @@ class PluggableUSBModule {
 public:
   PluggableUSBModule(uint8_t numEps, uint8_t numIfs, uint32_t *epType) :
     numEndpoints(numEps), numInterfaces(numIfs), endpointType(epType)
-  { }
+  {
+ next =(PluggableUSBModule *)NULL;}
 
 protected:
   virtual bool setup(USBSetup& setup) = 0;
@@ -44,8 +45,7 @@ protected:
   const uint8_t numInterfaces;
   const uint32_t *endpointType;
 
-  PluggableUSBModule *next = NULL;
-
+  PluggableUSBModule *next ;
   friend class PluggableUSB_;
 };
 

@@ -1,4 +1,5 @@
-/*
+
+/** @file RingBuffer.h
   Copyright (c) 2014 Arduino.  All right reserved.
 
   This library is free software; you can redistribute it and/or
@@ -15,27 +16,29 @@
   License along with this library; if not, write to the Free Software
   Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 */
-
+#ifdef __cplusplus
 #ifndef _RING_BUFFER_
 #define _RING_BUFFER_
 
 #include <stdint.h>
-
+#include <sam.h>
 // Define constants and variables for buffering incoming serial data.  We're
 // using a ring buffer (I think), in which head is the index of the location
 // to which to write the next incoming character and tail is the index of the
 // location from which to read.
-#define SERIAL_BUFFER_SIZE 64
+#define SERIAL_BUFFER_SIZE 128
+//#define SERIAL_BUFFER_SIZE ((HSRAM_SIZE/20)/SERCOM_INST_NUM)//5% of memory
 
-class RingBuffer
+template <int N>
+class RingBufferN
 {
   public:
-    uint8_t _aucBuffer[SERIAL_BUFFER_SIZE] ;
-    int _iHead ;
-    int _iTail ;
+    uint8_t _aucBuffer[N] ;
+    volatile int _iHead ;
+    volatile int _iTail ;
 
   public:
-    RingBuffer( void ) ;
+    RingBufferN( void ) ;
     void store_char( uint8_t c ) ;
 	void clear();
 	int read_char();
@@ -48,4 +51,108 @@ class RingBuffer
 	int nextIndex(int index);
 } ;
 
+typedef RingBufferN<SERIAL_BUFFER_SIZE> RingBuffer;
+
+
+template <int N>
+RingBufferN<N>::RingBufferN( void )
+{
+    memset( _aucBuffer, 0, N ) ;
+    clear();
+}
+
+template <int N>
+void RingBufferN<N>::store_char( uint8_t c )
+{
+  // __disable_irq();
+  int i = nextIndex(_iHead);
+
+  // if we should be storing the received character into the location
+  // just before the tail (meaning that the head would advance to the
+  // current location of the tail), we're about to overflow the buffer
+  // and so we don't write the character or advance the head.
+  if ( i != _iTail )
+  {
+    
+    _aucBuffer[_iHead] = c ;
+    _iHead = i ;
+  //   __enable_irq();
+  } else
+  {
+
+  }
+}
+
+template <int N>
+void RingBufferN<N>::clear()
+{
+ //  __disable_irq();
+  _iHead = 0;
+  _iTail = 0;
+  // __enable_irq();
+}
+
+template <int N>
+int RingBufferN<N>::read_char()
+{
+  if(_iTail == _iHead)
+    return -1;
+
+//   __disable_irq();
+  uint8_t value = _aucBuffer[_iTail];
+  _iTail = nextIndex(_iTail);
+// __enable_irq();
+  return value;
+}
+
+template <int N>
+int RingBufferN<N>::available()
+{
+ //  __disable_irq();
+  int delta = _iHead - _iTail;
+
+  if(delta < 0)
+    delta= N + delta;
+  else
+    delta= delta;
+  
+  // __enable_irq();
+   
+   return delta;
+}
+
+template <int N>
+signed int RingBufferN<N>::availableForStore()
+{
+
+ if (_iHead >= _iTail)
+    return N - 1 - _iHead + _iTail;
+  else
+    return _iTail - _iHead - 1;
+
+}
+
+template <int N>
+int RingBufferN<N>::peek()
+{
+  if(_iTail == _iHead)
+    return -1;
+
+  return _aucBuffer[_iTail];
+}
+
+template <int N>
+int RingBufferN<N>::nextIndex(int index)
+{
+  return (uint32_t)(index + 1) % N;
+}
+
+template <int N>
+bool RingBufferN<N>::isFull()
+{
+  return (nextIndex(_iHead) == _iTail);
+}
+
 #endif /* _RING_BUFFER_ */
+
+#endif /* __cplusplus */

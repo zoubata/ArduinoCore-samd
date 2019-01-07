@@ -29,7 +29,7 @@ extern "C" {
  * The format is different than the stock Arduino SAMD core,
  * which uses ARDUINO_SAMD_VARIANT_COMPLIANCE instead.
  */
-#if (MATTAIRTECH_ARDUINO_SAMD_VARIANT_COMPLIANCE >= 10608)
+#if 1
 
 extern const uint32_t __text_start__;
 #define APP_START ((volatile uint32_t)(&__text_start__) + 4)
@@ -99,5 +99,5 @@ void tickReset() {
 }
 
 #ifdef __cplusplus
-}
+}// extern "C" {
 #endif

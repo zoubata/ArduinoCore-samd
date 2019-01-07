@@ -18,6 +18,34 @@
 
 #include <Arduino.h>
 
+uint32_t countPulseC(uint32_t const volatile * regIn,int bitmask,int state,uint32_t timeout)
+{
+  uint32_t time1;
+  uint32_t time2;
+   uint32_t  time= micros();
+    time= micros()+timeout;
+
+  if (state==LOW)
+  {
+while((((*regIn)&(bitmask))!=0) & (  time> micros()));//while HIGH
+ time1= micros();
+while((((*regIn)&(bitmask))==0)& (  time> micros()));//while LOW
+ time2= micros();
+  }
+  else
+     {
+while(((((*regIn)&(bitmask)))==0) & (  time> micros()));//while LOW
+ time1= micros();
+while(  (((*regIn)&(bitmask))!=0)& (  time> micros()));//while HIGH
+ time2= micros();
+  }
+
+  if (  time< micros())
+      return 0;
+signed int dure=(time2-time1);
+
+return dure;
+}
 // See pulse_asm.S
 extern unsigned long countPulseASM(const volatile uint32_t *port, uint32_t bit, uint32_t stateMask, unsigned long maxloops);
 
@@ -31,9 +59,15 @@ uint32_t pulseIn(uint32_t pin, uint32_t state, uint32_t timeout)
   // pulse width measuring loop and achieve finer resolution.  calling
   // digitalRead() instead yields much coarser resolution.
   PinDescription p = g_APinDescription[pin];
-  uint32_t bit = 1 << p.ulPin;
-  uint32_t stateMask = state ? bit : 0;
+  uint32_t bit = 1 << p.ulPin;  
+  #if ( defined(__ICCARM__) || defined(__AARM__) )
+    return countPulseC( &(PORT->Group[p.ulPort].IN.reg), bit, state, timeout);
+  #else
+   uint32_t stateMask = state ? bit : 0;
 
+  
+
+ 
   // convert the timeout from microseconds to a number of times through
   // the initial loop; it takes (roughly) 13 clock cycles per iteration.
   uint32_t maxloops = microsecondsToClockCycles(timeout) / 13;
@@ -48,5 +82,20 @@ uint32_t pulseIn(uint32_t pin, uint32_t state, uint32_t timeout)
     return clockCyclesToMicroseconds(width * 13 + 16);
   else
     return 0;
+#endif
 }
 
+
+/*
+Int
+Timer
+
+
+US INT/timer
+G2P analog
+IR Analog
+DEDEUR : INT
+
+
+
+*/

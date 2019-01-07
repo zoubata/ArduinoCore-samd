@@ -86,7 +86,8 @@ DRESULT disk_writep (const BYTE* buff, DWORD sc);
 #define   SDCARD_SPI_BUAD_FAST                  6000000ul
 
 #ifdef __cplusplus
-}
+}// extern "C" {
 #endif
+
 
 #endif	/* _DISKIO_DEFINED */

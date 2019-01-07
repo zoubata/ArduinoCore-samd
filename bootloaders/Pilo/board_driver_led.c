@@ -22,7 +22,12 @@
 volatile uint8_t ledKeepValue = 0;
 volatile uint8_t ledTargetValue = 20;
 volatile int8_t ledDirection = 1;
-
+volatile uint8_t ledspeed = 240;
+void LED_setSpeed(uint8_t s)
+{
+  ledspeed=s;
+  ledTargetValue=ledspeed/2;
+}
 inline void LED_pulse()
 {
   if (ledKeepValue == 0) {
@@ -31,7 +36,7 @@ inline void LED_pulse()
   }
   ledKeepValue ++;
 
-  if (ledTargetValue > 240 || ledTargetValue < 10) {
+  if (ledTargetValue > ledspeed || ledTargetValue < 10) {
     ledDirection = -ledDirection;
     ledTargetValue += ledDirection;
   }

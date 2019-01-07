@@ -1,7 +1,8 @@
 /*
   Copyright (c) 2015 Arduino LLC.  All right reserved.
   Copyright (c) 2017 MattairTech LLC. All right reserved.
-
+  Copyright (c) 2018 Zoubworld LLC. All right reserved.
+  
   This library is free software; you can redistribute it and/or
   modify it under the terms of the GNU Lesser General Public
   License as published by the Free Software Foundation; either
@@ -117,6 +118,21 @@ void init( void )
   regAPBCMASK |= PM_APBCMASK_ADC | PM_APBCMASK_DAC ;
   
   PM->APBCMASK.reg |= regAPBCMASK ;
+#elif (SAMD20)
+ uint32_t regAPBCMASK = PM->APBCMASK.reg;
+ /* #if (SAMD20E)
+  regAPBCMASK |= PM_APBCMASK_SERCOM0 | PM_APBCMASK_SERCOM1 | PM_APBCMASK_SERCOM2 | PM_APBCMASK_SERCOM3 ;
+  regAPBCMASK |= PM_APBCMASK_TC0 | PM_APBCMASK_TC1 | PM_APBCMASK_TC2 | PM_APBCMASK_TC3 | PM_APBCMASK_TC4 | PM_APBCMASK_TC5 ;
+  #elif (SAMD20G)
+  regAPBCMASK |= PM_APBCMASK_SERCOM0 | PM_APBCMASK_SERCOM1 | PM_APBCMASK_SERCOM2 | PM_APBCMASK_SERCOM3 | PM_APBCMASK_SERCOM4 | PM_APBCMASK_SERCOM5 ;
+  regAPBCMASK |= PM_APBCMASK_TC0 | PM_APBCMASK_TC1 | PM_APBCMASK_TC2 | PM_APBCMASK_TC3 | PM_APBCMASK_TC4 | PM_APBCMASK_TC5 ;
+  #elif (SAMD20J)*/
+  regAPBCMASK |= PM_APBCMASK_SERCOM0 | PM_APBCMASK_SERCOM1 | PM_APBCMASK_SERCOM2 | PM_APBCMASK_SERCOM3 | PM_APBCMASK_SERCOM4 | PM_APBCMASK_SERCOM5 ;
+  regAPBCMASK |= PM_APBCMASK_TC0 | PM_APBCMASK_TC1 | PM_APBCMASK_TC2 | PM_APBCMASK_TC3 | PM_APBCMASK_TC4 | PM_APBCMASK_TC5 | PM_APBCMASK_TC6 | PM_APBCMASK_TC7 ;
+//  #endif
+  regAPBCMASK |= PM_APBCMASK_ADC | PM_APBCMASK_DAC ;
+  
+  PM->APBCMASK.reg |= regAPBCMASK ;
 #elif (SAML21 || SAMC21)
   uint32_t regAPBCMASK = MCLK->APBCMASK.reg;
   
@@ -130,11 +146,14 @@ void init( void )
   #elif (SAMC21E)
   regAPBCMASK |= MCLK_APBCMASK_SERCOM0 | MCLK_APBCMASK_SERCOM1 | MCLK_APBCMASK_SERCOM2 | MCLK_APBCMASK_SERCOM3 ;
   regAPBCMASK |= MCLK_APBCMASK_TCC0 | MCLK_APBCMASK_TCC1 | MCLK_APBCMASK_TCC2 | MCLK_APBCMASK_TC0 | MCLK_APBCMASK_TC1 | MCLK_APBCMASK_TC2 | MCLK_APBCMASK_TC3 | MCLK_APBCMASK_TC4 ;
-  #elif (SAMC21G) || (SAMC21J)
+  #elif (SAMC21G) || (SAMC21J) || (SAMC21N)
   regAPBCMASK |= MCLK_APBCMASK_SERCOM0 | MCLK_APBCMASK_SERCOM1 | MCLK_APBCMASK_SERCOM2 | MCLK_APBCMASK_SERCOM3 | MCLK_APBCMASK_SERCOM4 | MCLK_APBCMASK_SERCOM5 ;
   regAPBCMASK |= MCLK_APBCMASK_TCC0 | MCLK_APBCMASK_TCC1 | MCLK_APBCMASK_TCC2 | MCLK_APBCMASK_TC0 | MCLK_APBCMASK_TC1 | MCLK_APBCMASK_TC2 | MCLK_APBCMASK_TC3 | MCLK_APBCMASK_TC4 ;
   #endif
-
+#if (SAMC21N)
+  uint32_t regAPBDMASK = MCLK->APBDMASK.reg;
+  regAPBDMASK |=  MCLK_APBDMASK_TC7 | MCLK_APBDMASK_TC6 | MCLK_APBDMASK_TC5  | MCLK_APBDMASK_SERCOM6 | MCLK_APBDMASK_SERCOM7 ;
+  #endif
   #if (SAML)
   regAPBCMASK |= MCLK_APBCMASK_DAC ;
   MCLK->APBDMASK.reg |= MCLK_APBDMASK_ADC;	// On the SAML, ADC is on the low power bridge
@@ -143,6 +162,10 @@ void init( void )
   #endif
 
   MCLK->APBCMASK.reg |= regAPBCMASK ;
+  
+  #if (SAMC21N)
+   MCLK->APBDMASK.reg=regAPBDMASK;  
+  #endif
 #else
   #error "wiring.c: Unsupported chip"
 #endif
@@ -161,7 +184,7 @@ void init( void )
 // I/O mux table footnote for D21 and D11: enable pullups on PA24 and PA24 when using as GPIO to avoid excessive current
 //  Errata: disable pull resistors on PA24 or PA25 manually before switching to peripheral
 //  Errata: do not use continuous sampling (not enabled by default) on PA24 or PA25
-#if (SAMD && defined(USB_DISABLED))
+#if ((SAMD21  || SAMD11)&& defined(USB_DISABLED))
   PORT->Group[0].OUTSET.reg = (uint32_t)(1<<PIN_PA24G_USB_DM);
   PORT->Group[0].PINCFG[PIN_PA24G_USB_DM].bit.PULLEN = 1;
   PORT->Group[0].OUTSET.reg = (uint32_t)(1<<PIN_PA25G_USB_DP);
@@ -205,7 +228,7 @@ void init( void )
 
   // Setting clock, prescaler and resolution
 #if (SAMD)
-  GCLK->CLKCTRL.reg = GCLK_CLKCTRL_ID( GCM_ADC ) | GCLK_CLKCTRL_GEN_GCLK0 | GCLK_CLKCTRL_CLKEN ;
+  GCLK->CLKCTRL.reg = GCLK_CLKCTRL_ID( ADC_GCLK_ID ) | GCLK_CLKCTRL_GEN_GCLK0 | GCLK_CLKCTRL_CLKEN ;
   while ( GCLK->STATUS.reg & GCLK_STATUS_SYNCBUSY );
 
   ADC->CTRLB.reg = ADC_CTRLB_PRESCALER_DIV512 |    // Divide Clock by 512.
@@ -214,10 +237,10 @@ void init( void )
   SUPC->VREF.reg |= SUPC_VREF_VREFOE;		// Enable Supply Controller Reference output for use with ADC and DAC (AR_INTREF)
 
   #if (SAML21)
-    GCLK->PCHCTRL[GCM_ADC].reg = ( GCLK_PCHCTRL_CHEN | GCLK_PCHCTRL_GEN_GCLK0 );
+    GCLK->PCHCTRL[ADC_GCLK_ID].reg = ( GCLK_PCHCTRL_CHEN | GCLK_PCHCTRL_GEN_GCLK0 );
   #elif (SAMC21)
-    GCLK->PCHCTRL[GCM_ADC0].reg = ( GCLK_PCHCTRL_CHEN | GCLK_PCHCTRL_GEN_GCLK0 );
-    GCLK->PCHCTRL[GCM_ADC1].reg = ( GCLK_PCHCTRL_CHEN | GCLK_PCHCTRL_GEN_GCLK0 );
+    GCLK->PCHCTRL[ADC0_GCLK_ID].reg = ( GCLK_PCHCTRL_CHEN | GCLK_PCHCTRL_GEN_GCLK0 );
+    GCLK->PCHCTRL[ADC1_GCLK_ID].reg = ( GCLK_PCHCTRL_CHEN | GCLK_PCHCTRL_GEN_GCLK0 );
   #endif
   while ( GCLK->SYNCBUSY.reg & GCLK_SYNCBUSY_MASK );
 
@@ -245,8 +268,8 @@ void init( void )
   ADC->AVGCTRL.reg = ADC_AVGCTRL_SAMPLENUM_1 |    // 1 sample only (no oversampling nor averaging)
                      ADC_AVGCTRL_ADJRES(0x0ul);   // Adjusting result by 0
 #elif (SAMC21)
-  ADC0->SAMPCTRL.reg = (ADC_SAMPCTRL_SAMPLEN(0x0) | ADC_SAMPCTRL_OFFCOMP);     // ADC_SAMPCTRL_SAMPLEN must be 0 when ADC_SAMPCTRL_OFFCOMP=1
-  ADC1->SAMPCTRL.reg = (ADC_SAMPCTRL_SAMPLEN(0x0) | ADC_SAMPCTRL_OFFCOMP);     // ADC_SAMPCTRL_SAMPLEN must be 0 when ADC_SAMPCTRL_OFFCOMP=1
+  ADC0->SAMPCTRL.reg = (ADC_SAMPCTRL_SAMPLEN(0x10) | ADC_SAMPCTRL_OFFCOMP);     // ADC_SAMPCTRL_SAMPLEN must be 0 when ADC_SAMPCTRL_OFFCOMP=1
+  ADC1->SAMPCTRL.reg = (ADC_SAMPCTRL_SAMPLEN(0x10) | ADC_SAMPCTRL_OFFCOMP);     // ADC_SAMPCTRL_SAMPLEN must be 0 when ADC_SAMPCTRL_OFFCOMP=1
   syncADC();          // Wait for synchronization of registers between the clock domains
 
   ADC0->INPUTCTRL.reg = ADC_INPUTCTRL_MUXNEG_GND;   // No Negative input (Internal Ground)
@@ -292,5 +315,5 @@ void init( void )
 }
 
 #ifdef __cplusplus
-}
+}// extern "C" {
 #endif

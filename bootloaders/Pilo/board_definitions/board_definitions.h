@@ -31,6 +31,10 @@
   #include "board_definitions_arduino_mkrfox1200.h"
 #elif defined(BOARD_ID_Pilo)
   #include "board_definitions_arduino_pilo.h"
+#elif defined(BOARD_ID_Captor)
+  #include "board_definitions_arduino_Captor.h"
+#elif defined(BOARD_ID_Line)
+  #include "board_definitions_arduino_Line.h"
 #elif defined(BOARD_ID_engi)
   #include "board_definitions_arduino_engi.h"
  
@@ -53,7 +57,7 @@
   #define GCLK_CLKCTRL_ID_SERCOM4_CORE_Val	22
   #define GCLK_CLKCTRL_ID_SERCOM5_CORE_Val	24
 #endif
-#elif (SAMC21)
+#elif (SAMC21 || SAMC20)
 #ifndef GCLK_CLKCTRL_ID_SERCOM0_CORE_Val
   #define GCLK_CLKCTRL_ID_SERCOM0_CORE_Val	19
   #define GCLK_CLKCTRL_ID_SERCOM1_CORE_Val	20
@@ -75,8 +79,8 @@
 #define OUTPUT                  (0x1)
 #define INPUT_PULLUP            (0x2)
 #define INPUT_PULLDOWN          (0x3)
-#define OUTPUT_HIGH             (0x4)
-#define OUTPUT_LOW              (0x5)
+#define OUTPUT_HIGH             (0x5)
+#define OUTPUT_LOW              (0x4)
 
 #define PINMUX_UNUSED          0xFFFFFFFF
 
@@ -87,62 +91,55 @@
  * be touched from the loaded application. By default, the SRAM
  * location is the last 4 bytes.
  */
-#if (SAMD21 || SAMD11)
-  #define BOOT_DOUBLE_TAP_ADDRESS           (HMCRAMC0_ADDR + HMCRAMC0_SIZE - 4)
-#elif (SAML21 || SAMC21 || SAMD20)
-  #define BOOT_DOUBLE_TAP_ADDRESS           (HSRAM_ADDR + HSRAM_SIZE - 4)
-#else
-  #error "board_definitions.h: Missing dependency or unsupported chip. Please install CMSIS-Atmel from MattairTech (see Prerequisites for Building in README.md)."
-#endif
+#include "bootloaders/boot.h"
 
-#define BOOT_DOUBLE_TAP_DATA              (*((volatile uint32_t *) BOOT_DOUBLE_TAP_ADDRESS))
 
 #if (BOOT_USART_SERCOM_INSTANCE == 0)
   #define BOOT_USART_MODULE                   SERCOM0
   #define BOOT_USART_PER_CLOCK_INDEX          GCLK_CLKCTRL_ID_SERCOM0_CORE_Val
-  #if (SAMD21 || SAMD11)
+  #if (SAMD21 || SAMD11|| SAMD20)
     #define BOOT_USART_BUS_CLOCK_INDEX        PM_APBCMASK_SERCOM0
-  #elif (SAML21 || SAMC21)
+  #elif (SAML21 || SAMC21 || SAMC20)
     #define BOOT_USART_BUS_CLOCK_INDEX        MCLK_APBCMASK_SERCOM0
   #endif
 #elif (BOOT_USART_SERCOM_INSTANCE == 1)
   #define BOOT_USART_MODULE                   SERCOM1
   #define BOOT_USART_PER_CLOCK_INDEX          GCLK_CLKCTRL_ID_SERCOM1_CORE_Val
-  #if (SAMD21 || SAMD11)
+  #if (SAMD21 || SAMD11|| SAMD20)
     #define BOOT_USART_BUS_CLOCK_INDEX        PM_APBCMASK_SERCOM1
-  #elif (SAML21 || SAMC21)
+  #elif (SAML21 || SAMC21 || SAMC20)
     #define BOOT_USART_BUS_CLOCK_INDEX        MCLK_APBCMASK_SERCOM1
   #endif
 #elif (BOOT_USART_SERCOM_INSTANCE == 2)
   #define BOOT_USART_MODULE                   SERCOM2
   #define BOOT_USART_PER_CLOCK_INDEX          GCLK_CLKCTRL_ID_SERCOM2_CORE_Val
-  #if (SAMD21 || SAMD11)
+  #if (SAMD21 || SAMD11|| SAMD20)
     #define BOOT_USART_BUS_CLOCK_INDEX        PM_APBCMASK_SERCOM2
-  #elif (SAML21 || SAMC21)
+  #elif (SAML21 || SAMC21 || SAMC20)
     #define BOOT_USART_BUS_CLOCK_INDEX        MCLK_APBCMASK_SERCOM2
   #endif
 #elif (BOOT_USART_SERCOM_INSTANCE == 3)
   #define BOOT_USART_MODULE                   SERCOM3
   #define BOOT_USART_PER_CLOCK_INDEX          GCLK_CLKCTRL_ID_SERCOM3_CORE_Val
-  #if (SAMD21 || SAMD11)
+  #if (SAMD21 || SAMD11|| SAMD20)
     #define BOOT_USART_BUS_CLOCK_INDEX        PM_APBCMASK_SERCOM3
-  #elif (SAML21 || SAMC21)
+  #elif (SAML21 || SAMC21 || SAMC20)
     #define BOOT_USART_BUS_CLOCK_INDEX        MCLK_APBCMASK_SERCOM3
   #endif
 #elif (BOOT_USART_SERCOM_INSTANCE == 4)
   #define BOOT_USART_MODULE                   SERCOM4
   #define BOOT_USART_PER_CLOCK_INDEX          GCLK_CLKCTRL_ID_SERCOM4_CORE_Val
-  #if (SAMD21 || SAMD11)
+  #if (SAMD21 || SAMD11|| SAMD20)
     #define BOOT_USART_BUS_CLOCK_INDEX        PM_APBCMASK_SERCOM4
-  #elif (SAML21 || SAMC21)
+  #elif (SAML21 || SAMC21 || SAMC20)
     #define BOOT_USART_BUS_CLOCK_INDEX        MCLK_APBCMASK_SERCOM4
   #endif
 #elif (BOOT_USART_SERCOM_INSTANCE == 5)
   #define BOOT_USART_MODULE                   SERCOM5
   #define BOOT_USART_PER_CLOCK_INDEX          GCLK_CLKCTRL_ID_SERCOM5_CORE_Val
-  #if (SAMD21 || SAMD11)
+  #if (SAMD21 || SAMD11|| SAMD20)
     #define BOOT_USART_BUS_CLOCK_INDEX        PM_APBCMASK_SERCOM5
-  #elif (SAML21 || SAMC21)
+  #elif (SAML21 || SAMC21 || SAMC20)
     #define BOOT_USART_BUS_CLOCK_INDEX        MCLK_APBCMASK_SERCOM5
   #endif
 #endif
@@ -150,49 +147,49 @@
 #if (SDCARD_SPI_SERCOM_INSTANCE == 0)
   #define SDCARD_SPI_MODULE                   SERCOM0
   #define SDCARD_SPI_PER_CLOCK_INDEX          GCLK_CLKCTRL_ID_SERCOM0_CORE_Val
-  #if (SAMD21 || SAMD11)
+  #if (SAMD21 || SAMD11|| SAMD20)
     #define SDCARD_SPI_BUS_CLOCK_INDEX        PM_APBCMASK_SERCOM0
-  #elif (SAML21 || SAMC21)
+  #elif (SAML21 || SAMC21 || SAMC20)
     #define SDCARD_SPI_BUS_CLOCK_INDEX        MCLK_APBCMASK_SERCOM0
   #endif
 #elif (SDCARD_SPI_SERCOM_INSTANCE == 1)
   #define SDCARD_SPI_MODULE                   SERCOM1
   #define SDCARD_SPI_PER_CLOCK_INDEX          GCLK_CLKCTRL_ID_SERCOM1_CORE_Val
-  #if (SAMD21 || SAMD11)
+  #if (SAMD21 || SAMD11|| SAMD20)
     #define SDCARD_SPI_BUS_CLOCK_INDEX        PM_APBCMASK_SERCOM1
-  #elif (SAML21 || SAMC21)
+  #elif (SAML21 || SAMC21 || SAMC20)
     #define SDCARD_SPI_BUS_CLOCK_INDEX        MCLK_APBCMASK_SERCOM1
   #endif
 #elif (SDCARD_SPI_SERCOM_INSTANCE == 2)
   #define SDCARD_SPI_MODULE                   SERCOM2
   #define SDCARD_SPI_PER_CLOCK_INDEX          GCLK_CLKCTRL_ID_SERCOM2_CORE_Val
-  #if (SAMD21 || SAMD11)
+  #if (SAMD21 || SAMD11|| SAMD20)
     #define SDCARD_SPI_BUS_CLOCK_INDEX        PM_APBCMASK_SERCOM2
-  #elif (SAML21 || SAMC21)
+  #elif (SAML21 || SAMC21 || SAMC20)
     #define SDCARD_SPI_BUS_CLOCK_INDEX        MCLK_APBCMASK_SERCOM2
   #endif
 #elif (SDCARD_SPI_SERCOM_INSTANCE == 3)
   #define SDCARD_SPI_MODULE                   SERCOM3
   #define SDCARD_SPI_PER_CLOCK_INDEX          GCLK_CLKCTRL_ID_SERCOM3_CORE_Val
-  #if (SAMD21 || SAMD11)
+  #if (SAMD21 || SAMD11|| SAMD20)
     #define SDCARD_SPI_BUS_CLOCK_INDEX        PM_APBCMASK_SERCOM3
-  #elif (SAML21 || SAMC21)
+  #elif (SAML21 || SAMC21 || SAMC20)
     #define SDCARD_SPI_BUS_CLOCK_INDEX        MCLK_APBCMASK_SERCOM3
   #endif
 #elif (SDCARD_SPI_SERCOM_INSTANCE == 4)
   #define SDCARD_SPI_MODULE                   SERCOM4
   #define SDCARD_SPI_PER_CLOCK_INDEX          GCLK_CLKCTRL_ID_SERCOM4_CORE_Val
-  #if (SAMD21 || SAMD11)
+  #if (SAMD21 || SAMD11|| SAMD20)
     #define SDCARD_SPI_BUS_CLOCK_INDEX        PM_APBCMASK_SERCOM4
-  #elif (SAML21 || SAMC21)
+  #elif (SAML21 || SAMC21 || SAMC20)
     #define SDCARD_SPI_BUS_CLOCK_INDEX        MCLK_APBCMASK_SERCOM4
   #endif
 #elif (SDCARD_SPI_SERCOM_INSTANCE == 5)
   #define SDCARD_SPI_MODULE                   SERCOM5
   #define SDCARD_SPI_PER_CLOCK_INDEX          GCLK_CLKCTRL_ID_SERCOM5_CORE_Val
-  #if (SAMD21 || SAMD11)
+  #if (SAMD21 || SAMD11|| SAMD20)
     #define SDCARD_SPI_BUS_CLOCK_INDEX        PM_APBCMASK_SERCOM5
-  #elif (SAML21 || SAMC21)
+  #elif (SAML21 || SAMC21 || SAMC20)
     #define SDCARD_SPI_BUS_CLOCK_INDEX        MCLK_APBCMASK_SERCOM5
   #endif
 #endif

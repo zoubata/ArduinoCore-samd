@@ -11,16 +11,18 @@
       "platforms": [
         {
           "name": "Arduino SAMD core - Hourly build",
-          "architecture": "samd",
+          "architecture": "sam",
           "version": "%%VERSION%%",
           "category": "Arduino",
-          "url": "http://downloads.arduino.cc/Hourly/samd/%%FILENAME%%",
+          "url": "http://www.zoubworld.com/~zoubworld_Arduino/files/%%FILENAME%%",
           "archiveFileName": "%%FILENAME%%",
           "checksum": "SHA-256:%%CHECKSUM%%",
           "size": "%%SIZE%%",
           "boards": [
             {
-              "name": "Arduino Zero"
+              {"name": "Pilo"},
+			{"name": "Captor"},
+			{"name": "line"}
             }
           ],
           "toolsDependencies": [

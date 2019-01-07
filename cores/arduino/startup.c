@@ -1,4 +1,5 @@
 /*
+  Copyright (c) 2018 Zoubworld LLC. All right reserved.
   Copyright (c) 2017 MattairTech LLC. All right reserved.
   Copyright (c) 2015 Arduino LLC.  All right reserved.
 
@@ -73,6 +74,9 @@ void waitForPLL( void )
 
 void SystemInit( void )
 {
+
+  
+  
   /* Set 1 Flash Wait State for 48MHz (2 for the L21 and C21), cf tables 20.9 and 35.27 in SAMD21 Datasheet */
 #if (SAMD)
   NVMCTRL->CTRLB.bit.RWS = NVMCTRL_CTRLB_RWS_HALF_Val ;	// one wait state
@@ -387,4 +391,150 @@ void SystemInit( void )
    * Disable automatic NVM write operations (errata reference 13134, applies to D21/D11/L21, but not C21)
    */
   NVMCTRL->CTRLB.bit.MANW = 1;
+  
+  
+  
+  /* Change default QOS values to have the best performance and correct USB behaviour (applies to D21/D11). From startup_samd21.c from ASF 3.32. */
+#if (SAMD21 || SAMD11)
+  SBMATRIX->SFR[SBMATRIX_SLAVE_HMCRAMC0].reg = 2;
+  
+  USB->DEVICE.QOSCTRL.bit.CQOS = 2;
+  USB->DEVICE.QOSCTRL.bit.DQOS = 2;
+  
+  DMAC->QOSCTRL.bit.DQOS = 2;
+  DMAC->QOSCTRL.bit.FQOS = 2;
+  DMAC->QOSCTRL.bit.WRBQOS = 2;
+#endif
+
+  
+  for(int i=0;i<PERIPH_COUNT_IRQn;i++)
+      NVIC_SetPriority (i, ((1<<__NVIC_PRIO_BITS) - 1));  /* set Priority low */
+ 
+
+}
+
+
+//\brief Default interrupt handler for unused IRQs.
+
+#if SAMC21N // interupt shared on samC21N
+
+#if ( defined(__ICCARM__) || defined(__AARM__) )
+// Default empty handler 
+void Dummy_Handler2(void)
+{
+        while (1) {
+        }
+}
+#pragma weak TC0_Handler              = Dummy_Handler2
+#pragma weak  TC1_Handler              = Dummy_Handler2
+#pragma weak TC2_Handler              = Dummy_Handler2
+#pragma weak TC5_Handler              = Dummy_Handler2
+#pragma weak TC6_Handler              = Dummy_Handler2
+#pragma weak TC7_Handler              = Dummy_Handler2
+
+#pragma weak SERCOM0_Handler              = Dummy_Handler2
+#pragma weak SERCOM1_Handler              = Dummy_Handler2
+#pragma weak SERCOM6_Handler              = Dummy_Handler2
+#pragma weak SERCOM7_Handler              = Dummy_Handler2
+#endif
+
+extern void TC0_Handler(void);
+extern void TC5_Handler(void);
+extern void TC1_Handler(void);
+extern void TC6_Handler(void);
+extern void TC2_Handler(void);
+extern void TC7_Handler(void);
+extern void SERCOM0_Handler(void);
+extern void SERCOM6_Handler(void);
+extern void SERCOM1_Handler(void);
+extern void SERCOM7_Handler(void);
+
+// Cortex-M0+ core handlers 
+
+void INT20_Handler(void)
+{
+	if((TC0->COUNT8.INTFLAG.reg&TC0->COUNT8.INTENSET.reg)!=0)
+	TC0_Handler();
+#ifdef TC5
+	if((TC5->COUNT8.INTFLAG.reg&TC5->COUNT8.INTENSET.reg)!=0)
+	TC5_Handler();
+#endif
+}
+void INT21_Handler(void)
+{
+	if((TC1->COUNT8.INTFLAG.reg&TC1->COUNT8.INTENSET.reg)!=0)
+	TC1_Handler();
+#ifdef TC6
+	if((TC6->COUNT8.INTFLAG.reg&TC6->COUNT8.INTENSET.reg)!=0)
+	TC6_Handler();
+#endif
+}
+void INT22_Handler(void)
+{
+	if((TC2->COUNT8.INTFLAG.reg&TC2->COUNT8.INTENSET.reg)!=0)
+	TC2_Handler();
+#ifdef TC7
+	if((TC7->COUNT8.INTFLAG.reg&TC7->COUNT8.INTENSET.reg)!=0)
+	TC7_Handler();
+#endif
+}
+
+
+void INT9_Handler(void)
+{
+	if((SERCOM0->USART.INTFLAG.reg & SERCOM0->USART.INTENSET.reg)!=0)
+	SERCOM0_Handler();
+#ifdef SERCOM6
+	if((SERCOM6->USART.INTFLAG.reg & SERCOM6->USART.INTENSET.reg)!=0)
+	SERCOM6_Handler();
+#endif
+}
+
+void INT10_Handler(void)
+{
+	if((SERCOM1->USART.INTFLAG.reg & SERCOM1->USART.INTENSET.reg)!=0)
+	SERCOM1_Handler();
+#ifdef SERCOM7
+	if((SERCOM7->USART.INTFLAG.reg & SERCOM7->USART.INTENSET.reg)!=0)
+	SERCOM7_Handler();
+#endif
+}
+
+#endif
+
+
+/*
+void NMI_Handler(void)
+{
+  __BKPT(14);
+  while (1);
+}
+
+void SVC_Handler(void)
+{
+  __BKPT(5);
+  while (1);
+}
+
+void PendSV_Handler(void)
+{
+  __BKPT(2);
+  while (1);
+}
+*/
+
+void HardFault_Handler(void)
+{
+  __BKPT(13);
+  while (1);
+}
+
+extern int sysTickHook(void);
+extern int SysTick_DefaultHandler(void);
+
+void SysTick_Handler(void)
+{
+  if (sysTickHook())
+    return;
+  SysTick_DefaultHandler();
 }

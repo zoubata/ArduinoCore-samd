@@ -21,6 +21,10 @@
 #include "board_definitions/board_definitions.h"
 #include "sam_ba_serial.h"
 #include "board_driver_serial.h"
+#include "cores\arduino\WVariant.h"
+#include "Variant.h"
+
+Sercom * boot_usart_module=BOOT_USART_MODULE;
 
 /* Local reference to current Usart instance in use with this driver */
 //struct usart_module usart_sam_ba;
@@ -45,50 +49,196 @@ uint16_t size_of_data;
 uint8_t mode_of_transfer;
 
 #define BOOT_USART_PAD(n) BOOT_USART_PAD##n
-
+#define READ_PIN(pin) (((PORT->Group[pin >>5].IN.reg)>>(pin & 0x1F)) & 0x1)
+#define MAX(a,b) ((a<b)?b:a)
+#define MIN(a,b) ((a<b)?a:b)
+long long  get_time_ns();
+unsigned  long  ticks0 ;
+unsigned  long  ticks1;
+unsigned  long  ticks2;
+unsigned  long  ticks3;
+unsigned  long  ticks4;
+unsigned  long  ticks5;
+char s0;
+char s1;
+char s2;
+char s3;
+char s4;
+char s5;
+signed int pin;
 /**
  * \brief Open the given USART
  */
-void serial_open(void)
+void serial_open(unsigned int fBaudSpeed)
 {
+	
+  #if defined (SERIAL_AUTOBAUD) && (SERIAL_AUTOBAUD==1)
+  if (fBaudSpeed!=0)
+  {
+	//signed int
+	pin =-1;
+	switch(BOOT_USART_PAD_SETTINGS) 
+	{
+		case 	UART_RX_PAD0_TX_PAD2 : pin=BOOT_USART_PAD0;break;
+		case 	UART_RX_PAD1_TX_PAD2 : pin=BOOT_USART_PAD1;break;
+		case 	UART_RX_PAD2_TX_PAD0 : pin=BOOT_USART_PAD2;break;
+		case 	UART_RX_PAD3_TX_PAD0 : pin=BOOT_USART_PAD3;break;
+		case 	UART_RX_PAD1_TX_PAD0 : pin=BOOT_USART_PAD1;break;
+		case 	UART_RX_PAD3_TX_PAD2 : pin=BOOT_USART_PAD3;break;
+        default : pin=PINMUX_UNUSED;break;
+		 
+	}
+        unsigned int b[5]={1,1000,1,100000,10};
+	
+	if (pin!=PINMUX_UNUSED)
+	{
+		pin=(pin>>16)&0xff;
+		//configure as input pull up
+		PORT->Group[pin >>5].PINCFG[pin & 0x1F].bit.INEN=1;
+			PORT->Group[pin >>5].PINCFG[pin & 0x1F].bit.PULLEN=1;
+			PORT->Group[pin >>5].OUTSET.reg=(1L<<(pin & 0x1F));
+			PORT->Group[pin >>5].DIRCLR.reg=(1L<<(pin & 0x1F));
+		//wait 1st frame to read baud rate.
 
+                 //wait a frame
+		 //char 
+		 s0=READ_PIN(pin);
+		 while(s0==READ_PIN(pin));
+                  int load=SysTick->LOAD;// use to measure time (get_time_ns take time, create latency, so limit the baud max to 115200.
+                   SysTick->LOAD=SysTick_VAL_CURRENT_Msk;
+                   SysTick->VAL=0;
+                  s0=READ_PIN(pin);//start to measure
+                  while(s0==READ_PIN(pin));
+                  
+		 //unsigned  long  
+		 ticks0  =   SysTick->VAL;//get_time_ns();
+		 //char
+		 s1=READ_PIN(pin);
+		 while(s1==READ_PIN(pin));
+		// unsigned  long  
+		ticks1  =  SysTick->VAL;//get_time_ns();
+		 //char
+		 s2=READ_PIN(pin);
+		 while(s2==READ_PIN(pin));
+		 //unsigned  long  
+		 ticks2  =  SysTick->VAL;//get_time_ns();
+		 //char 
+		 s3=READ_PIN(pin);
+		 while(s3==READ_PIN(pin));
+		 //unsigned  long 
+		 ticks3  =  SysTick->VAL;//get_time_ns();
+		// char 
+		s4=READ_PIN(pin);
+		 while(s4==READ_PIN(pin));
+		 //unsigned  long  
+		 ticks4  =  SysTick->VAL;//get_time_ns();
+		 //char 
+		 s5=READ_PIN(pin);
+		 while(s5==READ_PIN(pin));
+		// unsigned  long
+		ticks5  =  SysTick->VAL;//get_time_ns();
+                 
+                 SysTick->LOAD=load;// restaure
+                 SysTick->VAL=0;
+                 
+		 b[0]=ticks0-ticks1;
+		 b[1]=ticks1-ticks2;
+		 b[2]=ticks2-ticks3;
+		 b[3]=ticks3-ticks4;
+		 b[4]=ticks4-ticks5;
+                 for(int i=0;i<5;i++)
+                  b[i]=(b[i]*1000)/(VARIANT_MCK/1000000);
+               
+	}
+	// frame : 80 80 #
+	// ------_00000001-...._00000001-...._11000100-
+	//s      0       1     2       3     45 6  78 9
+	//          b0     b1      b2    b3  b4b5    
+	//count      8     >2      8      >2  1 2
+	//_=start ; -=stop
+	
+	 unsigned int bm=b[0];
+	 unsigned int bM=b[0];
+	 for(int i=1;i<5;i++)
+         {
+           bm=MIN(bm,b[i]);
+           bM=MAX(bM,b[i]);
+         }
+         
+           
+	//
+	 if (bM>(1000000000LL/1100)) {}//error too slow to be correct
+	else
+		if (bm<(1000000000LL/1500000)) {}//error too fast 1.5Mbps we can't measure upper
+	else
+        {
+          
+         unsigned int bavg=0;
+           
+           if (((bm*17)/10)<bM) // not a 'U'
+              for(int i=0;i<5;i++)
+                 b[i]=b[i]/((b[i]+bm/2)/bm);// normalize pulse length to 1 bit
+             for(int i=0;i<5;i++)
+           { bavg+=b[i];}
+           bavg/=5;
+           
+	 fBaudSpeed=(long long)(1000000000LL/(long long)bavg);
+        }
+  }
+  #endif
 	/* Configure the port pins for SERCOM_USART */
-	pinMux(BOOT_USART_PAD0);
+	
+
+        pinMux(BOOT_USART_PAD0);
         pinMux(BOOT_USART_PAD1);
         pinMux(BOOT_USART_PAD2);
         pinMux(BOOT_USART_PAD3);
 
-	/* Enable clock for BOOT_USART_MODULE */
-#if (SAMD21 || SAMD11)
+	/* Enable clock for boot_usart_module */
+#if (SAMD21 || SAMD20 || SAMD11)
   PM->APBCMASK.reg |= BOOT_USART_BUS_CLOCK_INDEX;
 #elif (SAML21)
   MCLK->APBCMASK.reg |= MCLK_APBCMASK_SERCOM0 | MCLK_APBCMASK_SERCOM1 | MCLK_APBCMASK_SERCOM2 | MCLK_APBCMASK_SERCOM3 | MCLK_APBCMASK_SERCOM4 ;
   MCLK->APBDMASK.reg |= MCLK_APBDMASK_SERCOM5;	// On the SAML, SERCOM5 is on the low power bridge
-#elif (SAMC21)
+#elif (SAMC21 || SAMC20)
   #if (SAMC21E)
   MCLK->APBCMASK.reg |= MCLK_APBCMASK_SERCOM0 | MCLK_APBCMASK_SERCOM1 | MCLK_APBCMASK_SERCOM2 | MCLK_APBCMASK_SERCOM3 ;
   #elif (SAMC21G) || (SAMC21J)
   MCLK->APBCMASK.reg |= MCLK_APBCMASK_SERCOM0 | MCLK_APBCMASK_SERCOM1 | MCLK_APBCMASK_SERCOM2 | MCLK_APBCMASK_SERCOM3 | MCLK_APBCMASK_SERCOM4 | MCLK_APBCMASK_SERCOM5 ;
+ #elif (SAMC21N) 
+  MCLK->APBCMASK.reg |= MCLK_APBCMASK_SERCOM0 | MCLK_APBCMASK_SERCOM1 | MCLK_APBCMASK_SERCOM2 | MCLK_APBCMASK_SERCOM3 | MCLK_APBCMASK_SERCOM4 | MCLK_APBCMASK_SERCOM5  ;
+  MCLK->APBDMASK.reg |=  MCLK_APBDMASK_SERCOM6 | MCLK_APBDMASK_SERCOM7 ;
+
 #else
-  #error "sam_ba_serial.c: Missing dependency or unsupported chip. Please install CMSIS-Atmel from MattairTech (see Prerequisites for Building in README.md)."
+  #error "sam_ba_serial.c: Missing dependency or unsupported chip. Please install CMSIS-Atmel from zoubworld (see Prerequisites for Building in README.md)."
   #endif
 #else
-  #error "sam_ba_serial.c: Missing dependency or unsupported chip. Please install CMSIS-Atmel from MattairTech (see Prerequisites for Building in README.md)."
+  #error "sam_ba_serial.c: Missing dependency or unsupported chip. Please install CMSIS-Atmel from zoubworld (see Prerequisites for Building in README.md)."
 #endif
 
 	/* Set GCLK_GEN0 as source for GCLK_ID_SERCOMx_CORE */
-#if (SAMD21 || SAMD11)
+#if (SAMD21 || SAMD20 || SAMD11)
   GCLK->CLKCTRL.reg = ( GCLK_CLKCTRL_ID( BOOT_USART_PER_CLOCK_INDEX ) | GCLK_CLKCTRL_GEN_GCLK0 | GCLK_CLKCTRL_CLKEN );
   waitForSync();
 #elif (SAML21 || SAMC21)
   GCLK->PCHCTRL[BOOT_USART_PER_CLOCK_INDEX].reg = ( GCLK_PCHCTRL_CHEN | GCLK_PCHCTRL_GEN_GCLK0 );
   waitForSync();
 #else
-  #error "sam_ba_serial.c: Missing dependency or unsupported chip. Please install CMSIS-Atmel from MattairTech (see Prerequisites for Building in README.md)."
+  #error "sam_ba_serial.c: Missing dependency or unsupported chip. Please install CMSIS-Atmel from zoubworld (see Prerequisites for Building in README.md)."
 #endif
 
+#define fref ((signed long long )VARIANT_MCK)
+#define SamplesPerBit 16LL
+signed long long BAUD=((signed long long )65536LL*(signed long long )SamplesPerBit*(signed long long )fBaudSpeed);
+BAUD=BAUD/(signed long long )fref;
+BAUD=65536-BAUD;
+
 	/* Baud rate 115200 - clock 48MHz -> BAUD value-63018 */
-	uart_basic_init(BOOT_USART_MODULE, 63018, BOOT_USART_PAD_SETTINGS);
+	uart_basic_init(boot_usart_module,BAUD , BOOT_USART_PAD_SETTINGS);
+// SAMPR=0 =>16 & Arithmetic Baud
+//SMPA=0  => 7/8/9
+
+
 
 	//Initialize flag
 	b_sharp_received = false;
@@ -96,24 +246,124 @@ void serial_open(void)
 	idx_rx_write = 0;
 	idx_tx_read = 0;
 	idx_tx_write = 0;
-/*
-	uart_write_byte(BOOT_USART_MODULE, 0x55);
-uart_write_byte(BOOT_USART_MODULE, 0x55);
-uart_write_byte(BOOT_USART_MODULE, 0x55);
-uart_write_byte(BOOT_USART_MODULE, 0x55);
-uart_write_byte(BOOT_USART_MODULE, 0x55);
-uart_write_byte(BOOT_USART_MODULE, 0x55);
-uart_write_byte(BOOT_USART_MODULE, 0x55);
-*/
+
+	serial_putc('B');
+	serial_putc('O');
+	serial_putc('O');
+	serial_putc('T');
 	error_timeout = 0;
+	/*	while(1)
+	serial_putc('U');*/
 }
 
+#define SHIFT 32
+#define USART_SAMPLE_NUM 16
+/*
+* \internal Calculate asynchronous baudrate value (UART)
+*/
+uint16_t calculate_baud_value(
+const uint32_t baudrate,
+const uint32_t peripheral_clock,
+uint8_t sample_num)
+{
+  /* Temporary variables */
+  uint64_t ratio = 0;
+  uint64_t scale = 0;
+  uint64_t baud_calculated = 0;
+  uint64_t temp1;
+  /* Calculate the BAUD value */
+  temp1 = ((sample_num * (uint64_t)baudrate) << SHIFT);
+  ratio = long_division(temp1, peripheral_clock);
+  scale = ((uint64_t)1 << SHIFT) - ratio;
+  baud_calculated = (65536 * scale) >> SHIFT;
+  return baud_calculated;
+}
+/**
+ * \brief Open the given USART
+ */
+void Pcom_open_usart(PcomStatus Pcom)
+{
+
+if (Pcom.mode==USART2)
+{
+	/* Configure the port pins for SERCOM_USART */
+	pinMux(Pcom.instance.PinMux.RXD2);
+    pinMux(Pcom.instance.PinMux.TXD2);       
+}
+else if (Pcom.mode==USART)
+{
+	/* Configure the port pins for SERCOM_USART */
+	pinMux(Pcom.instance.PinMux.RXD);
+    pinMux(Pcom.instance.PinMux.TXD);       
+}
+
+	/* Enable clock for boot_usart_module */
+#if (SAMD20 || SAMD21 || SAMD11)
+  PM->APBCMASK.reg |= BOOT_USART_BUS_CLOCK_INDEX;
+#elif (SAML21)
+  MCLK->APBCMASK.reg |= MCLK_APBCMASK_SERCOM0 | MCLK_APBCMASK_SERCOM1 | MCLK_APBCMASK_SERCOM2 | MCLK_APBCMASK_SERCOM3 | MCLK_APBCMASK_SERCOM4 ;
+  MCLK->APBDMASK.reg |= MCLK_APBDMASK_SERCOM5;	// On the SAML, SERCOM5 is on the low power bridge
+#elif (SAMC21 || SAMC20)
+  #if (SAMC21E)
+  MCLK->APBCMASK.reg |= MCLK_APBCMASK_SERCOM0 | MCLK_APBCMASK_SERCOM1 | MCLK_APBCMASK_SERCOM2 | MCLK_APBCMASK_SERCOM3 ;
+  #elif (SAMC21G) || (SAMC21J)
+  MCLK->APBCMASK.reg |= MCLK_APBCMASK_SERCOM0 | MCLK_APBCMASK_SERCOM1 | MCLK_APBCMASK_SERCOM2 | MCLK_APBCMASK_SERCOM3 | MCLK_APBCMASK_SERCOM4 | MCLK_APBCMASK_SERCOM5 ;
+#elif (SAMC21N) 
+  MCLK->APBCMASK.reg |= MCLK_APBCMASK_SERCOM0 | MCLK_APBCMASK_SERCOM1 | MCLK_APBCMASK_SERCOM2 | MCLK_APBCMASK_SERCOM3 | MCLK_APBCMASK_SERCOM4 | MCLK_APBCMASK_SERCOM5  ;
+  MCLK->APBDMASK.reg |=  MCLK_APBDMASK_SERCOM6 | MCLK_APBDMASK_SERCOM7 ;
+  #else
+  #error "sam_ba_serial.c: Missing dependency or unsupported chip. Please install CMSIS-Atmel from zoubworld (see Prerequisites for Building in README.md)."
+  #endif
+#else
+  #error "sam_ba_serial.c: Missing dependency or unsupported chip. Please install CMSIS-Atmel from zoubworld (see Prerequisites for Building in README.md)."
+#endif
+
+	/* Set GCLK_GEN0 as source for GCLK_ID_SERCOMx_CORE */
+#if (SAMD20 || SAMD21 || SAMD11)
+  GCLK->CLKCTRL.reg = ( GCLK_CLKCTRL_ID( BOOT_USART_PER_CLOCK_INDEX ) | GCLK_CLKCTRL_GEN_GCLK0 | GCLK_CLKCTRL_CLKEN );
+  waitForSync();
+#elif (SAML21 || SAMC21)
+  GCLK->PCHCTRL[BOOT_USART_PER_CLOCK_INDEX].reg = ( GCLK_PCHCTRL_CHEN | GCLK_PCHCTRL_GEN_GCLK0 );
+  waitForSync();
+#else
+  #error "sam_ba_serial.c: Missing dependency or unsupported chip. Please install CMSIS-Atmel from zoubworld (see Prerequisites for Building in README.md)."
+#endif
+
+
+	/* Baud rate 115200 - clock 48MHz -> BAUD value-63018 */
+	int baud_value=63018;
+	baud_value = calculate_baud_value(Pcom.BaudRate,VARIANT_MCK/*system_gclk_chan_get_hz(BOOT_USART_PER_CLOCK_INDEX/*SERCOM2_GCLK_ID_CORE*//*)*/,USART_SAMPLE_NUM);
+	if (Pcom.mode==USART)
+{
+	uart_basic_init(Pcom.instance.sercom, baud_value, UART_RX_PAD1_TX_PAD0);
+	}
+else if (Pcom.mode==USART2)
+{
+	uart_basic_init(Pcom.instance.sercom, baud_value, UART_RX_PAD3_TX_PAD2);
+}
+	//Initialize flag
+	b_sharp_received = false;
+	idx_rx_read = 0;
+	idx_rx_write = 0;
+	idx_tx_read = 0;
+	idx_tx_write = 0;
+
+	error_timeout = 0;
+
+}
+/**
+ * \brief Close communication line
+ */
+void Pcom_close(PcomStatus Pcom)
+{
+	uart_disable(Pcom.instance.sercom);
+}
 /**
  * \brief Close communication line
  */
 void serial_close(void)
 {
-	uart_disable(BOOT_USART_MODULE);
+	uart_disable(boot_usart_module);
 }
 
 /**
@@ -125,10 +375,65 @@ void serial_close(void)
  * \return \c 1 if function was successfully done, otherwise \c 0.
  */
 int serial_putc(int value)
-{
-	uart_write_byte(BOOT_USART_MODULE, (uint8_t)value);
+{	
+	uart_write_byte(boot_usart_module, (uint8_t)value);
 	return 1;
 }
+int Pcom_putc(PcomStatus Pcom,int value)
+{
+	if ((Pcom.mode==USART)||(Pcom.mode==USART2))
+	uart_write_byte(Pcom.instance.sercom, (uint8_t)value);
+else{
+/**to do SPI I2C*/
+}
+	return 1;
+}
+
+int Pcom_getc(PcomStatus Pcom)
+{
+	uint16_t retval;
+	if ((Pcom.mode==USART)||(Pcom.mode==USART2))
+	{
+	//Wait until input buffer is filled
+	while(!(Pcom_is_rx_ready(Pcom)));
+	retval = (uint16_t)uart_read_byte(Pcom.instance.sercom);
+	}
+	else{
+/**to do SPI I2C*/
+}
+	//usart_read_wait(&usart_sam_ba, &retval);
+	return (int)retval;
+
+}
+
+int Pcom_sharp_received(PcomStatus Pcom)
+{
+	if (Pcom_is_rx_ready(Pcom))
+  {
+		if (serial_getc() == SHARP_CHARACTER)
+			return (true);
+	}
+
+	return (false);
+}
+
+bool Pcom_is_rx_ready(PcomStatus Pcom)
+{
+	if ((Pcom.mode==USART)||(Pcom.mode==USART2))
+	return (Pcom.instance.sercom->USART.INTFLAG.reg & SERCOM_USART_INTFLAG_RXC);
+	else{
+/**to do SPI I2C*/
+return 0;
+}
+}
+
+
+
+
+
+
+
+
 
 
 int serial_getc(void)
@@ -136,7 +441,7 @@ int serial_getc(void)
 	uint16_t retval;
 	//Wait until input buffer is filled
 	while(!(serial_is_rx_ready()));
-	retval = (uint16_t)uart_read_byte(BOOT_USART_MODULE);
+	retval = (uint16_t)uart_read_byte(boot_usart_module);
 	//usart_read_wait(&usart_sam_ba, &retval);
 	return (int)retval;
 
@@ -154,8 +459,10 @@ int serial_sharp_received(void)
 
 bool serial_is_rx_ready(void)
 {
-	return (BOOT_USART_MODULE->USART.INTFLAG.reg & SERCOM_USART_INTFLAG_RXC);
+	return (boot_usart_module->USART.INTFLAG.reg & SERCOM_USART_INTFLAG_RXC);
 }
+
+
 
 int serial_readc(void)
 {

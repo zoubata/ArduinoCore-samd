@@ -1,0 +1,7 @@
+mem32 0 32
+erase
+mem32 0 32 
+loadbin sam_ba_Pilo_SAMC21J18A_FTDI.bin 0
+mem32 0 32
+g
+q

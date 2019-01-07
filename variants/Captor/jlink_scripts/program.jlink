@@ -1,0 +1,3 @@
+loadfile %%FILE%% %%ADDR%%
+verifyfile %%FILE%% %%ADDR%%
+q

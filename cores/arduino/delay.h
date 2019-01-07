@@ -18,14 +18,15 @@
 
 #ifndef _DELAY_
 #define _DELAY_
+#include <stdint.h>
+#include "variant.h"
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-#include <stdint.h>
-#include "variant.h"
 
+#define __inline__ inline
 /**
  * \brief Returns the number of milliseconds since the Arduino board began running the current program.
  *
@@ -84,7 +85,14 @@ static __inline__ void delayMicroseconds( unsigned int usec )
 
   // VARIANT_MCK / 1000000 == cycles needed to delay 1uS
   //                     3 == cycles used in a loop
-  uint32_t n = usec * (VARIANT_MCK / 1000000) / 3;
+  uint32_t n = usec * (VARIANT_MCK / 1000000) / 6;
+  
+  
+#if (defined(__ICCARM__) || defined(__AARM__))
+/// @todo
+  for(volatile int i=n;n>0;n--);
+#else
+                     
   __asm__ __volatile__(
     "1:              \n"
     "   sub %0, #1   \n" // substract 1 from %0 (n)
@@ -93,12 +101,13 @@ static __inline__ void delayMicroseconds( unsigned int usec )
     :                    // no input
     :                    // no clobber
   );
+#endif
   // https://gcc.gnu.org/onlinedocs/gcc/Extended-Asm.html
   // https://gcc.gnu.org/onlinedocs/gcc/Extended-Asm.html#Volatile
 }
 
 #ifdef __cplusplus
-}
+}// extern "C" {
 #endif
 
 #endif /* _DELAY_ */

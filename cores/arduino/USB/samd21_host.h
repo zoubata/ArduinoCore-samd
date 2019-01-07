@@ -129,7 +129,7 @@ extern __attribute__((__aligned__(4))) volatile UsbHostDescriptor usb_pipe_table
 #define uhd_force_full_speed()              USB->HOST.CTRLB.reg &= ~USB_HOST_CTRLB_SPDCONF_Msk
 
 #ifdef __cplusplus
-}
+}// extern "C" {
 #endif
 
 #endif /* SAMD21_HOST_H_INCLUDED */

@@ -33,8 +33,8 @@ extern "C" {
 
 #define RET_STATUS_OK     0
 
-int pinPeripheral( uint32_t ulPin, uint32_t ulPeripheral );
-
+int pinPeripheral( uint32_t ulPin, EPioType ulPeripheral );
+int pinPeripheralDisable( uint32_t ulPin  );
 #ifdef __cplusplus
 } // extern "C"
 

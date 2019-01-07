@@ -115,7 +115,7 @@
  * lacks USB, so set to SAM_BA_UART_ONLY in this case. By default,
  * SAM_BA_USBCDC_ONLY is set (SAM_BA_UART_ONLY with the C21).
  */
-#if (SAMC21)
+#if (SAMC21) || (SAMD20)
 
   #define SAM_BA_INTERFACE              SAM_BA_UART_ONLY
 #else
@@ -264,7 +264,7 @@
  * PIN_POLARITY_ACTIVE_HIGH. Config can be INPUT, INPUT_PULLUP, or INPUT_PULLDOWN.
  * Size: ~84B. Disabled by default.
  */
-//#define BOOT_LOAD_PIN_ENABLED
+#define BOOT_LOAD_PIN_ENABLED
 #define BOOT_LOAD_PIN_POLARITY            PIN_POLARITY_ACTIVE_LOW
 #define BOOT_LOAD_PIN_PORT                (0)
 #define BOOT_LOAD_PIN                     (4)
@@ -287,9 +287,9 @@
 #define BOARD_LED_PIN                     (5)
 #define BOARD_LED_POLARITY	LED_POLARITY_HIGH_ON
 
-//#define BOARD_LEDRX_PORT                  (1)
-//#define BOARD_LEDRX_PIN                   (3)
-//#define BOARD_LEDRX_POLARITY	LED_POLARITY_LOW_ON
+#define BOARD_LEDRX_PORT                  (0)
+#define BOARD_LEDRX_PIN                   (4)
+#define BOARD_LEDRX_POLARITY	LED_POLARITY_HIGH_ON
 
 //#define BOARD_LEDTX_PORT                  (0)
 //#define BOARD_LEDTX_PIN                   (27)

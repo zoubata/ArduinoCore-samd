@@ -1,6 +1,8 @@
 /*
   Copyright (c) 2014 Arduino LLC.  All right reserved.
   Copyright (c) 2017 MattairTech LLC. All right reserved.
+  Copyright (c) 2018 Zoubworld LLC. All right reserved.
+  
 
   This library is free software; you can redistribute it and/or
   modify it under the terms of the GNU Lesser General Public
@@ -32,27 +34,40 @@ extern "C" {
 const uint8_t timerClockIDs[] = 
 {
 #if (SAMD11)
-	GCM_TCC0,
-	GCM_TC1_TC2,
-	GCM_TC1_TC2,
+	TCC0_GCLK_ID,
+	TC1_GCLK_ID,
+	TC2_GCLK_ID,
 #elif (SAMD21)
-	GCM_TCC0_TCC1,
-	GCM_TCC0_TCC1,
-	GCM_TCC2_TC3,
-	GCM_TCC2_TC3,
-	GCM_TC4_TC5,
-	GCM_TC4_TC5,
-	GCM_TC6_TC7,
-	GCM_TC6_TC7,
+	TCC0_GCLK_ID,
+	TCC1_GCLK_ID,
+	TCC2_GCLK_ID,
+	TC3_GCLK_ID,
+	TC4_GCLK_ID,
+	TC5_GCLK_ID,
+	#if (!SAMD21E) && (!SAMD20E)
+	TC6_GCLK_ID,
+	TC7_GCLK_ID,
+	#endif
+#elif (SAMD20)
+	TC0_GCLK_ID,
+	TC1_GCLK_ID,
+	TC2_GCLK_ID,
+	TC3_GCLK_ID,
+	TC4_GCLK_ID,
+	TC5_GCLK_ID,
+	#if (!SAMD21E) && (!SAMD20E)
+	TC6_GCLK_ID,
+	TC7_GCLK_ID,
+	#endif
 #elif (SAML21 || SAMC21)
-	GCM_TCC0_TCC1,
-	GCM_TCC0_TCC1,
-	GCM_TCC2,
-	GCM_TC0_TC1,
-	GCM_TC0_TC1,
-	GCM_TC2_TC3,
-	GCM_TC2_TC3,
-	GCM_TC4,
+	TCC0_GCLK_ID,
+	TCC1_GCLK_ID,
+	TCC2_GCLK_ID,
+	TC0_GCLK_ID,
+	TC1_GCLK_ID,
+	TC2_GCLK_ID,
+	TC3_GCLK_ID,
+	TC4_GCLK_ID,
 #else
 #error "wiring_analog.c: Unsupported chip"
 #endif
@@ -95,13 +110,13 @@ static void syncTC_16(Tc* TCx) {
   while (TCx->COUNT16.SYNCBUSY.reg & (TC_SYNCBUSY_SWRST | TC_SYNCBUSY_ENABLE | TC_SYNCBUSY_CTRLB | TC_SYNCBUSY_STATUS | TC_SYNCBUSY_COUNT));
 #endif
 }
-
+ #if TCC_INST_NUM>0
 // Wait for synchronization of registers between the clock domains
 static __inline__ void syncTCC(Tcc* TCCx) __attribute__((always_inline, unused));
 static void syncTCC(Tcc* TCCx) {
   while (TCCx->SYNCBUSY.reg & TCC_SYNCBUSY_MASK);
 }
-
+#endif
 void analogReadResolution(int res)
 {
   _readResolution = res;
@@ -142,6 +157,7 @@ void analogReadResolution(int res)
 void analogWriteResolution(int res)
 {
   _writeResolution = res;
+  PinExtention_analogWriteResolution(res);
 }
 
 static inline uint32_t mapResolution(uint32_t value, uint32_t from, uint32_t to)
@@ -234,17 +250,23 @@ void analogReference(eAnalogReference mode)
   syncADC();
 }
 
-uint32_t analogRead( uint32_t pin )
+uint32_t analogRead( uint32_t ulPin )
 {
   uint32_t valueRead = 0;
 
+    if (( ulPin>=NUM_PIN_DESCRIPTION_ENTRIES))
+  {
+    return PinExtention_analogRead(  ulPin );
+   
+  }
+  
 #if defined(REMAP_ANALOG_PIN_ID)
   REMAP_ANALOG_PIN_ID(pin);
 #endif
 
 #if (SAMC21)
   Adc* ADC;
-  if ( (g_APinDescription[pin].ulPeripheralAttribute & PER_ATTR_ADC_MASK) == PER_ATTR_ADC_STD ) {
+  if ( (g_APinDescription[ulPin].ulPeripheralAttribute & PER_ATTR_ADC_MASK) == PER_ATTR_ADC_STD ) {
     ADC = ADC0;
   } else {
     ADC = ADC1;
@@ -252,13 +274,14 @@ uint32_t analogRead( uint32_t pin )
 #endif
 
   // pinPeripheral now handles disabling the DAC (if active)
-  if ( pinPeripheral(pin, PIO_ANALOG_ADC) == RET_STATUS_OK )
+  if ( pinPeripheral(ulPin, PIO_ANALOG_ADC) == RET_STATUS_OK )
   {
-    ADC->INPUTCTRL.bit.MUXPOS = g_APinDescription[pin].ulADCChannelNumber; // Selection for the positive ADC input
+    ADC->INPUTCTRL.bit.MUXPOS = g_APinDescription[ulPin].ulADCChannelNumber; // Selection for the positive ADC input
     syncADC();
 
     ADC->CTRLA.bit.ENABLE = 0x01;             // Enable ADC
     syncADC();
+    ADC->SAMPCTRL.bit.SAMPLEN = 0x3F;// perform extended sampling time to allow source with high impedance.
 
     // Start conversion
     ADC->SWTRIG.bit.START = 1;
@@ -271,10 +294,20 @@ uint32_t analogRead( uint32_t pin )
     ADC->CTRLA.bit.ENABLE = 0x00;             // Disable ADC
     syncADC();
   }
-
   return mapResolution(valueRead, _ADCResolution, _readResolution);
 }
+/*
+uint32_t ADC[2][20];
+IT()
+{
+}
+getvalue(pin)
+{
+  return ADC[g_APinDescription[ulPin].ulPeripheralAttribute & PER_ATTR_ADC_MASK) == PER_ATTR_ADC_STD][g_APinDescription[ulPin].ulADCChannelNumber];
+}
 
+subscribe(pin)
+*/
 
 // Right now, PWM output only works on the pins with
 // hardware support.  These are defined in the appropriate
@@ -282,6 +315,11 @@ uint32_t analogRead( uint32_t pin )
 // to digital output.
 void analogWrite(uint32_t pin, uint32_t value)
 {
+    if (( pin>=NUM_PIN_DESCRIPTION_ENTRIES))
+  {
+    PinExtention_analogWrite(  pin,  value );
+    return;
+  }
   if ( pinPeripheral(pin, PIO_ANALOG_DAC) == RET_STATUS_OK )
   {
     syncDAC();
@@ -326,18 +364,24 @@ void analogWrite(uint32_t pin, uint32_t value)
   else if ( pinPeripheral(pin, PIO_TIMER_PWM) == RET_STATUS_OK )
   {
     Tc*  TCx  = 0 ;
+	#if TCC_INST_NUM>0
     Tcc* TCCx = 0 ;
+	#endif
+	uint8_t Channelx = GetTCChannelNumber( g_APinDescription[pin].ulTCChannel ) ;
+    
     uint8_t timerIndex;
-    uint8_t Channelx = GetTCChannelNumber( g_APinDescription[pin].ulTCChannel ) ;
     // uint8_t Timerx = GetTCNumber( g_APinDescription[pin].ulTCChannel ) ;
     uint8_t Typex = GetTCType( g_APinDescription[pin].ulTCChannel ) ;
     static bool tcEnabled[TCC_INST_NUM+TC_INST_NUM];
 
     if ( Typex == 1 ) {
       TCx = (Tc*) GetTC( g_APinDescription[pin].ulTCChannel ) ;
-    } else {
+    } 
+	#if TCC_INST_NUM>0
+	else {
       TCCx = (Tcc*) GetTC( g_APinDescription[pin].ulTCChannel ) ;
     }
+	#endif
 
     // Enable peripheral clock, SAML and SAMC have TC numbers starting at 0
     if ( TCx ) {
@@ -348,11 +392,21 @@ void analogWrite(uint32_t pin, uint32_t value)
         timerIndex = (uint8_t)(((uint32_t)TCx - (uint32_t)TCC0) >> 10);
       }
 #else
+	 #if TCC_INST_NUM>0
       timerIndex = (uint8_t)(((uint32_t)TCx - (uint32_t)TCC0) >> 10);
+	  #else
+	 timerIndex = (uint8_t)(((uint32_t)TCx ) >> 10);
+	 	  
+	 #endif
 #endif
-    } else {
+    } 
+	#if TCC_INST_NUM>0
+	else {
       timerIndex = (uint8_t)(((uint32_t)TCCx - (uint32_t)TCC0) >> 10);
     }
+	#else
+	
+	#endif
 
     value = mapResolution(value, _writeResolution, 16);
 
@@ -390,7 +444,9 @@ void analogWrite(uint32_t pin, uint32_t value)
         // Enable TCx
         TCx->COUNT16.CTRLA.bit.ENABLE = 1;
         syncTC_16(TCx);
-      } else {
+      } 
+	  #if TCC_INST_NUM>0
+	  else {
         // -- Configure TCC
         // Disable TCCx
         TCCx->CTRLA.bit.ENABLE = 0;
@@ -408,6 +464,7 @@ void analogWrite(uint32_t pin, uint32_t value)
         TCCx->CTRLA.bit.ENABLE = 1;
         syncTCC(TCCx);
       }
+	  #endif 
     } else {
       if (TCx) {
 #if (SAMD)
@@ -417,8 +474,11 @@ void analogWrite(uint32_t pin, uint32_t value)
         TCx->COUNT16.CCBUF[Channelx].reg = (uint32_t) value;
 #endif
         syncTC_16(TCx);
-      } else {
+      }
+ #if TCC_INST_NUM>0
+ else {
 #if (SAMD)
+	
         TCCx->CTRLBSET.bit.LUPD = 1;
         syncTCC(TCCx);
 	TCCx->CCB[Channelx].reg = (uint32_t) value;
@@ -426,11 +486,13 @@ void analogWrite(uint32_t pin, uint32_t value)
 	TCCx->CTRLBCLR.bit.LUPD = 1;
 // LUPD caused endless spinning in syncTCC() on SAML (and probably SAMC). Note that CCBUF writes are already
 // atomic. The LUPD bit is intended for updating several registers at once, which analogWrite() does not do.
+
 #elif (SAML21 || SAMC21)
 	TCCx->CCBUF[Channelx].reg = (uint32_t) value;
 #endif
         syncTCC(TCCx);
       }
+	  #endif
     }
   }
 
@@ -447,5 +509,5 @@ void analogWrite(uint32_t pin, uint32_t value)
 }
 
 #ifdef __cplusplus
-}
+}// extern "C" {
 #endif

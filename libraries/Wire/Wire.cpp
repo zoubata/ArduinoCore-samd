@@ -17,35 +17,63 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  */
 
-extern "C" {
-#include <string.h>
-}
-
-#include <Arduino.h>
-#include <wiring_private.h>
-
 #include "Wire.h"
 
+extern "C" {
+#include <string.h>
+}// extern "C" {
+
+#include <Arduino.h>
+
+#include <wiring_private.h>
+
+//#include "variant.h"
 TwoWire::TwoWire(SERCOM * s, uint8_t pinSDA, uint8_t pinSCL)
 {
   this->sercom = s;
   this->_uc_pinSDA=pinSDA;
   this->_uc_pinSCL=pinSCL;
   transmissionBegun = false;
+  initialized= false;
 }
 
+int TwoWire::enabled()
+{
+	if (!initialized)
+		return initialized;
+    return (((sercom->mode()>>1)&0x3)==0x2);
+}
+
+   bool TwoWire::testLine(void) {
+  if (!initialized)
+  {
+     pinMode(_uc_pinSDA, INPUT_PULLDOWN);
+     pinMode(_uc_pinSCL, INPUT_PULLDOWN);
+   }
+      delay(1);
+  bool r= (digitalRead(_uc_pinSDA)==HIGH) &&
+(digitalRead(_uc_pinSCL)==HIGH);
+
+   return r;
+}
 void TwoWire::begin(void) {
   //Master Mode
   sercom->initMasterWIRE(TWI_CLOCK);
   sercom->enableWIRE();
 
+  initialized= true;
+
+  pinPeripheral(_uc_pinSDA,PIO_SERCOM);
+
+  pinPeripheral(_uc_pinSCL, PIO_SERCOM);
+
   pinPeripheral(_uc_pinSDA, g_APinDescription[_uc_pinSDA].ulPinType);
   pinPeripheral(_uc_pinSCL, g_APinDescription[_uc_pinSCL].ulPinType);
 }
 
-void TwoWire::begin(uint8_t address) {
+void TwoWire::begin(uint8_t address, bool enableGeneralCall) {
   //Slave mode
-  sercom->initSlaveWIRE(address);
+  sercom->initSlaveWIRE(address, enableGeneralCall);
   sercom->enableWIRE();
 
   pinPeripheral(_uc_pinSDA, g_APinDescription[_uc_pinSDA].ulPinType);
@@ -55,11 +83,13 @@ void TwoWire::begin(uint8_t address) {
 void TwoWire::setClock(uint32_t baudrate) {
   sercom->disableWIRE();
   sercom->initMasterWIRE(baudrate);
+  // Synchronous arithmetic baudrate
   sercom->enableWIRE();
 }
 
 void TwoWire::end() {
   sercom->disableWIRE();
+//  initialized= false;
 }
 
 uint8_t TwoWire::requestFrom(uint8_t address, size_t quantity, bool stopBit)
@@ -119,7 +149,7 @@ void TwoWire::beginTransmission(uint8_t address) {
 uint8_t TwoWire::endTransmission(bool stopBit)
 {
   transmissionBegun = false ;
-
+//  sercom->multiMastertoMaster();
   // Start I2C transmission
   if ( !sercom->startTransmissionWIRE( txAddress, WIRE_WRITE_FLAG ) )
   {
@@ -141,7 +171,8 @@ uint8_t TwoWire::endTransmission(bool stopBit)
   if (stopBit)
   {
     sercom->prepareCommandBitsWire(WIRE_MASTER_ACT_STOP);
-  }   
+  }
+//  sercom->multiMastertoSlave();
 
   return 0;
 }
@@ -154,7 +185,7 @@ uint8_t TwoWire::endTransmission()
 size_t TwoWire::write(uint8_t ucData)
 {
   // No writing, without begun transmission or a full buffer
-  if ( !transmissionBegun || txBuffer.isFull() )
+  if ( (!transmissionBegun) || txBuffer.isFull() )
   {
     return 0 ;
   }
@@ -272,7 +303,7 @@ void TwoWire::onService(void)
   }
 }
 
-#if WIRE_INTERFACES_COUNT > 0
+#if defined(PERIPH_WIRE)
   /* In case new variant doesn't define these macros,
    * we put here the ones for Arduino Zero.
    *
@@ -282,14 +313,14 @@ void TwoWire::onService(void)
     #define PERIPH_WIRE          sercom3
     #define WIRE_IT_HANDLER      SERCOM3_Handler
   #endif // PERIPH_WIRE
-  TwoWire Wire(&PERIPH_WIRE, PIN_WIRE_SDA, PIN_WIRE_SCL);
+  TwoWire Wire0(&PERIPH_WIRE, PIN_WIRE_SDA, PIN_WIRE_SCL);
 
   void WIRE_IT_HANDLER(void) {
-    Wire.onService();
+    Wire0.onService();
   }
 #endif
 
-#if WIRE_INTERFACES_COUNT > 1
+#if defined(PERIPH_WIRE1)
   TwoWire Wire1(&PERIPH_WIRE1, PIN_WIRE1_SDA, PIN_WIRE1_SCL);
 
   void WIRE1_IT_HANDLER(void) {
@@ -297,7 +328,7 @@ void TwoWire::onService(void)
   }
 #endif
 
-#if WIRE_INTERFACES_COUNT > 2
+#if defined(PERIPH_WIRE2)
   TwoWire Wire2(&PERIPH_WIRE2, PIN_WIRE2_SDA, PIN_WIRE2_SCL);
 
   void WIRE2_IT_HANDLER(void) {
@@ -305,7 +336,7 @@ void TwoWire::onService(void)
   }
 #endif
 
-#if WIRE_INTERFACES_COUNT > 3
+#if defined(PERIPH_WIRE3)
   TwoWire Wire3(&PERIPH_WIRE3, PIN_WIRE3_SDA, PIN_WIRE3_SCL);
 
   void WIRE3_IT_HANDLER(void) {
@@ -313,7 +344,7 @@ void TwoWire::onService(void)
   }
 #endif
 
-#if WIRE_INTERFACES_COUNT > 4
+#if defined(PERIPH_WIRE4)
   TwoWire Wire4(&PERIPH_WIRE4, PIN_WIRE4_SDA, PIN_WIRE4_SCL);
 
   void WIRE4_IT_HANDLER(void) {
@@ -321,11 +352,18 @@ void TwoWire::onService(void)
   }
 #endif
 
-#if WIRE_INTERFACES_COUNT > 5
+#if defined(PERIPH_WIRE5)
   TwoWire Wire5(&PERIPH_WIRE5, PIN_WIRE5_SDA, PIN_WIRE5_SCL);
 
   void WIRE5_IT_HANDLER(void) {
     Wire5.onService();
-  }
+  } 
 #endif
 
+#if defined(PERIPH_WIRE6)
+  TwoWire Wire6(&PERIPH_WIRE6, PIN_WIRE6_SDA, PIN_WIRE6_SCL);
+
+  void WIRE6_IT_HANDLER(void) {
+    Wire6.onService();
+  }
+#endif

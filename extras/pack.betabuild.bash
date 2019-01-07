@@ -17,7 +17,7 @@
 #  License along with this library; if not, write to the Free Software
 #  Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 
-BUILD_NUMBER=$1
+BUILD_NUMBER=`git rev-parse HEAD`
 CURR_TIME=`date "+%Y-%m-%d %H:%M"`
 CURR_TIME_SED=`date "+%Y\\-%m\\-%d %H:%M"`
 VERSION=`grep version= platform.txt | sed 's/version=//g'`
@@ -25,7 +25,7 @@ VERSION=`grep version= platform.txt | sed 's/version=//g'`
 PWD=`pwd`
 FOLDERNAME=`basename $PWD`
 THIS_SCRIPT_NAME=`basename $0`
-FILENAME=zoubworld_sam_m0p-${VERSION}-beta-b${BUILD_NUMBER}.tar.bz2
+FILENAME=Zoubworld_sam_m0p-${VERSION}-beta-b${BUILD_NUMBER}.tar.bz2
 
 rm -f $FILENAME
 

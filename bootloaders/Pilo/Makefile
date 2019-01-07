@@ -52,8 +52,9 @@ MCU?=SAMD21E18A
 ifeq ($(findstring ENABLED,$(SDCARD)),ENABLED)
 NAME=sam_ba_sdcard_$(BOARD_ID)_$(MCU)
 else
-NAME=sam_ba_$(BOARD_ID)_$(MCU)
+NAME=sam_ba_$(BOARD_ID)_$(MCU)_$(BOOT)
 endif
+BOOTSIZE=8KB
 
 ifeq ($(findstring 18,$(MCU)),18)
 FLASHSIZE=256KB
@@ -70,8 +71,11 @@ endif
 ifeq ($(findstring 14,$(MCU)),14)
 FLASHSIZE=16KB
 endif
+ifeq ($(findstring D21,$(MCU)),D21)
+BOOTSIZE=16KB
+endif
 
-LINKER_SCRIPT?=bootloader_sam_m0p_$(FLASHSIZE).ld
+LINKER_SCRIPT?=bootloader_sam_m0p_$(BOOTSIZE)_$(FLASHSIZE).ld
 
 # CORE_VENDOR?=arduino
 CORE_VENDOR?=zoubworld_Arduino
@@ -81,20 +85,36 @@ CORE_VENDOR?=zoubworld_Arduino
 ifeq ($(OS),Windows_NT)
   # Are we using mingw/msys/msys2/cygwin?
   ifeq ($(TERM),xterm)
-    T=$(shell cygpath -u $(LOCALAPPDATA))
-    MODULE_PATH?=$(T)/Arduino15/packages/$(CORE_VENDOR)
+  ifeq ($(HOSTNAME),zouba)
+    T=$(shell cygpath -w $(shell pwd)/../../../../../../../..)
+	else  
+	ifeq ($(HOSTNAME),NAN-LT-M43507B)
+    T=$(shell cygpath -w $(shell pwd)/../../../../../../../..)
+	else
+    T=$(shell cygpath -w $(LOCALAPPDATA))
+	endif
+	
+	endif
+	
+    MODULE_PATH?=$(T)Arduino15/packages/$(CORE_VENDOR)
     MODULE_PATH_ARDUINO?=$(T)/Arduino15/packages/arduino
     RM=rm
     SEP=/
-  elifeq ($(TERM),cygwin)
+else ifeq ($(TERM),cygwin)
     T=$(shell cygpath -u $(LOCALAPPDATA))
     MODULE_PATH?=$(T)/Arduino15/packages/$(CORE_VENDOR)
     MODULE_PATH_ARDUINO?=$(T)/Arduino15/packages/arduino
     RM=rm
     SEP=/
   else
-    MODULE_PATH?=$(LOCALAPPDATA)/Arduino15/packages/$(CORE_VENDOR)
-    MODULE_PATH_ARDUINO?=$(LOCALAPPDATA)/Arduino15/packages/arduino
+#    T=/cygdrive/c/temp/arduino
+#    T=C:\temp\arduino
+    T=$(shell cygpath -w $(LOCALAPPDATA))
+#    T=$(LOCALAPPDATA)
+
+    MODULE_PATH?=$(T)/Arduino15/packages/$(CORE_VENDOR)
+    MODULE_PATH_ARDUINO?=$(T)/Arduino15/packages/arduino
+
     RM=rm
     SEP=\\
   endif
@@ -116,6 +136,21 @@ else
   endif
 endif
 
+
+
+ifeq ($(HOSTNAME),zouba)
+REV_ARCH=src
+REV_CMSIS=src
+else 
+ifeq ($(HOSTNAME),NAN-LT-M43507B)
+REV_ARCH=src
+REV_CMSIS=src
+else
+REV_ARCH=1.6.19
+REV_CMSIS=1.1.1-Zoubworld
+endif
+endif
+
 PATHSEP=$(strip $(SEP))
 ARM_GCC_PATH?=$(MODULE_PATH_ARDUINO)/tools/arm-none-eabi-gcc/4.8.3-2014q1/bin/arm-none-eabi-
 BUILD_DIR=build
@@ -134,12 +169,12 @@ BOARD_ID?=arduino_zero
 # -----------------------------------------------------------------------------
 # Compiler options
 # eliminate PARANOIA define to save a tiny amount of code (~40B)
-CFLAGS_EXTRA=-D$(SDCARD) -D__$(MCU)__ -DBOARD_ID_$(BOARD_ID) -DPARANOIA
+CFLAGS_EXTRA=-D$(SDCARD) -D__$(MCU)__ -DBOARD_ID_$(BOARD_ID) -DPARANOIA -DBOOT_$(BOOT)
 CFLAGS=-mthumb -mcpu=cortex-m0plus -Wall -c -std=gnu99 -ffunction-sections -fdata-sections -nostdlib -nostartfiles --param max-inline-insns-single=500 -Wa,-adhlns=$(<:%.c=$(BUILD_DIR)/%.lst)
 ifdef DEBUG
-  CFLAGS+= -g3 -O0 -DDEBUG=1
+  CFLAGS+= -g3 -ggdb -Og -DDEBUG=1
 else
-  CFLAGS+= -g3 -Os -DDEBUG=0
+  CFLAGS+= -g3  -Os -DDEBUG=0
 endif
 
 ELF=$(NAME).elf
@@ -147,7 +182,17 @@ BIN=$(NAME).bin
 HEX=$(NAME).hex
 SYM= $(NAME).sym
 
-INCLUDES=-I"$(MODULE_PATH_ARDUINO)/tools/CMSIS/4.5.0/CMSIS/Include/" -I"$(MODULE_PATH)/tools/CMSIS-Atmel/CMSIS/Device/ATMEL/"
+INCLUDES= -I"$(MODULE_PATH)/hardware/samd/$(REV_ARCH)" -I"$(MODULE_PATH)/tools/CMSIS-Atmel/$(REV_CMSIS)/CMSIS"
+INCLUDES+= -I"$(MODULE_PATH)/tools/CMSIS-Atmel/$(REV_CMSIS)/CMSIS/Device/ATMEL" 
+#-I"$(MODULE_PATH_ARDUINO)/tools/CMSIS/4.5.0/CMSIS/Include"  
+
+INCLUDES+= -I"$(MODULE_PATH)/hardware/samd/$(REV_ARCH)/variants/Pilo"  -I"$(MODULE_PATH)/hardware/samd/$(REV_ARCH)"  -I"$(MODULE_PATH)/hardware/samd/$(REV_ARCH)/cores/arduino" -I"$(MODULE_PATH)/hardware/samd/$(REV_ARCH)\cores\ASF\thirdparty\CMSIS\Include"
+
+#INCLUDES= -I"$(MODULE_PATH)/hardware/samd/1.6.19/" -I"$(MODULE_PATH)/tools/CMSIS-Atmel/CMSIS/Device/ATMEL/" 
+#INCLUDES+= -I"$(MODULE_PATH)/hardware/samd/1.6.19/variants/Pilo"  -I"$(MODULE_PATH)/hardware/samd/1.6.19/cores/arduino" 
+#INCLUDES+= -I"$(MODULE_PATH)/tools/CMSIS-Atmel/1.1.1-Zoubworld/CMSIS/Device/ATMEL/"  -I"$(MODULE_PATH_ARDUINO)/tools/CMSIS/4.5.0/CMSIS/Include/" 
+
+
 
 # -----------------------------------------------------------------------------
 # Linker options
@@ -159,6 +204,20 @@ LDFLAGS+=-Wl,--cref -Wl,-Map,$(NAME).map
 # -----------------------------------------------------------------------------
 # Source files and objects
 ifeq ($(findstring SAMC21,$(MCU)),SAMC21)
+SOURCES= \
+  board_driver_led.c \
+  board_driver_serial.c \
+  board_init.c \
+  board_startup.c \
+  util.c \
+  main.c \
+  sam_ba_monitor.c \
+  sam_ba_serial.c
+#  SDCard/sdBootloader.c \
+#  SDCard/mmcbbp.c \
+#  SDCard/pff.c \
+
+else ifeq ($(findstring SAMD20,$(MCU)),SAMD20)
 SOURCES= \
   board_driver_led.c \
   board_driver_serial.c \
@@ -185,8 +244,8 @@ SOURCES= \
   sam_ba_cdc.c \
   sam_ba_monitor.c \
   sam_ba_serial.c
-
 endif
+
 
 OBJECTS=$(addprefix $(BUILD_DIR)/, $(SOURCES:.c=.o))
 DEPS=$(addprefix $(BUILD_DIR)/, $(SOURCES:.c=.d))
@@ -202,20 +261,36 @@ endif
 lss: $(LSS)
 
 
-sym: $(SYM)
-all: print_info $(SOURCES) $(BIN) sym lss $(SYM) $(AS_BUILD)
+sym: $(SYM) 
+test:
+	echo TERM=$(TERM)
+	echo OS=$(OS)
+	echo REV_ARCH=$(REV_ARCH)
+	echo REV_CMSIS=$(REV_CMSIS)
+	echo T=$(T)
+	echo MODULE_PATH=$(MODULE_PATH)
+	echo MODULE_PATH_ARDUINO=$(MODULE_PATH_ARDUINO)
+	echo INCLUDES=$(INCLUDES)
+	
+all: print_info $(SOURCES) deps $(BIN) $(HEX) sym lss $(SYM) $(AS_BUILD) jlink mv
+mv:
+	cp -f $(BIN) ./binaries/
 
+jlink:
+	cat ../../variants/Pilo/jlink_scripts/bootloader.jlink  | sed "s/%%FILE%%/..\/..\/..\/bootloaders\/Pilo\/binaries\/sam_ba_Pilo_$(MCU).bin/" | sed "s/%%ADDR%%/0/" > ../../variants/Pilo/jlink_scripts/bootloader-$(MCU).jlink
+deps: $(BUILD_DIR)  $(DEPS)
+$(OBJECTS): Makefile
 $(ELF): Makefile $(BUILD_DIR) $(OBJECTS)
 	@echo ----------------------------------------------------------
 	@echo Creating ELF binary
 	"$(CC)" -L. -L$(BUILD_DIR) $(LDFLAGS) -Os -Wl,--gc-sections -save-temps -Tlinker_scripts/$(LINKER_SCRIPT) -Wl,-Map,"$(BUILD_DIR)/$(NAME).map" -o "$(BUILD_DIR)/$(ELF)" -Wl,--start-group $(OBJECTS) -lm -Wl,--end-group
-	"$(NM)" "$(BUILD_DIR)/$(ELF)" >"$(BUILD_DIR)/$(NAME)_symbols.txt"
-	"$(SIZE)" --format=sysv -t -x $(BUILD_DIR)/$(ELF)
+	@"$(NM)" "$(BUILD_DIR)/$(ELF)" >"$(BUILD_DIR)/$(NAME)_symbols.txt"
+	@"$(SIZE)" --format=sysv -t -x $(BUILD_DIR)/$(ELF)
 
 $(BIN): $(ELF)
 	@echo ----------------------------------------------------------
-	@echo Creating flash binary
-	"$(OBJCOPY)" -O binary $(BUILD_DIR)/$< $@
+	@echo Creating flash binary $(BUILD_DIR)/$< $@
+	@"$(OBJCOPY)" -O binary $(BUILD_DIR)/$< $@
 
 $(HEX): $(ELF)
 	@echo ----------------------------------------------------------
@@ -242,6 +317,7 @@ $(BUILD_DIR):
 	@echo Creating build folder
 	-mkdir $(BUILD_DIR)
 	-mkdir $(BUILD_DIR)$(PATHSEP)SDCard
+	-mkdir binaries
 
 print_info:
 	@echo ----------------------------------------------------------
@@ -249,8 +325,9 @@ print_info:
 	@echo BASE PATH = $(MODULE_PATH)
 	@echo GCC  PATH = $(ARM_GCC_PATH)
 	@echo OS        = $(OS)
-	@echo SHELL     = $(SHELL)
+	@echo CC        = $(CC)
 	@echo TERM      = $(TERM)
+	@echo SHELL     = $(SHELL)
 	"$(CC)" -v
 #	env
 
@@ -264,33 +341,38 @@ clean_for_atmel_studio:
 	@echo Atmel Studio detected, cleaning ELF from project root
 	-$(RM) .$(PATHSEP)$(ELF)
 
-clean: $(AS_CLEAN)
+clean: $(AS_CLEAN) mostly_clean
 	@echo ----------------------------------------------------------
 	@echo Cleaning project
 	-$(RM) $(BIN)
 	-$(RM) $(HEX)
-	-$(RM) $(OBJECTS)
-	-$(RM) *.o
-	-$(RM) *.d	
-	-$(RM) $(DEPS)
 	-$(RM) $(BUILD_DIR)$(PATHSEP)SDCard$(PATHSEP)*.*
 	-$(RM) $(BUILD_DIR)$(PATHSEP)*.*
 	-rmdir $(BUILD_DIR)$(PATHSEP)SDCard
 	-rmdir $(BUILD_DIR)
+	-mkdir $(BUILD_DIR)
+	
 
 mostly_clean: $(AS_CLEAN)
 	@echo ----------------------------------------------------------
 	@echo Cleaning project except bin
-	-$(RM) $(HEX)
-	-$(RM) $(BUILD_DIR)$(PATHSEP)SDCard$(PATHSEP)*.*
-	-$(RM) $(BUILD_DIR)$(PATHSEP)*.*
 	-$(RM) $(OBJECTS)
+	-$(RM) $(DEPS)
+	-$(RM) *.o
+	-$(RM) *.d	
 	-$(RM) $(DEPS)  $(LSS)  $(SYM)
-	-rmdir $(BUILD_DIR)$(PATHSEP)SDCard
-	-rmdir $(BUILD_DIR)
 
 .phony: print_info $(BUILD_DIR)
 %.lss: %.elf
 	@echo
 	@echo $(MSG_EXTENDED_LISTING) $@
 	$(OBJDUMP) -h -S -z $< > $@
+# Preprocess: create dependancy files from C/S source files.
+$(BUILD_DIR)/%.d: %.c 
+	@echo ----------------------------------------------------------
+	@echo COMPILING_DEPENDENCY $< to $@
+	"$(CC)" -M $(CFLAGS) $(CFLAGS_EXTRA) $(INCLUDES)  -MD -MP -MT '$*.i $*.si $*.o' -MF $@ $<
+
+
+
+

@@ -23,7 +23,6 @@
 #include "sam_ba_monitor.h"
 #include "sam_ba_serial.h"
 #include "board_definitions/board_definitions.h"
-#include "board_driver_led.h"
 #if defined(SDCARD_ENABLED)
 #include "SDCard/sdBootloader.h"
 #endif
@@ -31,8 +30,12 @@
 #if (SAMD21 || SAMD11 || SAML21)
 #include "sam_ba_usb.h"
 #include "sam_ba_cdc.h"
-#endif
 
+#endif
+#include "bootloaders/boot.h"
+#include "board_driver_led.h"
+
+#define MYDEBUG(a) {};
 extern uint32_t __sketch_vectors_ptr; // Exported value from linker script
 extern volatile int8_t ledDirection;
 extern void board_init(void);
@@ -61,6 +64,7 @@ uint32_t* pulSketch_Start_Address;
   if (__sketch_vectors_ptr == 0xFFFFFFFF)
   {
     /* Stay in bootloader */
+	MYDEBUG(serial_putdata(" 0xfff   ", 10))
     return;
   }
 
@@ -81,6 +85,7 @@ uint32_t* pulSketch_Start_Address;
   if ( ((uint32_t)(&__sketch_vectors_ptr) & ~SCB_VTOR_TBLOFF_Msk) != 0x00)
   {
     /* Stay in bootloader */
+	MYDEBUG(serial_putdata(" vtor    ", 10))
     return;
   }
 #if defined(BOOT_LOAD_PIN_ENABLED)
@@ -92,6 +97,7 @@ uint32_t* pulSketch_Start_Address;
   // Read the BOOT_LOAD_PIN status
   if (isPinActive(BOOT_LOAD_PIN_PORT, BOOT_LOAD_PIN, BOOT_LOAD_PIN_POLARITY))
   {
+	  MYDEBUG(serial_putdata("  pin    ", 10))
     // Stay in bootloader
     return;
   }
@@ -99,9 +105,13 @@ uint32_t* pulSketch_Start_Address;
 
 #if defined(BOOT_DOUBLE_TAP_ENABLED)
   #define DOUBLE_TAP_MAGIC 0x07738135
-#if (SAMD21 || SAMD11)
+#if (SAMD21 ||SAMD20 || SAMD11)
   if (PM->RCAUSE.bit.POR)
-#elif (SAML21 || SAMC21)
+	  /*
+#elif (SAMC21 || SAMC20)
+	 if (1==0)// C21 is buggy  RST==POR
+ */
+#elif (SAML21 || SAMC21|| SAMC20)
   if (RSTC->RCAUSE.bit.POR)
 #else
   #error "main.c: Missing dependency or unsupported chip. Please install CMSIS-Atmel from MattairTech (see Prerequisites for Building in README.md)."
@@ -109,35 +119,40 @@ uint32_t* pulSketch_Start_Address;
   {
     /* On power-on initialize double-tap */
     BOOT_DOUBLE_TAP_DATA = 0;
+	MYDEBUG(serial_putdata("  tap0   ", 10))
   }
   else
   {
     if (BOOT_DOUBLE_TAP_DATA == DOUBLE_TAP_MAGIC)
     {
+		MYDEBUG(serial_putdata("  dtap   ", 10))
       /* Second tap, stay in bootloader */
       BOOT_DOUBLE_TAP_DATA = 0;
       return;
     }
 
+	MYDEBUG(serial_putdata("  tapm   ", 10))
     /* First tap */
     BOOT_DOUBLE_TAP_DATA = DOUBLE_TAP_MAGIC;
 
     /* Wait 0.5sec to see if the user tap reset again */
+     LED_off();
     delayUs(500000UL);
+     LED_on();
 
     /* Timeout happened, continue boot... */
     BOOT_DOUBLE_TAP_DATA = 0;
   }
 #endif
 
-
+MYDEBUG(serial_putdata("  app    ", 10))
 
   /* Rebase the Stack Pointer */
   __set_MSP( (uint32_t)(__sketch_vectors_ptr) );
 
   /* Rebase the vector table base address */
   SCB->VTOR = ((uint32_t)(&__sketch_vectors_ptr) & SCB_VTOR_TBLOFF_Msk);
-
+  LED_off();
   /* Jump to application Reset Handler in the application */
   asm("bx %0"::"r"(*pulSketch_Start_Address));
 }
@@ -150,6 +165,7 @@ uint32_t* pulSketch_Start_Address;
 #	define DEBUG_PIN_LOW 	do{}while(0)
 #endif
 
+
 /**
  *  \brief SAMD21 SAM-BA Main loop.
  *  \return Unused (ANSI-C compatibility).
@@ -160,10 +176,25 @@ int main(void)
   P_USB_CDC pCdc;
 #endif
   DEBUG_PIN_HIGH;
+ // delay_init(  VARIANT_MCK);
+ /* MYDEBUG(board_init())
+  MYDEBUG(__enable_irq())
+  MYDEBUG(serial_open())
+  MYDEBUG(serial_putdata(" START   ", 10))*/
+ LED_init();
+   LED_on();
+   LEDRX_init();
+   LEDRX_on();
+ 
+  #if defined(BOARD_LED_FADE_ENABLED)
+  LED_init();
+  LED_on() ;
+  #endif
 
   /* Jump in application if condition is satisfied */
   check_start_application();
-
+MYDEBUG(serial_putdata(" boot    ", 10))
+LEDRX_off();
   /* We have determined we should stay in the monitor. */
   /* System initialization */
   board_init();
@@ -288,7 +319,10 @@ int main(void)
 
 #if SAM_BA_INTERFACE == SAM_BA_UART_ONLY  ||  SAM_BA_INTERFACE == SAM_BA_BOTH_INTERFACES
   /* UART is enabled in all cases */
-  serial_open();
+  LED_setSpeed(240);
+  serial_open(115200);
+  LED_setSpeed(120);
+  
 #endif
 #if defined(SAM_BA_INTERFACE_USE_PIN)
   } else if (sambaInterface == SAM_BA_USBCDC_ONLY) {
@@ -350,10 +384,23 @@ int main(void)
     }
 #endif
   }
+}/*
+long time=0;
+long long  get_time_ns()
+{
+    __disable_irq();
+  long time2=time;
+  int load=SysTick->LOAD;
+   int val= SysTick->VAL;
+        __enable_irq();
+      
+  return (((time2+1)*load+-val)*1000)/48;
+  
 }
-
+*/
 void SysTick_Handler(void)
 {
+//  time++;
 #if (defined(BOARD_LED_FADE_ENABLED) && defined(BOARD_LED_PORT))
   LED_pulse();
 #endif

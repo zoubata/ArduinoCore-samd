@@ -36,7 +36,7 @@ extern void shiftOut( uint32_t ulDataPin, uint32_t ulClockPin, uint32_t ulBitOrd
 
 
 #ifdef __cplusplus
-}
+}// extern "C" {
 #endif
 
 #endif /* _WIRING_SHIFT_ */

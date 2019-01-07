@@ -1,6 +1,8 @@
 /*
   Copyright (c) 2015 Arduino LLC.  All right reserved.
   Copyright (c) 2017 MattairTech LLC. All right reserved.
+  Copyright (c) 2018 Zoubworld LLC. All right reserved.
+  
 
   This library is free software; you can redistribute it and/or
   modify it under the terms of the GNU Lesser General Public
@@ -25,16 +27,31 @@
 
 void pinMode( uint32_t ulPin, uint32_t ulMode )
 {
-  // Set pin mode according to chapter '22.6.3 I/O Pin Configuration'
+    if (( ulPin>=NUM_PIN_DESCRIPTION_ENTRIES)|| ( g_APinDescription[ulPin].ulPinType == PIO_NOT_A_PIN ))
+  {
+    PinExtention_pinMode(  ulPin,  ulMode );
+    return;
+  }
+  if (ulMode==OUTPUT_LOW)
+  {
+  pinPeripheral(ulPin, OUTPUT);
+  digitalWrite(  ulPin, LOW );
+  }
+  else
   pinPeripheral(ulPin, ulMode);
+  
+  // Set pin mode according to chapter '22.6.3 I/O Pin Configuration'
+ 
 }
 
 void digitalWrite( uint32_t ulPin, uint32_t ulVal )
 {
   // Handle the case the pin isn't usable as PIO
-  if ( g_APinDescription[ulPin].ulPinType == PIO_NOT_A_PIN )
+  
+  if (( ulPin>=NUM_PIN_DESCRIPTION_ENTRIES)|| ( g_APinDescription[ulPin].ulPinType == PIO_NOT_A_PIN ))
   {
-    return ;
+    PinExtention_digitalWrite(  ulPin,  ulVal );
+    return;
   }
 
   uint32_t pinAttribute = g_APinDescription[ulPin].ulPinAttribute;
@@ -79,9 +96,14 @@ void digitalWrite( uint32_t ulPin, uint32_t ulVal )
 
 int digitalRead( uint32_t ulPin )
 {
+  
+    if (( ulPin>=NUM_PIN_DESCRIPTION_ENTRIES))
+  {
+    return PinExtention_digitalRead(  ulPin );
+  }
   // Handle the case the pin isn't usable as PIO
   if ( g_APinDescription[ulPin].ulPinType == PIO_NOT_A_PIN )
-  {
+  {    
     return LOW ;
   }
   
@@ -94,6 +116,6 @@ int digitalRead( uint32_t ulPin )
 }
 
 #ifdef __cplusplus
-}
+}// extern "C" {
 #endif
 

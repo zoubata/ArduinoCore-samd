@@ -1,0 +1,3 @@
+loadfile ../../../bootloaders/Pilo/binaries/sam_ba_Pilo_SAMD21E15A.bin 0
+verifyfile ../../../bootloaders/Pilo/binaries/sam_ba_Pilo_SAMD21E15A.bin 0
+q

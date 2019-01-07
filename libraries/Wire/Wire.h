@@ -17,15 +17,18 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  */
 
-#ifndef TwoWire_h
-#define TwoWire_h
+
 
 #include "Stream.h"
 #include "variant.h"
 #include <WVariant.h>
 
 #include "SERCOM.h"
+
+
 #include "RingBuffer.h"
+#ifndef TwoWire_h
+#define TwoWire_h
 
  // WIRE_HAS_END means Wire has end()
 #define WIRE_HAS_END 1
@@ -35,10 +38,11 @@ class TwoWire : public Stream
   public:
     TwoWire(SERCOM *s, uint8_t pinSDA, uint8_t pinSCL);
     void begin();
-    void begin(uint8_t);
+    void begin(uint8_t, bool enableGeneralCall = false);
     void end();
     void setClock(uint32_t);
-
+	int enabled();
+  bool testLine(void);
     void beginTransmission(uint8_t);
     uint8_t endTransmission(bool stopBit);
     uint8_t endTransmission(void);
@@ -65,6 +69,8 @@ class TwoWire : public Stream
     void onService(void);
 
   private:
+    bool initialized;
+  
     SERCOM * sercom;
     uint8_t _uc_pinSDA;
     uint8_t _uc_pinSCL;
@@ -72,10 +78,10 @@ class TwoWire : public Stream
     bool transmissionBegun;
 
     // RX Buffer
-    RingBuffer rxBuffer;
+    RingBufferN<64> rxBuffer;
 
     //TX buffer
-    RingBuffer txBuffer;
+    RingBufferN<64> txBuffer;
     uint8_t txAddress;
 
     // Callback user functions
@@ -87,7 +93,8 @@ class TwoWire : public Stream
 };
 
 #if WIRE_INTERFACES_COUNT > 0
-  extern TwoWire Wire;
+  extern TwoWire Wire0;
+  #define Wire Wire0
 #endif
 #if WIRE_INTERFACES_COUNT > 1
   extern TwoWire Wire1;
@@ -104,5 +111,7 @@ class TwoWire : public Stream
 #if WIRE_INTERFACES_COUNT > 5
   extern TwoWire Wire5;
 #endif
-
+extern TwoWire Wire0_BIS;
 #endif
+
+

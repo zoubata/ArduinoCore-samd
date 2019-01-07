@@ -153,7 +153,7 @@ FRESULT pf_readdir (DIR* dj, FILINFO* fno);					/* Read a directory item from th
 
 
 #ifdef __cplusplus
-}
+}// extern "C" {
 #endif
 
 #endif /* _PFATFS */

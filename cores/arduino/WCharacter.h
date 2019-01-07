@@ -173,7 +173,7 @@ inline int toUpperCase(int c)
 }
 
 #ifdef __cplusplus
-}
+}// extern "C" {
 #endif
 
 #endif

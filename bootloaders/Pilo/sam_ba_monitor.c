@@ -56,7 +56,7 @@ typedef struct
 
 #if SAM_BA_INTERFACE == SAM_BA_UART_ONLY  ||  SAM_BA_INTERFACE == SAM_BA_BOTH_INTERFACES
 /* Initialize structures with function pointers from supported interfaces */
-const t_monitor_if uart_if =
+t_monitor_if uart_if =
 {
   .put_c =       serial_putc,
   .get_c =       serial_getc,

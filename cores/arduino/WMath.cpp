@@ -19,7 +19,7 @@
 extern "C" {
   #include "stdlib.h"
   #include "stdint.h"
-}
+}// extern "C" {
 #include "WMath.h"
 
 extern void randomSeed( uint32_t dwSeed )
@@ -53,6 +53,10 @@ extern long random( long howsmall, long howbig )
 }
 
 extern long map(long x, long in_min, long in_max, long out_min, long out_max)
+{
+  return (x - in_min) * (out_max - out_min) / (in_max - in_min) + out_min;
+}
+extern double map(double x, double in_min, double in_max, double out_min, double out_max)
 {
   return (x - in_min) * (out_max - out_min) / (in_max - in_min) + out_min;
 }

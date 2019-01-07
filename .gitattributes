@@ -1,0 +1,12 @@
+*.bash text=auto eol=lf
+
+*.json text=auto eol=lf
+
+*.txt text=auto eol=lf
+*.sh text=auto eol=lf
+*.bash text=auto eol=lf
+*.c text=auto eol=lf
+*.h text=auto eol=lf
+Makefile text=auto eol=lf
+*.properties text=auto eol=crlf
+

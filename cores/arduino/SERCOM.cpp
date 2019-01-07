@@ -18,13 +18,21 @@
 
 #include "SERCOM.h"
 #include "variant.h"
+#ifndef WIRE_RISE_TIME_NANOSECONDS
+// Default rise time in nanoseconds, based on 4.7K ohm pull up resistors
+// you can override this value in your variant if needed
+#define WIRE_RISE_TIME_NANOSECONDS 125
+#endif
 
 SERCOM::SERCOM(Sercom* s)
 {
   sercom = s;
+ // backup=0;
+ // savecontext=false;
 }
 
 #if 0
+
 // From https://en.wikipedia.org/wiki/Division_algorithm
 static uint64_t divide64(uint64_t n, uint64_t d)
 {
@@ -49,6 +57,10 @@ static uint64_t divide64(uint64_t n, uint64_t d)
 }
 #endif
 
+int SERCOM::mode()
+{
+  return sercom->USART.CTRLA.bit.MODE;
+}
 /* 	=========================
  *	===== Sercom UART
  *	=========================
@@ -63,16 +75,22 @@ void SERCOM::initUART(SercomUartMode mode, SercomUartSampleRate sampleRate, uint
   }
 #endif
 
-  initClockNVIC();
+  initClockNVIC(baudrate);
   resetUART();
 
   //Setting the CTRLA register
-  sercom->USART.CTRLA.reg =	SERCOM_USART_CTRLA_MODE(mode) |
-                SERCOM_USART_CTRLA_SAMPR(sampleRate);
+  sercom->USART.CTRLA.reg =	SERCOM_USART_CTRLA_MODE(mode)
+  #if !SAMD20
+              |   SERCOM_USART_CTRLA_SAMPR(sampleRate)
+  #endif
+  ;
 
   //Setting the Interrupt register
-  sercom->USART.INTENSET.reg =	SERCOM_USART_INTENSET_RXC |  //Received complete
-                                SERCOM_USART_INTENSET_ERROR; //All others errors
+  sercom->USART.INTENSET.reg =	SERCOM_USART_INTENSET_RXC //Received complete
+  #if !SAMD20
+  |   SERCOM_USART_INTENSET_ERROR
+  #endif
+  ; //All others errors
 
   if ( mode == UART_INT_CLOCK )
   {
@@ -84,18 +102,18 @@ void SERCOM::initUART(SercomUartMode mode, SercomUartSampleRate sampleRate, uint
       sampleRateValue = 8;
     }
 
-#if 0
+#if SAMD20
     // Asynchronous arithmetic mode
     // 65535 * ( 1 - sampleRateValue * baudrate / SystemCoreClock);
     // 65535 - 65535 * (sampleRateValue * baudrate / SystemCoreClock));
     // sercom->USART.BAUD.reg = 65535.0f * ( 1.0f - (float)(sampleRateValue) * (float)(baudrate) / (float)(SystemCoreClock));  // this pulls in 3KB of floating point math code
     // make numerator much larger than denominator so result is integer (avoid floating point).
     uint64_t numerator = ((sampleRateValue * (uint64_t)baudrate) << 32); // 32 bits of shifting ensures no loss of precision.
-    uint64_t ratio = divide64(numerator, SystemCoreClock);
+    uint64_t ratio = numerator / (uint64_t)SystemCoreClock; //divide64(numerator, SystemCoreClock);
     uint64_t scale = ((uint64_t)1 << 32) - ratio;
     uint64_t baudValue = (65536 * scale) >> 32;
     sercom->USART.BAUD.reg = baudValue;
-#endif
+#else
     // Asynchronous fractional mode (Table 24-2 in datasheet)
     //   BAUD = fref / (sampleRateValue * fbaud)
     // (multiply by 8, to calculate fractional piece)
@@ -103,6 +121,7 @@ void SERCOM::initUART(SercomUartMode mode, SercomUartSampleRate sampleRate, uint
 
     sercom->USART.BAUD.FRAC.FP   = (baudTimes8 % 8);
     sercom->USART.BAUD.FRAC.BAUD = (baudTimes8 / 8);
+	#endif
   }
 }
 void SERCOM::initFrame(SercomUartCharSize charSize, SercomDataOrder dataOrder, SercomParityMode parityMode, SercomNumberStopBit nbStopBits)
@@ -131,11 +150,17 @@ void SERCOM::resetUART()
 {
   // Start the Software Reset
   sercom->USART.CTRLA.bit.SWRST = 1 ;
-
+#if SAMD20
+ while ( sercom->USART.CTRLA.bit.SWRST  || sercom->USART.STATUS.bit.SYNCBUSY)
+  {
+    // Wait for both bits Software Reset from CTRLA and SYNCBUSY coming back to 0
+  }
+#else
   while ( sercom->USART.CTRLA.bit.SWRST || sercom->USART.SYNCBUSY.bit.SWRST )
   {
     // Wait for both bits Software Reset from CTRLA and SYNCBUSY coming back to 0
   }
+  #endif
 }
 
 void SERCOM::enableUART()
@@ -144,7 +169,13 @@ void SERCOM::enableUART()
   sercom->USART.CTRLA.bit.ENABLE = 0x1u;
 
   //Wait for then enable bit from SYNCBUSY is equal to 0;
-  while(sercom->USART.SYNCBUSY.bit.ENABLE);
+ #if SAMD20
+  while ( (!sercom->USART.CTRLA.bit.ENABLE)  || sercom->USART.STATUS.bit.SYNCBUSY);
+  #else
+	while(sercom->USART.SYNCBUSY.bit.ENABLE);
+#endif
+
+ 
 }
 
 void SERCOM::flushUART()
@@ -171,12 +202,21 @@ bool SERCOM::availableDataUART()
 
 bool SERCOM::isUARTError()
 {
-  return sercom->USART.INTFLAG.bit.ERROR;
+  #if SAMD20
+    return 0;
+  #else
+    return sercom->USART.INTFLAG.bit.ERROR;
+  #endif
 }
 
 void SERCOM::acknowledgeUARTError()
 {
-  sercom->USART.INTFLAG.bit.ERROR = 1;
+  #if SAMD20
+   
+  #else
+    sercom->USART.INTFLAG.bit.ERROR = 1;
+  #endif
+  
 }
 
 bool SERCOM::isBufferOverflowErrorUART()
@@ -235,7 +275,7 @@ void SERCOM::disableDataRegisterEmptyInterruptUART()
 void SERCOM::initSPI(SercomSpiTXPad mosi, SercomRXPad miso, SercomSpiCharSize charSize, SercomDataOrder dataOrder)
 {
   resetSPI();
-  initClockNVIC();
+  initClockNVIC(100000);//medium priority
 
   //Setting the CTRLA register
   sercom->SPI.CTRLA.reg =	SERCOM_SPI_CTRLA_MODE_SPI_MASTER |
@@ -252,6 +292,7 @@ void SERCOM::initSPI(SercomSpiTXPad mosi, SercomRXPad miso, SercomSpiCharSize ch
 
 void SERCOM::initSPIClock(SercomSpiClockMode clockMode, uint32_t baudrate)
 {
+  initClockNVIC(baudrate);
   //Extract data from clockMode
   int cpha, cpol;
 
@@ -279,7 +320,17 @@ void SERCOM::resetSPI()
   sercom->SPI.CTRLA.bit.SWRST = 1;
 
   //Wait both bits Software Reset from CTRLA and SYNCBUSY are equal to 0
-  while(sercom->SPI.CTRLA.bit.SWRST || sercom->SPI.SYNCBUSY.bit.SWRST);
+  #if SAMD20
+ while ( sercom->SPI.CTRLA.bit.SWRST  || sercom->SPI.STATUS.bit.SYNCBUSY)
+  {
+    // Wait for both bits Software Reset from CTRLA and SYNCBUSY coming back to 0
+  }
+#else
+  while ( sercom->SPI.CTRLA.bit.SWRST || sercom->SPI.SYNCBUSY.bit.SWRST )
+  {
+    // Wait for both bits Software Reset from CTRLA and SYNCBUSY coming back to 0
+  }
+  #endif
 }
 
 void SERCOM::enableSPI()
@@ -287,18 +338,23 @@ void SERCOM::enableSPI()
   //Setting the enable bit to 1
   sercom->SPI.CTRLA.bit.ENABLE = 1;
 
-  while(sercom->SPI.SYNCBUSY.bit.ENABLE)
-  {
-    //Waiting then enable bit from SYNCBUSY is equal to 0;
-  }
+#if SAMD20
+  while ( (!sercom->SPI.CTRLA.bit.ENABLE)  || sercom->SPI.STATUS.bit.SYNCBUSY);
+  #else
+	while(sercom->SPI.SYNCBUSY.bit.ENABLE);
+#endif
 }
 
 void SERCOM::disableSPI()
 {
-  while(sercom->SPI.SYNCBUSY.bit.ENABLE)
-  {
+ #if SAMD20
+  while ( sercom->SPI.STATUS.bit.SYNCBUSY);
+  #else
+	while(sercom->SPI.SYNCBUSY.bit.ENABLE);
+#endif
+
     //Waiting then enable bit from SYNCBUSY is equal to 0;
-  }
+  
 
   //Setting the enable bit to 0
   sercom->SPI.CTRLA.bit.ENABLE = 0;
@@ -408,7 +464,17 @@ void SERCOM::resetWIRE()
   sercom->I2CM.CTRLA.bit.SWRST = 1;
 
   //Wait both bits Software Reset from CTRLA and SYNCBUSY are equal to 0
-  while(sercom->I2CM.CTRLA.bit.SWRST || sercom->I2CM.SYNCBUSY.bit.SWRST);
+    #if SAMD20
+ while ( sercom->I2CM.CTRLA.bit.SWRST  || sercom->I2CM.STATUS.bit.SYNCBUSY)
+  {
+    // Wait for both bits Software Reset from CTRLA and SYNCBUSY coming back to 0
+  }
+#else
+  while ( sercom->I2CM.CTRLA.bit.SWRST || sercom->I2CM.SYNCBUSY.bit.SWRST )
+  {
+    // Wait for both bits Software Reset from CTRLA and SYNCBUSY coming back to 0
+  }
+  #endif
 }
 
 void SERCOM::enableWIRE()
@@ -417,19 +483,23 @@ void SERCOM::enableWIRE()
 
   // Enable the I²C master mode
   sercom->I2CM.CTRLA.bit.ENABLE = 1 ;
-
-  while ( sercom->I2CM.SYNCBUSY.bit.ENABLE != 0 )
-  {
-    // Waiting the enable bit from SYNCBUSY is equal to 0;
-  }
+#if SAMD20
+  while ( (!sercom->I2CM.CTRLA.bit.ENABLE)  || sercom->I2CM.STATUS.bit.SYNCBUSY);
+  #else
+	while(sercom->I2CM.SYNCBUSY.bit.ENABLE);
+#endif
+  
 
   // Setting bus idle mode
   sercom->I2CM.STATUS.bit.BUSSTATE = 1 ;
-
+#if SAMD20
+  while ( sercom->I2CM.STATUS.bit.SYNCBUSY);
+  #else
   while ( sercom->I2CM.SYNCBUSY.bit.SYSOP != 0 )
   {
     // Wait the SYSOP bit from SYNCBUSY coming back to 0
   }
+  #endif
 }
 
 void SERCOM::disableWIRE()
@@ -438,17 +508,20 @@ void SERCOM::disableWIRE()
 
   // Enable the I²C master mode
   sercom->I2CM.CTRLA.bit.ENABLE = 0 ;
-
+#if SAMD20
+  while ( sercom->I2CM.STATUS.bit.SYNCBUSY);
+  #else
   while ( sercom->I2CM.SYNCBUSY.bit.ENABLE != 0 )
   {
     // Waiting the enable bit from SYNCBUSY is equal to 0;
   }
+  #endif
 }
 
-void SERCOM::initSlaveWIRE( uint8_t ucAddress )
+void SERCOM::initSlaveWIRE( uint8_t ucAddress , bool enableGeneralCall )
 {
   // Initialize the peripheral clock and interruption
-  initClockNVIC() ;
+  initClockNVIC(10000) ;//low priority in slave
   resetWIRE() ;
 
   // Set slave mode
@@ -457,21 +530,31 @@ void SERCOM::initSlaveWIRE( uint8_t ucAddress )
   sercom->I2CS.ADDR.reg = SERCOM_I2CS_ADDR_ADDR( ucAddress & 0x7Ful ) | // 0x7F, select only 7 bits
                           SERCOM_I2CS_ADDR_ADDRMASK( 0x00ul ) ;         // 0x00, only match exact address
 
+  if (enableGeneralCall) {
+    sercom->I2CS.ADDR.reg |= SERCOM_I2CS_ADDR_GENCEN;                   // enable general call (address 0x00)
+  }
+
+
   // Set the interrupt register
   sercom->I2CS.INTENSET.reg = SERCOM_I2CS_INTENSET_PREC |   // Stop
                               SERCOM_I2CS_INTENSET_AMATCH | // Address Match
                               SERCOM_I2CS_INTENSET_DRDY ;   // Data Ready
-
+#if SAMD20
+  while ( sercom->I2CM.STATUS.bit.SYNCBUSY);
+  #else
   while ( sercom->I2CM.SYNCBUSY.bit.SYSOP != 0 )
   {
     // Wait the SYSOP bit from SYNCBUSY to come back to 0
   }
+  #endif
+ //  sercom->I2CM.BAUD.bit.BAUD = calculateBaudrateSynchronous(TWI_CLOCK) ;
+
 }
 
 void SERCOM::initMasterWIRE( uint32_t baudrate )
 {
   // Initialize the peripheral clock and interruption
-  initClockNVIC() ;
+  initClockNVIC(baudrate) ;
 
   resetWIRE() ;
 
@@ -490,6 +573,12 @@ void SERCOM::initMasterWIRE( uint32_t baudrate )
   sercom->I2CM.BAUD.bit.BAUD = calculateBaudrateSynchronous(baudrate) ;
 }
 
+/*
+void SERCOM::initClockWIRE( uint32_t baudrate )
+{ 
+  // Synchronous arithmetic baudrate
+  sercom->I2CM.BAUD.bit.BAUD = calculateBaudrateSynchronous(baudrate) ;
+}*/
 void SERCOM::prepareNackBitWIRE( void )
 {
   if(isMasterWIRE()) {
@@ -514,15 +603,71 @@ void SERCOM::prepareCommandBitsWire(uint8_t cmd)
 {
   if(isMasterWIRE()) {
     sercom->I2CM.CTRLB.bit.CMD = cmd;
-
+#if SAMD20
+  while (  sercom->I2CM.STATUS.bit.SYNCBUSY);
+  #else
     while(sercom->I2CM.SYNCBUSY.bit.SYSOP)
     {
       // Waiting for synchronization
     }
+	#endif
   } else {
     sercom->I2CS.CTRLB.bit.CMD = cmd;
   }
+}/*
+  int backup=0;
+  bool savecontext=false;
+  void SERCOM::multiMastertoMaster()
+{
+   backup=0;
+   savecontext=sercom->I2CS.CTRLA.bit.MODE == I2C_SLAVE_OPERATION;
+  if (savecontext)
+  {
+     sercom->I2CS.CTRLA.bit.ENABLE=0;
+    sercom->I2CS.CTRLA.bit.MODE = I2C_MASTER_OPERATION;
+      // Set the interrupt register
+  sercom->I2CS.INTENCLR.reg =( SERCOM_I2CS_INTENSET_PREC |   // Stop
+                              SERCOM_I2CS_INTENSET_AMATCH | // Address Match
+                              SERCOM_I2CS_INTENSET_DRDY );   // Data Ready
+#if SAMD20
+  while ( sercom->I2CM.STATUS.bit.SYNCBUSY);
+  #else
+  while ( sercom->I2CM.SYNCBUSY.bit.SYSOP != 0 )
+  {
+    // Wait the SYSOP bit from SYNCBUSY to come back to 0
+  }
+  #endif
+     sercom->I2CS.CTRLA.bit.ENABLE=1;
+    backup=sercom->I2CS.ADDR.reg;
+   enableWIRE();
+  }
 }
+volatile int save=0xff;
+void SERCOM::multiMastertoSlave()
+{
+  if (savecontext)
+  {
+    // Wait idle or owner bus mode
+    save=sercom->I2CM.STATUS.reg;
+  while ( !isBusIdleWIRE()  );
+     sercom->I2CS.CTRLA.bit.ENABLE=0;
+    sercom->I2CS.CTRLA.bit.MODE = I2C_SLAVE_OPERATION;
+    sercom->I2CS.ADDR.reg=backup;
+      // Set the interrupt register
+  sercom->I2CS.INTENSET.reg = SERCOM_I2CS_INTENSET_PREC |   // Stop
+                              SERCOM_I2CS_INTENSET_AMATCH | // Address Match
+                              SERCOM_I2CS_INTENSET_DRDY ;   // Data Ready
+#if SAMD20
+  while ( sercom->I2CM.STATUS.bit.SYNCBUSY);
+  #else
+  while ( sercom->I2CM.SYNCBUSY.bit.SYSOP != 0 )
+  {
+    // Wait the SYSOP bit from SYNCBUSY to come back to 0
+  }
+  #endif
+   enableWIRE();
+  }
+}*/
 
 bool SERCOM::startTransmissionWIRE(uint8_t address, SercomWireReadWriteFlag flag)
 {
@@ -578,7 +723,7 @@ bool SERCOM::sendDataMasterWIRE(uint8_t data)
   sercom->I2CM.DATA.bit.DATA = data;
 
   //Wait transmission successful
-  while(!sercom->I2CM.INTFLAG.bit.MB) {
+  while(!sercom->I2CM.INTFLAG.bit.MB) {//check pull up on I2c
 
     // If a bus error occurs, the MB bit may never be set.
     // Check the bus error bit and bail if it's set.
@@ -682,47 +827,61 @@ uint8_t SERCOM::readDataWIRE( void )
 }
 
 
-void SERCOM::initClockNVIC( void )
+void SERCOM::initClockNVIC( uint32_t baudrate )
 {
   uint8_t clockId = 0;
   IRQn_Type IdNvic=PendSV_IRQn ; // Dummy init to intercept potential error later
 
   if(sercom == SERCOM0)
   {
-    clockId = GCM_SERCOM0_CORE;
+    clockId = SERCOM0_GCLK_ID_CORE;
     IdNvic = SERCOM0_IRQn;
   }
   else if(sercom == SERCOM1)
   {
-    clockId = GCM_SERCOM1_CORE;
+    clockId = SERCOM1_GCLK_ID_CORE;
     IdNvic = SERCOM1_IRQn;
   }
 #if !(SAMD11C14)
   else if(sercom == SERCOM2)
   {
-    clockId = GCM_SERCOM2_CORE;
+    clockId = SERCOM2_GCLK_ID_CORE;
     IdNvic = SERCOM2_IRQn;
   }
 #endif
 #if !(SAMD11_SERIES)
   else if(sercom == SERCOM3)
   {
-    clockId = GCM_SERCOM3_CORE;
+    clockId = SERCOM3_GCLK_ID_CORE;
     IdNvic = SERCOM3_IRQn;
   }
 #endif
-#if !(SAMD11_SERIES) && !(SAMD21E) && !(SAMC21E)
+#if (!(SAMD11_SERIES)) && (!(SAMD21E)) && (!(SAMD20E)) && (!(SAMC21E))
   else if(sercom == SERCOM4)
   {
-    clockId = GCM_SERCOM4_CORE;
+    clockId = SERCOM4_GCLK_ID_CORE;
     IdNvic = SERCOM4_IRQn;
   }
   else if(sercom == SERCOM5)
   {
-    clockId = GCM_SERCOM5_CORE;
+    clockId = SERCOM5_GCLK_ID_CORE;
     IdNvic = SERCOM5_IRQn;
   }
 #endif
+#ifdef SERCOM6_GCLK_ID_CORE
+   else if(sercom == SERCOM6)
+  {
+    clockId = SERCOM6_GCLK_ID_CORE;
+    IdNvic = SERCOM6_IRQn;
+  }
+    #endif
+  #ifdef SERCOM7_GCLK_ID_CORE
+   else if(sercom == SERCOM7)
+  {
+    clockId = SERCOM7_GCLK_ID_CORE;
+    IdNvic = SERCOM7_IRQn;
+  }
+  #endif
 
   if ( IdNvic == PendSV_IRQn )
   {
@@ -732,11 +891,19 @@ void SERCOM::initClockNVIC( void )
 
   // Setting NVIC
   NVIC_EnableIRQ(IdNvic);
-  NVIC_SetPriority (IdNvic, (1<<__NVIC_PRIO_BITS) - 1);  /* set Priority */
-
+  // as IRQ handler is big, adjust the priority just for the need to prevent latency drop of data. : the trhoughtput
+  if (baudrate>=921600)
+    NVIC_SetPriority (IdNvic, 0);  /* set Priority high : just to be sure that we are called on time in case of burst of data(as flow control is soft)*/
+  else if (baudrate>=115200)
+    NVIC_SetPriority (IdNvic, ((1<<__NVIC_PRIO_BITS) -1)/2);  /* set Priority medium : just to be sure that we are called on time*/
+  else
+    NVIC_SetPriority (IdNvic, ((1<<__NVIC_PRIO_BITS) - 2));  /* set Priority so so low*/
   //Setting clock
 #if (SAMD21 || SAMD11)
   GCLK->CLKCTRL.reg = ( GCLK_CLKCTRL_ID( clockId ) | GCLK_CLKCTRL_GEN_GCLK0 | GCLK_CLKCTRL_CLKEN );
+  while ( GCLK->STATUS.reg & GCLK_STATUS_SYNCBUSY );
+#elif (SAMD20 )
+	GCLK->CLKCTRL.reg = ( GCLK_CLKCTRL_ID( clockId ) | GCLK_CLKCTRL_GEN_GCLK0 | GCLK_CLKCTRL_CLKEN );
   while ( GCLK->STATUS.reg & GCLK_STATUS_SYNCBUSY );
 #elif (SAML21 || SAMC21)
   GCLK->PCHCTRL[clockId].reg = ( GCLK_PCHCTRL_CHEN | GCLK_PCHCTRL_GEN_GCLK0 );

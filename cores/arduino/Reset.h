@@ -27,5 +27,5 @@ void tickReset();
 void cancelReset();
 
 #ifdef __cplusplus
-}
+}// extern "C" {
 #endif

@@ -19,17 +19,25 @@
  */
 
 #include "util.h"
-
+#ifdef __ICCARM__
+#pragma location = "__OUT_SEGMENT"
+#pragma object_attribute = __root
+__no_init const uint32_t   __sketch_vectors_ptr; // Exported value from linker script
+#else
 extern uint32_t __sketch_vectors_ptr; // Exported value from linker script
-
+#endif
+#if defined ( __ICCARM__ ) /* IAR Ewarm 5.41+ */
+#pragma location="CODE32"
+#pragma object_attribute=__root
+#endif
 /*
  * The SAMD21 has a default 1MHz clock @ reset.
  * SAML21 and SAMC21 have a default 4MHz clock @ reset.
  * It is switched to 48MHz in board_init.c
  */
-#if (SAMD21 || SAMD11)
+#if (SAMD21 || SAMD20 || SAMD11)
   #define CLOCK_DEFAULT 1000000ul
-#elif (SAML21 || SAMC21)
+#elif (SAML21 || SAMC21 || SAMC20)
   #define CLOCK_DEFAULT 4000000ul
 #endif
 uint32_t SystemCoreClock=CLOCK_DEFAULT;
@@ -56,7 +64,7 @@ void flashErase (uint32_t startAddress)
   }
 }
 
-void flashWrite (uint32_t numBytes, uint32_t * buffer, uint32_t * ptr_data)
+void flashWrite(uint32_t numBytes, uint32_t * buffer, uint32_t * ptr_data)
 {
   // This command writes the content of a buffer in SRAM into flash memory.
 
@@ -152,29 +160,101 @@ bool isPinActive (uint8_t port, uint8_t pin, uint8_t config)
   return(false);
 }
 
-void delayUs (uint32_t delay)
-{
-  /* The SAMD21 has a default 1MHz clock @ reset.
-   * SAML21 and SAMC21 have a default 4MHz clock @ reset.
-   * It is switched to 48MHz in board_init.c
-   */
-  uint32_t numLoops;
+#define Get_sys_count()     ( (SysTick->VAL)  & SysTick_VAL_CURRENT_Msk       )
 
+void delayUs (unsigned int  delay)
+{
+   SysTick->CTRL  |= SysTick_CTRL_CLKSOURCE_Msk |
+                    
+                   SysTick_CTRL_ENABLE_Msk;                    /* Enable SysTick IRQ and SysTick Timer */
+   
+  // The SAMD21 has a default 1MHz clock @ reset.
+   // SAML21 and SAMC21 have a default 4MHz clock @ reset.
+   // It is switched to 48MHz in board_init.c
+   //
+  volatile uint32_t numLoops;
+
+signed int delta=(((long)delay*(long)SystemCoreClock)/(long)1000000);
+/*
+signed int now=Get_sys_count();
+signed int time=now;
+time-=delta;
+
+while(time<0)
+{
+	
+	while(now>(SysTick->LOAD/2))
+          now=Get_sys_count();
+	while(now<(SysTick->LOAD-50))
+          now=Get_sys_count();// wait an over flow	
+	time+=SysTick->LOAD;
+}
+while(now>time)
+  now=Get_sys_count();// wait an over flow	
+*/
+	
   if (SystemCoreClock == VARIANT_MCK) {
     numLoops = (12 * delay);
   } else {
 #if (SAMD21 || SAMD11)
     numLoops = (delay >> 2);
-#elif (SAML21 || SAMC21)
+#elif (SAML21 || SAMC21 || SAMC20)
     numLoops = delay;
 #endif
   }
 
-  for (uint32_t i=0; i < numLoops; i++) /* 10ms */
-    /* force compiler to not optimize this... */
-    __asm__ __volatile__("");
+  for (volatile uint32_t i=0; i < numLoops; i++) // 10ms 
+    // force compiler to not optimize this... 
+     __asm__ __volatile__("nop");
 }
 
+/*
+uint32_t us2CyFactor = 0;
+unsigned int s_fcpu_hz=VARIANT_MCK;
+//initialize time base
+
+
+
+
+void delay_init(unsigned long fcpu_hz){
+  s_fcpu_hz = fcpu_hz;
+  SysTick->LOAD= SysTick_LOAD_RELOAD_Msk;
+  SysTick->CTRL    = SysTick_CTRL_CLKSOURCE_Msk | SysTick_CTRL_ENABLE_Msk; //! ENABLE Enables the counter &   CLKSOURCE Indicates the clock source: 1 processor clock.
+  SysTick->VAL=0;
+
+//SGU    us2CyFactor=   ((unsigned long long)fcpu_hz*1024)  / 1000000 /SYSTICK_NUMBER_CYCLE ;
+  us2CyFactor = fcpu_hz;
+  us2CyFactor /= 1000;
+  us2CyFactor *= 1024;
+  us2CyFactor /= 1000;
+  us2CyFactor /= SYSTICK_NUMBER_CYCLE;
+}
+// delay to wait (error about +100s at 10Mhz   and can't manage delay bealow 300ms at 50Mhz; 100ms at 150Mhz
+
+void delayMs(unsigned long delay){
+   // Assert(delay < 64);
+    
+   while ( (cpu_ms_2_cy_fast( delay ) >SysTick_LOAD_RELOAD_Msk))
+   {
+      cpu_delay_ms(50, s_fcpu_hz);delay-=50;
+   }
+   cpu_delay_ms(delay, s_fcpu_hz);
+}
+
+// delay to wait (error about +100s at 10Mhz    and can't manage delay below 100s
+
+void delayUs(unsigned long delay){
+   // Assert(delay <= 0xFFFF);
+   cpu_delay_us(delay, s_fcpu_hz);
+
+}
+
+
+void delay_cy(unsigned long delay){
+  cpu_delay_cy(delay);
+}
+
+*/
 void systemReset (void)
 {
   /* Request a system reset */
@@ -187,7 +267,7 @@ void waitForSync (void)
 {
   #if (SAMD)
   while ( GCLK->STATUS.reg & GCLK_STATUS_SYNCBUSY );
-  #elif (SAML21 || SAMC21)
+  #elif (SAML21 || SAMC21 || SAMC20)
   while ( GCLK->SYNCBUSY.reg & GCLK_SYNCBUSY_MASK );
   #endif
 }

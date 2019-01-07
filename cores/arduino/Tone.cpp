@@ -21,7 +21,7 @@
 #include "variant.h"
 #include "sam.h"
 
-#if (SAMD21 || SAMD11)
+#if (SAMD20 ||SAMD21 || SAMD11)
 #define WAIT_TC16_REGS_SYNC(x) while(x->COUNT16.STATUS.bit.SYNCBUSY);
 #elif (SAML21 || SAMC21)
 #define WAIT_TC16_REGS_SYNC(x) while(x->COUNT16.SYNCBUSY.reg);
@@ -103,6 +103,116 @@ void tone (uint32_t outputPin, uint32_t frequency, uint32_t duration)
     GCLK->CLKCTRL.reg = (uint16_t) ( GCLK_CLKCTRL_CLKEN | GCLK_CLKCTRL_GEN_GCLK0 | GCLK_CLKCTRL_ID( GCM_TC4_TC5 ));
     while ( GCLK->STATUS.reg & GCLK_STATUS_SYNCBUSY );
 #endif
+
+#if ((SAML_SERIES || SAMC_SERIES))
+    #ifdef TCC0_GCLK_ID
+      GCLK->PCHCTRL[TCC0_GCLK_ID].reg = ( GCLK_PCHCTRL_CHEN | GCLK_PCHCTRL_GEN_GCLK0 );
+      while ( GCLK->SYNCBUSY.reg & GCLK_SYNCBUSY_MASK );
+    #endif
+    #ifdef TCC1_GCLK_ID
+      GCLK->PCHCTRL[TCC1_GCLK_ID].reg = ( GCLK_PCHCTRL_CHEN | GCLK_PCHCTRL_GEN_GCLK0 );
+      while ( GCLK->SYNCBUSY.reg & GCLK_SYNCBUSY_MASK );
+    #endif
+    #ifdef TCC2_GCLK_ID
+      GCLK->PCHCTRL[TCC2_GCLK_ID].reg = ( GCLK_PCHCTRL_CHEN | GCLK_PCHCTRL_GEN_GCLK0 );
+      while ( GCLK->SYNCBUSY.reg & GCLK_SYNCBUSY_MASK );
+    #endif
+    #ifdef TCC3_GCLK_ID
+      GCLK->PCHCTRL[TCC3_GCLK_ID].reg = ( GCLK_PCHCTRL_CHEN | GCLK_PCHCTRL_GEN_GCLK0 );
+      while ( GCLK->SYNCBUSY.reg & GCLK_SYNCBUSY_MASK );
+    #endif
+   
+    #ifdef TC0_GCLK_ID
+      GCLK->PCHCTRL[TC0_GCLK_ID].reg = ( GCLK_PCHCTRL_CHEN | GCLK_PCHCTRL_GEN_GCLK0 );
+      while ( GCLK->SYNCBUSY.reg & GCLK_SYNCBUSY_MASK );
+    #endif   
+    #ifdef TC1_GCLK_ID
+      GCLK->PCHCTRL[TC1_GCLK_ID].reg = ( GCLK_PCHCTRL_CHEN | GCLK_PCHCTRL_GEN_GCLK0 );
+      while ( GCLK->SYNCBUSY.reg & GCLK_SYNCBUSY_MASK );
+    #endif         
+    #ifdef TC2_GCLK_ID
+      GCLK->PCHCTRL[TC2_GCLK_ID].reg = ( GCLK_PCHCTRL_CHEN | GCLK_PCHCTRL_GEN_GCLK0 );
+      while ( GCLK->SYNCBUSY.reg & GCLK_SYNCBUSY_MASK );
+    #endif   
+    #ifdef TC3_GCLK_ID
+      GCLK->PCHCTRL[TC3_GCLK_ID].reg = ( GCLK_PCHCTRL_CHEN | GCLK_PCHCTRL_GEN_GCLK0 );
+      while ( GCLK->SYNCBUSY.reg & GCLK_SYNCBUSY_MASK );
+    #endif   
+    #ifdef TC4_GCLK_ID
+      GCLK->PCHCTRL[TC4_GCLK_ID].reg = ( GCLK_PCHCTRL_CHEN | GCLK_PCHCTRL_GEN_GCLK0 );
+      while ( GCLK->SYNCBUSY.reg & GCLK_SYNCBUSY_MASK );
+    #endif   
+    #ifdef TC5_GCLK_ID
+      GCLK->PCHCTRL[TC5_GCLK_ID].reg = ( GCLK_PCHCTRL_CHEN | GCLK_PCHCTRL_GEN_GCLK0 );
+      while ( GCLK->SYNCBUSY.reg & GCLK_SYNCBUSY_MASK );
+    #endif   
+    #ifdef TC6_GCLK_ID
+      GCLK->PCHCTRL[TC6_GCLK_ID].reg = ( GCLK_PCHCTRL_CHEN | GCLK_PCHCTRL_GEN_GCLK0 );
+      while ( GCLK->SYNCBUSY.reg & GCLK_SYNCBUSY_MASK );
+    #endif   
+    #ifdef TC7_GCLK_ID
+      GCLK->PCHCTRL[TC7_GCLK_ID].reg = ( GCLK_PCHCTRL_CHEN | GCLK_PCHCTRL_GEN_GCLK0 );
+      while ( GCLK->SYNCBUSY.reg & GCLK_SYNCBUSY_MASK );
+    #endif
+#else
+  #ifdef TCC0_GCLK_ID
+      GCLK->CLKCTRL.reg = (uint16_t) ( GCLK_CLKCTRL_CLKEN | GCLK_CLKCTRL_GEN_GCLK0 | GCLK_CLKCTRL_ID( TCC0_GCLK_ID ));
+      while ( GCLK->STATUS.reg & GCLK_STATUS_SYNCBUSY );
+  #endif
+  #ifdef TCC1_GCLK_ID
+      GCLK->CLKCTRL.reg = (uint16_t) ( GCLK_CLKCTRL_CLKEN | GCLK_CLKCTRL_GEN_GCLK0 | GCLK_CLKCTRL_ID( TCC1_GCLK_ID ));
+      while ( GCLK->STATUS.reg & GCLK_STATUS_SYNCBUSY );
+  #endif
+  #ifdef TCC2_GCLK_ID
+      GCLK->CLKCTRL.reg = (uint16_t) ( GCLK_CLKCTRL_CLKEN | GCLK_CLKCTRL_GEN_GCLK0 | GCLK_CLKCTRL_ID( TCC2_GCLK_ID ));
+      while ( GCLK->STATUS.reg & GCLK_STATUS_SYNCBUSY );
+  #endif
+  #ifdef TCC3_GCLK_ID
+      GCLK->CLKCTRL.reg = (uint16_t) ( GCLK_CLKCTRL_CLKEN | GCLK_CLKCTRL_GEN_GCLK0 | GCLK_CLKCTRL_ID( TCC3_GCLK_ID ));
+      while ( GCLK->STATUS.reg & GCLK_STATUS_SYNCBUSY );
+  #endif
+
+  #ifdef TC0_GCLK_ID
+      GCLK->CLKCTRL.reg = (uint16_t) ( GCLK_CLKCTRL_CLKEN | GCLK_CLKCTRL_GEN_GCLK0 | GCLK_CLKCTRL_ID( TC0_GCLK_ID ));
+      while ( GCLK->STATUS.reg & GCLK_STATUS_SYNCBUSY );
+  #endif
+
+  #ifdef TC1_GCLK_ID
+      GCLK->CLKCTRL.reg = (uint16_t) ( GCLK_CLKCTRL_CLKEN | GCLK_CLKCTRL_GEN_GCLK0 | GCLK_CLKCTRL_ID( TC1_GCLK_ID ));
+      while ( GCLK->STATUS.reg & GCLK_STATUS_SYNCBUSY );
+  #endif
+
+  #ifdef TC2_GCLK_ID
+      GCLK->CLKCTRL.reg = (uint16_t) ( GCLK_CLKCTRL_CLKEN | GCLK_CLKCTRL_GEN_GCLK0 | GCLK_CLKCTRL_ID( TC2_GCLK_ID ));
+      while ( GCLK->STATUS.reg & GCLK_STATUS_SYNCBUSY );
+  #endif
+
+  #ifdef TC3_GCLK_ID
+      GCLK->CLKCTRL.reg = (uint16_t) ( GCLK_CLKCTRL_CLKEN | GCLK_CLKCTRL_GEN_GCLK0 | GCLK_CLKCTRL_ID( TC3_GCLK_ID ));
+      while ( GCLK->STATUS.reg & GCLK_STATUS_SYNCBUSY );
+  #endif
+
+  #ifdef TC4_GCLK_ID
+      GCLK->CLKCTRL.reg = (uint16_t) ( GCLK_CLKCTRL_CLKEN | GCLK_CLKCTRL_GEN_GCLK0 | GCLK_CLKCTRL_ID( TC4_GCLK_ID ));
+      while ( GCLK->STATUS.reg & GCLK_STATUS_SYNCBUSY );
+  #endif
+
+  #ifdef TC5_GCLK_ID
+      GCLK->CLKCTRL.reg = (uint16_t) ( GCLK_CLKCTRL_CLKEN | GCLK_CLKCTRL_GEN_GCLK0 | GCLK_CLKCTRL_ID( TC5_GCLK_ID ));
+      while ( GCLK->STATUS.reg & GCLK_STATUS_SYNCBUSY );
+  #endif
+
+  #ifdef TC6_GCLK_ID
+      GCLK->CLKCTRL.reg = (uint16_t) ( GCLK_CLKCTRL_CLKEN | GCLK_CLKCTRL_GEN_GCLK0 | GCLK_CLKCTRL_ID( TC6_GCLK_ID ));
+      while ( GCLK->STATUS.reg & GCLK_STATUS_SYNCBUSY );
+  #endif
+
+  #ifdef TC7_GCLK_ID
+      GCLK->CLKCTRL.reg = (uint16_t) ( GCLK_CLKCTRL_CLKEN | GCLK_CLKCTRL_GEN_GCLK0 | GCLK_CLKCTRL_ID( TC7_GCLK_ID ));
+      while ( GCLK->STATUS.reg & GCLK_STATUS_SYNCBUSY );
+  #endif
+#endif
+
   }
   
   if (toneIsActive && (outputPin != lastOutputPin))
@@ -223,5 +333,5 @@ void Tone_Handler (void)
 }
 
 #ifdef __cplusplus
-}
+}// extern "C" {
 #endif

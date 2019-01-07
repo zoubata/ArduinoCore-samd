@@ -24,7 +24,7 @@ extern "C" {
 #endif
 extern void USB_SetHandler(void (*pf_isr)(void));
 #ifdef __cplusplus
-}
+}// extern "C" {
 #endif
 
 //	Standard requests

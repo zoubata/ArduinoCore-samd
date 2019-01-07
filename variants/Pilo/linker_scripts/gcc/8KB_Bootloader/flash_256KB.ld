@@ -70,6 +70,8 @@ SECTIONS
 		KEEP(*(.sketch_boot))
 
 		. = ALIGN(0x2000);
+		_sfixed = .;
+		KEEP(*(.vectors))
 		KEEP(*(.isr_vector))
 		*(.text*)
 
@@ -140,12 +142,15 @@ SECTIONS
 		__zero_table_end__ = .;
 	} > FLASH
 	*/
+    . = ALIGN(4);
+    _etext = .;
 
 	__etext = .;
 
 	.data : AT (__etext)
 	{
 		__data_start__ = .;
+		_srelocate = .;
 		*(vtable)
 		*(.ramfunc*)
 		*(.data*)
@@ -175,6 +180,7 @@ SECTIONS
 		. = ALIGN(16);
 		/* All data end */
 		__data_end__ = .;
+		_erelocate = .;
 
 	} > RAM
 
@@ -182,10 +188,14 @@ SECTIONS
 	{
 		. = ALIGN(4);
 		__bss_start__ = .;
+		_sbss = . ;
+        _szero = .;
 		*(.bss*)
 		*(COMMON)
 		. = ALIGN(4);
 		__bss_end__ = .;
+        _ebss = . ;
+        _ezero = .;
 	} > RAM
 
 	.heap (COPY):
@@ -201,7 +211,10 @@ SECTIONS
 	 * values to stack symbols later */
 	.stack_dummy (COPY):
 	{
+	. = ALIGN(8);
+	_sstack = .;
 		*(.stack*)
+        _estack = .;
 	} > RAM
 
 	/* Set stack top to end of RAM, and stack limit move down by

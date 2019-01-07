@@ -1,0 +1,2 @@
+verifyfile %%FILE%% %%ADDR%%
+q

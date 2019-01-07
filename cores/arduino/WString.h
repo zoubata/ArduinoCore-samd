@@ -25,7 +25,12 @@
 
 #include <stdlib.h>
 #include <string.h>
+#undef _L
+#undef _U
 #include <ctype.h>
+#undef _L
+#undef _U
+
 #include <avr/pgmspace.h>
 
 // When compiling programs with this class, the following gcc parameters

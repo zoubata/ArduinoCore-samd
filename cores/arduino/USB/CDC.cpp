@@ -23,7 +23,7 @@
 #include <stdio.h>
 #include <stdint.h>
 
-#if (!SAMC)
+#if (!SAMC) && (!defined(USB_DISABLED))
 #if defined(CDC_ONLY) || defined(CDC_HID) || defined(WITH_CDC)
 
 #define CDC_SERIAL_BUFFER_SIZE	256

@@ -1,0 +1,9 @@
+mem32 0 32
+chiperase
+erase
+mem32 0 32 
+loadbin sam_ba_Pilo_SAMC21J18A_PCOM3_SERIAL2.bin 0
+loadbinfactory sam_ba_Pilo_SAMC21J18A_PCOM3_SERIAL2.bin 0
+mem32 0 32
+g
+q

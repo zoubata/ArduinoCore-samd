@@ -38,9 +38,10 @@
  * makefile (so it can be used with the build_all_bootloaders.sh script).
  * Size: ~2788B. Disabled by default. Available with 4KB bootloader.
  */
-#ifndef SDCARD_ENABLED
-//#define SDCARD_ENABLED
-#endif
+ //#define SDCARD_ENABLED
+#ifdef SDCARD_ENABLED
+
+
 
 /* If SDCARD_ENABLED is defined, then all SDCARD_SPI_* defines must also be set.
  * When setting SDCARD_SPI_PADx defines, consult the appropriate header file
@@ -108,18 +109,18 @@
  */
 //#define SDCARD_FILENAME_PRIMARY        "UPDATE.BIN"
 //#define SDCARD_FILENAME_SECONDARY      "UPDATE2.BIN"
-
+#endif
 /* Set SAM_BA_INTERFACE to SAM_BA_USBCDC_ONLY, SAM_BA_UART_ONLY, SAM_BA_NONE, or
  * SAM_BA_BOTH_INTERFACES. With 4KB bootloaders, select only one interface (except
  * when using SDCARD_ENABLED, then set SAM_BA_INTERFACE to SAM_BA_NONE). The C21
  * lacks USB, so set to SAM_BA_UART_ONLY in this case. By default,
  * SAM_BA_USBCDC_ONLY is set (SAM_BA_UART_ONLY with the C21).
  */
-#if (SAMC21)
+#if (SAMC21) ||(SAMC20) || (SAMD20)
 
   #define SAM_BA_INTERFACE              SAM_BA_UART_ONLY
 #else
-  #define SAM_BA_INTERFACE		SAM_BA_USBCDC_ONLY
+  #define SAM_BA_INTERFACE		SAM_BA_BOTH_INTERFACES
 #endif
   
 
@@ -233,12 +234,41 @@
 #define BOOT_USART_PAD0                   PINMUX_UNUSED
 */
 /* PILO ****/
+#ifdef BOOT_FTDI //boot from FTDI
+	#define BOOT_USART_SERCOM_INSTANCE        1
+	#define BOOT_USART_PAD_SETTINGS           UART_RX_PAD3_TX_PAD2
+	#define BOOT_USART_PAD3                   PINMUX_PA31D_SERCOM1_PAD3
+	#define BOOT_USART_PAD2                   PINMUX_PA30D_SERCOM1_PAD2
+	#define BOOT_USART_PAD0                   PINMUX_UNUSED
+	#define BOOT_USART_PAD1                   PINMUX_UNUSED
+#elif defined( BOOT_PCOM3_SERIAL2) // booot from pi
+	#define BOOT_USART_SERCOM_INSTANCE        3
+	#define BOOT_USART_PAD_SETTINGS           UART_RX_PAD3_TX_PAD2
+	#define BOOT_USART_PAD3                   PINMUX_PA25C_SERCOM3_PAD3
+	#define BOOT_USART_PAD2                   PINMUX_PA24C_SERCOM3_PAD2
+	#define BOOT_USART_PAD0                   PINMUX_UNUSED
+	#define BOOT_USART_PAD1                   PINMUX_UNUSED
+#elif defined( BOOT_PCOM3_SERIAL1)
+ 	#define BOOT_USART_PAD_SETTINGS           UART_RX_PAD1_TX_PAD0
+	#define BOOT_USART_PAD3                   PINMUX_UNUSED
+	#define BOOT_USART_PAD2                   PINMUX_UNUSED
+	#define BOOT_USART_PAD1                   PINMUX_PA23C_SERCOM3_PAD1
+	#define BOOT_USART_PAD0                   PINMUX_PA22C_SERCOM3_PAD0
+#elif defined( BOOT_engi)
 #define BOOT_USART_SERCOM_INSTANCE        1
 #define BOOT_USART_PAD_SETTINGS           UART_RX_PAD3_TX_PAD2
-#define BOOT_USART_PAD3                   PINMUX_PA31D_SERCOM1_PAD3
-#define BOOT_USART_PAD2                   PINMUX_PA30D_SERCOM1_PAD2
+#define BOOT_USART_PAD3                   PINMUX_PA19C_SERCOM1_PAD3
+#define BOOT_USART_PAD2                   PINMUX_PA18C_SERCOM1_PAD2
 #define BOOT_USART_PAD1                   PINMUX_UNUSED
 #define BOOT_USART_PAD0                   PINMUX_UNUSED
+
+
+#else
+	#error bad def
+#endif
+// enable auto baud computation, cost ~2ko
+#define SERIAL_AUTOBAUD                   1
+#define AUTO_DETECT_ENABLED               0
 /**/
 /* engi
 #define BOOT_USART_SERCOM_INSTANCE        1
@@ -263,11 +293,13 @@
  * PIN_POLARITY_ACTIVE_HIGH. Config can be INPUT, INPUT_PULLUP, or INPUT_PULLDOWN.
  * Size: ~84B. Disabled by default.
  */
-//#define BOOT_LOAD_PIN_ENABLED
+#define BOOT_LOAD_PIN_ENABLED
 #define BOOT_LOAD_PIN_POLARITY            PIN_POLARITY_ACTIVE_LOW
 #define BOOT_LOAD_PIN_PORT                (0)
-#define BOOT_LOAD_PIN                     (21)
+#define BOOT_LOAD_PIN                     (20)
 #define BOOT_LOAD_PIN_CONFIG              INPUT_PULLUP
+
+//#define BOOT_LOAD_AUTODETECT_ENABLED
 
 /*
  * If BOARD_LED_FADE_ENABLED is defined, then the main LED produces a PWM fade in an
@@ -283,7 +315,7 @@
  * By default, only BOARD_LED is enabled.
  */
 #define BOARD_LED_PORT                    (0)
-#define BOARD_LED_PIN                     (17)
+#define BOARD_LED_PIN                     (19)
 #define BOARD_LED_POLARITY	LED_POLARITY_HIGH_ON
 
 //#define BOARD_LEDRX_PORT                  (1)

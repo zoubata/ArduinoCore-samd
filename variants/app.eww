@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="iso-8859-1"?>
+
+<workspace>
+  <project>
+    <path>$WS_DIR$\Captor\Captor_fl.ewp</path>
+  </project>
+  <project>
+    <path>$WS_DIR$\Line\Line_fl.ewp</path>
+  </project>
+  <project>
+    <path>$WS_DIR$\Pilo\Pilo_fl.ewp</path>
+  </project>
+  <batchBuild/>
+</workspace>
+
+

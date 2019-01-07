@@ -1,3 +1,4 @@
+
 #!/bin/bash -ex
 
 #  pack.*.bash - Bash script to help packaging samd core releases.
@@ -17,6 +18,12 @@
 #  License along with this library; if not, write to the Free Software
 #  Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 
+#{
+#		"packager": "zoubworld_Arduino",
+#		"name": "Jlink",
+#		"version": "%%VERSIONJLINK%%"
+#	},
+#	
 VERSION=`grep version= platform.txt | sed 's/version=//g'`
 
 PWD=`pwd`
@@ -24,11 +31,11 @@ FOLDERNAME=`basename $PWD`
 THIS_SCRIPT_NAME=`basename $0`
 
 FILENAME=Zoubworld_sam_m0p-$VERSION.tar.bz2
-
+echo cd ./bootloaders/Pilo/ ;echo ./build_all_bootloaders.sh
 rm -f $FILENAME
 
 cd ..
-tar --transform "s|$FOLDERNAME|$FOLDERNAME-$VERSION|g"  --exclude=extras/** --exclude=.git* --exclude=.idea -cjf $FILENAME $FOLDERNAME
+tar --transform "s|$FOLDERNAME|$FOLDERNAME-$VERSION|g"  --exclude=extras/**   --exclude=variants/Captor/settings/**   --exclude=variants/Captor/ObjProject1/**  --exclude=variants/Captor/Debug/**  --exclude=bootloaders/Pilo/build/**   --exclude=bootloaders/Pilo/Debug/**    --exclude=variants/Line/Debug/**   --exclude=variants/Pilo/Debug/** --exclude=.git* --exclude=.idea -cjf $FILENAME $FOLDERNAME
 cd -
 
 mv ../$FILENAME .

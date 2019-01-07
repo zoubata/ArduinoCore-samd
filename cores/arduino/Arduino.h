@@ -20,7 +20,7 @@
 #ifndef Arduino_h
 #define Arduino_h
 
-#define MATTAIRTECH_CORE
+#define ZOUBWORLD_CORE
 
 #include <stdbool.h>
 #include <stdint.h>
@@ -28,28 +28,42 @@
 #include <string.h>
 #include <math.h>
 
+
 typedef bool boolean;
 typedef uint8_t byte;
 typedef uint16_t word;
-
-// some libraries and sketches depend on this AVR stuff,
-// assuming Arduino.h or WProgram.h automatically includes it...
-//
+/*
 #include "avr/pgmspace.h"
 #include "avr/interrupt.h"
 #include "avr/io.h"
-
+*/
+// some libraries and sketches depend on this AVR stuff,
+// assuming Arduino.h or WProgram.h automatically includes it...
+//
+/*
+#include "avr/pgmspace.h"
+#include "avr/interrupt.h"
+#include "avr/io.h"
+*/
 #include "binary.h"
 #include "itoa.h"
-
-#ifdef __cplusplus
-extern "C"{
-#endif // __cplusplus
-
 // Include Atmel headers
 #include "sam.h"
 
 #include "wiring_constants.h"
+
+#ifdef __cplusplus
+  #include "WCharacter.h"
+  #include "WString.h"
+#endif
+  
+
+#ifdef __cplusplus
+extern "C" 
+{
+#endif // __cplusplus
+
+
 
 #define clockCyclesPerMicrosecond() ( SystemCoreClock / 1000000L )
 #define clockCyclesToMicroseconds(a) ( ((a) * 1000L) / (SystemCoreClock / 1000L) )
@@ -68,25 +82,30 @@ void loop( void ) ;
 #ifdef __cplusplus
 } // extern "C"
 #endif
+#include "WVariant.h"
+
+  #ifdef __cplusplus
+  #include "Uart.h"
+#endif
 
 // The following headers are for C++ only compilation
 #ifdef __cplusplus
   #include "WCharacter.h"
-  #include "WString.h"
-
-extern "C"{
+ 
+  /*
+extern "C" {
 #include "WVariant.h"
 } // extern "C"
-
+#include "PinExtender.h"
+*/
   #include "Tone.h"
   #include "WMath.h"
+
   #include "HardwareSerial.h"
   #include "pulse.h"
 #endif
 #include "delay.h"
-#ifdef __cplusplus
-  #include "Uart.h"
-#endif
+
 
 // Include board variant
 #include "variant.h"
@@ -124,8 +143,7 @@ extern "C"{
 
 #define bit(b) (1UL << (b))
 
-// Interrupts
-#define digitalPinToInterrupt(P)   ( P )
+
 
 // USB Device
 #if defined(USBCON)
@@ -136,5 +154,6 @@ extern "C"{
   #include "USB/USB_host.h"
 #endif
 #endif
+
 
 #endif // Arduino_h

@@ -22,6 +22,7 @@
 #include "sam.h"
 
 #define SERCOM_FREQ_REF F_CPU
+#define SERCOM_NVIC_PRIORITY ((1<<__NVIC_PRIO_BITS) - 1)
 
 // Not defined in CMSIS for SAML or SAMC
 #ifndef SERCOM_SPI_CTRLA_MODE_SPI_MASTER
@@ -86,13 +87,13 @@ typedef enum
 {
 	UART_TX_PAD_0 = 0x0ul,	// Only for UART
 	UART_TX_PAD_2 = 0x1ul,  // Only for UART
-	UART_TX_RTS_CTS_PAD_0_2_3 = 0x2ul,  // Only for UART with TX on PAD0, RTS on PAD2 and CTS on PAD3
+	UART_TX_RTS_CTS_PAD_0_2_3 = 0x2ul  // Only for UART with TX on PAD0, RTS on PAD2 and CTS on PAD3
 } SercomUartTXPad;
 
 typedef enum
 {
 	SAMPLE_RATE_x16 = 0x1,	//Fractional
-	SAMPLE_RATE_x8 = 0x3,	//Fractional
+	SAMPLE_RATE_x8 = 0x3	//Fractional
 } SercomUartSampleRate;
 
 typedef enum
@@ -178,6 +179,7 @@ class SERCOM
 		void resetSPI( void ) ;
 		void enableSPI( void ) ;
 		void disableSPI( void ) ;
+		int mode();
 		void setDataOrderSPI(SercomDataOrder dataOrder) ;
 		SercomDataOrder getDataOrderSPI( void ) ;
 		void setBaudrateSPI(uint8_t divider) ;
@@ -189,9 +191,9 @@ class SERCOM
 		bool isReceiveCompleteSPI( void ) ;
 
 		/* ========== WIRE ========== */
-		void initSlaveWIRE(uint8_t address) ;
+		void initSlaveWIRE(uint8_t address , bool enableGeneralCall  = false) ;
 		void initMasterWIRE(uint32_t baudrate) ;
-
+      //          void initClockWIRE( uint32_t baudrate );
 		void resetWIRE( void ) ;
 		void enableWIRE( void ) ;
     void disableWIRE( void );
@@ -213,12 +215,16 @@ class SERCOM
     bool isRXNackReceivedWIRE( void ) ;
 		int availableWIRE( void ) ;
 		uint8_t readDataWIRE( void ) ;
-
+/*
+                void multiMastertoMaster();
+                void multiMastertoSlave();*/
 	private:
+//    int backup;
+//  bool savecontext;
 		Sercom* sercom;
 		uint32_t calculateBaudrateSynchronous(uint32_t baudrate) ;
 		uint32_t division(uint32_t dividend, uint32_t divisor) ;
-		void initClockNVIC( void ) ;
+		void initClockNVIC( uint32_t baudrate ) ;
 };
 
 #endif

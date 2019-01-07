@@ -18,6 +18,7 @@
 
 #pragma once
 
+//#include "wiring_private.h"
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -25,5 +26,5 @@ extern "C" {
 extern void init(void);
 
 #ifdef __cplusplus
-}
+}// extern "C" {
 #endif

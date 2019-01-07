@@ -23,6 +23,8 @@
 #include <stdint.h>
 #include <stdbool.h>
 #include "util.h"
+#include "cores\arduino\WVariant.h"
+#include "Variant.h"
 
 
 /* USART buffer size (must be a power of two) */
@@ -35,7 +37,7 @@
 /* CRC16  polynomial */
 #define CRC16POLY                (0x1021)
 
-#define SHARP_CHARACTER          '#'
+#define SHARP_CHARACTER          '#' /* 0x23 : 35*/
 
 /* X/Ymodem protocol: */
 #define SOH                      (0x01)
@@ -52,7 +54,7 @@
 /**
  * \brief Open the given USART
  */
-void serial_open(void);
+void serial_open(unsigned int fBaudSpeed);
 
 /**
  * \brief Stops the USART
@@ -140,5 +142,6 @@ uint32_t serial_getdata_xmd(void* data, uint32_t length); //Get data from comm. 
  * \return The new computed CRC
  */
 unsigned short serial_add_crc(char c, unsigned short crc);
-
+bool Pcom_is_rx_ready(PcomStatus Pcom);
+int Pcom_sharp_received(PcomStatus Pcom);
 #endif // _SAM_BA_SERIAL_H_

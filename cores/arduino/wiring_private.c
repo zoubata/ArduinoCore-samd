@@ -1,6 +1,8 @@
 /*
   Copyright (c) 2015 Arduino LLC.  All right reserved.
   Copyright (c) 2017 MattairTech LLC. All right reserved.
+  Copyright (c) 2018 Zoubworld LLC. All right reserved.
+  
 
   This library is free software; you can redistribute it and/or
   modify it under the terms of the GNU Lesser General Public
@@ -31,45 +33,61 @@ static void syncDAC() {
   while ( DAC->SYNCBUSY.reg & DAC_SYNCBUSY_MASK );
 #endif
 }
+  uint32_t pinAttribute = 0;
+  uint8_t peripheralAttribute = 0;
+  uint8_t pinType = 0;
+   EPioPeripheral peripheral = PER_PORT;
+   uint8_t pinPort = 0;
+  uint8_t pinNum = 0;
+  uint8_t pinCfg = 0;	// INEN should be enabled for both input and output (but not analog)
 
-int pinPeripheral( uint32_t ulPin, uint32_t ulPeripheral )
+    uint32_t myulPin = 0;
+  uint32_t myulPeripheral = 0;	// INEN should be enabled for both input and output (but not analog)
+
+int pinPeripheral( uint32_t ulPin, EPioType ulPeripheral )
 {
+	myulPin=ulPin;
+	myulPeripheral=ulPeripheral;
   // Prevent out of bounds access
   if (ulPin >= NUM_PIN_DESCRIPTION_ENTRIES)
   {
     return -1 ;
   }
 
-  uint32_t pinAttribute = g_APinDescription[ulPin].ulPinAttribute;
-  uint8_t peripheralAttribute = g_APinDescription[ulPin].ulPeripheralAttribute;
-  uint8_t pinType = g_APinDescription[ulPin].ulPinType;
+  pinAttribute = g_APinDescription[ulPin].ulPinAttribute;
+ // uint8_t 
+  
+  peripheralAttribute = g_APinDescription[ulPin].ulPeripheralAttribute;
+  //uint8_t 
+  pinType = g_APinDescription[ulPin].ulPinType;
 
   // Handle the case the pin isn't usable as PIO
   if ( pinType == PIO_NOT_A_PIN )
   {
-    return -1 ;
+    return -2 ;
   }
 
   // If pinType is not PIO_MULTI or PIO_STARTUP in the pinDescription table, then it must match ulPeripheral
   if ( pinType != PIO_MULTI && pinType != PIO_STARTUP && pinType != ulPeripheral )
   {
-    return -1 ;
+    return -3 ;
   }
 
   // Make sure ulPeripheral is listed in the attributes
-  if ( !(pinAttribute & (1UL << ulPeripheral)) && pinType != PIO_STARTUP )
-  {
-    return -1 ;
+  if ( (pinAttribute & (1UL << ulPeripheral)) != (pinAttribute & (1UL << ulPeripheral)) )
+  {// && pinType!=PIO_STARTUP
+    return -4 ;
   }
+  EPioPeripheral peripheral = PER_PORT;
 
   // Determine hardware peripheral to use
-  EPioPeripheral peripheral = PER_PORT;
+  //EPioPeripheral peripheral = PER_PORT;
   switch ( ulPeripheral )
   {
     case PIO_EXTINT:
       if ( digitalPinToInterrupt( ulPin ) == NOT_AN_INTERRUPT )
       {
-        return -1 ;
+        return -5 ;
       }
       peripheral = PER_EXTINT;
     break ;
@@ -77,7 +95,7 @@ int pinPeripheral( uint32_t ulPin, uint32_t ulPeripheral )
     case PIO_ANALOG_ADC:
       if ( g_APinDescription[ulPin].ulADCChannelNumber == No_ADC_Channel )
       {
-        return -1 ;
+        return -6 ;
       }
       peripheral = PER_ANALOG;
     break ;
@@ -91,7 +109,7 @@ int pinPeripheral( uint32_t ulPin, uint32_t ulPeripheral )
     case PIO_TIMER_CAPTURE:
       if ( g_APinDescription[ulPin].ulTCChannel == NOT_ON_TIMER )
       {
-        return -1 ;
+        return -7 ;
       }
 
       if ( (peripheralAttribute & PER_ATTR_TIMER_MASK) == PER_ATTR_TIMER_STD )
@@ -129,16 +147,18 @@ int pinPeripheral( uint32_t ulPin, uint32_t ulPeripheral )
 
     case PIO_NOT_A_PIN:
     case PIO_MULTI:
-      return -1l ;
+      return -8l ;
     break ;
 
     default:
     break ;
   }
 
-  uint8_t pinPort = g_APinDescription[ulPin].ulPort;
-  uint8_t pinNum = g_APinDescription[ulPin].ulPin;
-  uint8_t pinCfg = PORT_PINCFG_INEN;	// INEN should be enabled for both input and output (but not analog)
+  pinPort = g_APinDescription[ulPin].ulPort;
+ // uint8_t
+  pinNum = g_APinDescription[ulPin].ulPin;
+  ///uint8_t 
+  pinCfg = PORT_PINCFG_INEN;	// INEN should be enabled for both input and output (but not analog)
 
   // Disable DAC, if analogWrite() used previously the DAC is enabled
   // Note that on the L21, the DAC output would interfere with other peripherals if left enabled, even if the anaolog peripheral is not selected
@@ -264,4 +284,13 @@ int pinPeripheral( uint32_t ulPin, uint32_t ulPeripheral )
 
   interrupts();
   return 0l ;
+}
+/** disable any peripheral(expected I/O)*/
+int pinPeripheralDisable( uint32_t ulPin  )
+{
+	 uint8_t pinPort = g_APinDescription[ulPin].ulPort;
+  uint8_t pinNum = g_APinDescription[ulPin].ulPin;
+ 
+		PORT->Group[pinPort].PINCFG[pinNum].reg &= ~PORT_PINCFG_PMUXEN ; // Enable port mux
+		return 0;
 }

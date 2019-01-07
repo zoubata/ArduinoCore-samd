@@ -23,11 +23,13 @@
 #include "RingBuffer.h"
 
 #include <cstddef>
-
+#ifndef cores_usart_h
+#define cores_usart_h
 class Uart : public HardwareSerial
 {
   public:
     Uart(SERCOM *_s, uint8_t _pinRX, uint8_t _pinTX, SercomRXPad _padRX, SercomUartTXPad _padTX);
+    Uart(SERCOM *_s, uint8_t _pinRX, uint8_t _pinTX, SercomRXPad _padRX, SercomUartTXPad _padTX, uint8_t _pinRTS, uint8_t _pinCTS);
     void begin(unsigned long baudRate);
     void begin(unsigned long baudrate, uint16_t config);
     void end();
@@ -36,14 +38,18 @@ class Uart : public HardwareSerial
     int peek();
     int read();
     void flush();
+	void waitTxEnd();
+    int enabled();
     size_t write(const uint8_t data);
-    using Print::write; // pull in write(str) and write(buf, size) from Print
-
+#if ! defined(__ICCARM__)
+   using Print::write; // pull in write(str) and write(buf, size) from Print
+#endif
     void IrqHandler();
 
     operator bool() { return true; }
 
   private:
+	bool initialized;  
     SERCOM *sercom;
     RingBuffer rxBuffer;
     RingBuffer txBuffer;
@@ -52,8 +58,36 @@ class Uart : public HardwareSerial
     uint8_t uc_pinTX;
     SercomRXPad uc_padRX;
     SercomUartTXPad uc_padTX;
+    uint8_t uc_pinRTS;
+    volatile uint32_t* pul_outsetRTS;
+    volatile uint32_t* pul_outclrRTS;
+    uint32_t ul_pinMaskRTS;
+    uint8_t uc_pinCTS;
 
     SercomNumberStopBit extractNbStopBit(uint16_t config);
     SercomUartCharSize extractCharSize(uint16_t config);
     SercomParityMode extractParity(uint16_t config);
 };
+/*
+#if SERIAL_INTERFACES_COUNT > 0
+#define Serial Serial0
+  extern Uart Serial0;
+  #define SPI SPI0
+#endif
+#if SERIAL_INTERFACES_COUNT > 1
+  extern Uart Serial1;
+#endif
+#if SERIAL_INTERFACES_COUNT > 2
+  extern Uart Serial2;
+#endif
+#if SERIAL_INTERFACES_COUNT > 3
+  extern Uart Serial3;
+#endif
+#if SERIAL_INTERFACES_COUNT > 4
+  extern Uart Serial4;
+#endif
+#if SERIAL_INTERFACES_COUNT > 5
+  extern Uart Serial5;
+#endif
+*/
+#endif

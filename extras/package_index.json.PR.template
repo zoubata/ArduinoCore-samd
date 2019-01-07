@@ -3,26 +3,28 @@
     {
       "name": "Zoubworld_Arduino_Beta",
       "maintainer": "Zoubworld ",
-      "websiteURL": "https://www.Zoubworld.com/",
+      "websiteURL": "http://www.zoubworld.com/~zoubworld_Arduino/support/",
       "email": "support@Zoubworld.com",
       "help": {
-        "online": "https://www.Zoubworld.com/support/"
+        "online": "http://www.zoubworld.com/~zoubworld_Arduino/support/"
       },
       "platforms": [
         {
           "name": "Zoubworld SAM M0+ Boards - Pull request #%%PR_NUMBER%% (build %%BUILD_NUMBER%%)",
-          "architecture": "samd",
+          "architecture": "sam",
           "version": "%%VERSION%%",
           "category": "Contributed",
           "help": {
-            "online": "https://www.Zoubworld.com/support/"
+            "online": "http://www.zoubworld.com/~zoubworld_Arduino/support/"
           },
-          "url": "https://www.Zoubworld.com/software/arduino/beta/%%FILENAME%%",
+          "url": "http://lfbn-1-14132-125.w90-12.abo.wanadoo.fr/~zoubworld_Arduino/files/Release/%%FILENAME%%",
           "archiveFileName": "%%FILENAME%%",
           "checksum": "SHA-256:%%CHECKSUM%%",
           "size": "%%SIZE%%",
           "boards": [
-            {"name": "Pilo"}
+            {"name": "Pilo"},
+			{"name": "Captor"},
+			{"name": "line"}
           ],
           "toolsDependencies": [
             {
@@ -43,12 +45,7 @@
             {
               "packager": "arduino",
               "name": "CMSIS",
-              "version": "4.5.0"
-            },
-            {
-              "packager": "Zoubworld_Arduino",
-              "name": "CMSIS-Atmel",
-	      "version": "1.0.0-Zoubworld-1"
+              "version": "4.0.0-atmel"
             },
             {
               "packager": "arduino",
@@ -65,28 +62,28 @@
         "systems": [
         {
           "host": "i686-mingw32",
-	  "url": "https://www.Zoubworld.com/software/arduino/bossac-1.7.0-Zoubworld-1-mingw32.tar.gz",
+	  "url": "http://lfbn-1-14132-125.w90-12.abo.wanadoo.fr/~zoubworld_Arduino/files/Release/bossac-1.7.0-Zoubworld-1-mingw32.tar.gz",
 	  "archiveFileName": "bossac-1.7.0-mattairtech-1-mingw32.tar.gz",
 	  "checksum": "SHA-256:1e1cf251fd4fd5260d9f000da5f2890b0f91c839fd1491af575f05339c0d136a",
 	  "size": "324086"
         },
         {
           "host": "x86_64-pc-linux-gnu",
-	  "url": "https://www.Zoubworld.com/software/arduino/bossac-1.7.0-Zoubworld-1-x86_64-linux-gnu.tar.gz",
+	  "url": "http://lfbn-1-14132-125.w90-12.abo.wanadoo.fr/~zoubworld_Arduino/files/Release/bossac-1.7.0-Zoubworld-1-x86_64-linux-gnu.tar.gz",
 	  "archiveFileName": "bossac-1.7.0-mattairtech-1-x86_64-linux-gnu.tar.gz",
 	  "checksum": "SHA-256:788315e2f8814db77efd2d32fc660471dda8336fe9341c72b60fb3052a986ebc",
 	  "size": "204696"
         },
         {
           "host": "i686-pc-linux-gnu",
-	  "url": "https://www.Zoubworld.com/software/arduino/bossac-1.7.0-Zoubworld-1-i686-linux-gnu.tar.gz",
+	  "url": "http://lfbn-1-14132-125.w90-12.abo.wanadoo.fr/~zoubworld_Arduino/files/Release/bossac-1.7.0-Zoubworld-1-i686-linux-gnu.tar.gz",
 	  "archiveFileName": "bossac-1.7.0-mattairtech-1-i686-linux-gnu.tar.gz",
 	  "checksum": "SHA-256:07dcd2201831813e58e06ddc0c755c88754d2b766060626f8e51fc885dd6798c",
 	  "size": "194636"
         },
         {
           "host": "x86_64-apple-darwin",
-	  "url": "https://www.Zoubworld.com/software/arduino/bossac-1.7.0-Zoubworld-1-x86_64-apple-darwin.tar.gz",
+	  "url": "http://lfbn-1-14132-125.w90-12.abo.wanadoo.fr/~zoubworld_Arduino/files/Release/bossac-1.7.0-Zoubworld-1-x86_64-apple-darwin.tar.gz",
 	  "archiveFileName": "bossac-1.7.0-mattairtech-1-x86_64-apple-darwin.tar.gz",
 	  "checksum": "SHA-256:ca57765d7c7ef94e43d316658c8b3012d888501d10ec58bc38dc2aaa173edadf",
 	  "size": "85071"
@@ -99,28 +96,28 @@
         "systems": [
         {
           "host": "i686-mingw32",
-	  "url": "https://www.Zoubworld.com/software/arduino/CMSIS-Atmel-1.0.0-Zoubworld-1.tar.gz",
+	  "url": "http://lfbn-1-14132-125.w90-12.abo.wanadoo.fr/~zoubworld_Arduino/files/Release/CMSIS-Atmel-1.0.0-Zoubworld-1.tar.gz",
 	  "archiveFileName": "CMSIS-Atmel-1.0.0-mattairtech-1.tar.gz",
 	  "checksum": "SHA-256:ab100e3336b61f23f10759a9f0d0ffef6dd2af0615b02428ada9027dea3dba15",
 	  "size": "1386014"
         },
         {
           "host": "x86_64-pc-linux-gnu",
-	  "url": "https://www.Zoubworld.com/software/arduino/CMSIS-Atmel-1.0.0-Zoubworld-1.tar.gz",
+	  "url": "http://lfbn-1-14132-125.w90-12.abo.wanadoo.fr/~zoubworld_Arduino/files/Release/CMSIS-Atmel-1.0.0-Zoubworld-1.tar.gz",
 	  "archiveFileName": "CMSIS-Atmel-1.0.0-mattairtech-1.tar.gz",
 	  "checksum": "SHA-256:ab100e3336b61f23f10759a9f0d0ffef6dd2af0615b02428ada9027dea3dba15",
 	  "size": "1386014"
         },
         {
           "host": "i686-pc-linux-gnu",
-	  "url": "https://www.Zoubworld.com/software/arduino/CMSIS-Atmel-1.0.0-Zoubworld-1.tar.gz",
+	  "url": "http://lfbn-1-14132-125.w90-12.abo.wanadoo.fr/~zoubworld_Arduino/files/Release/CMSIS-Atmel-1.0.0-Zoubworld-1.tar.gz",
 	  "archiveFileName": "CMSIS-Atmel-1.0.0-mattairtech-1.tar.gz",
 	  "checksum": "SHA-256:ab100e3336b61f23f10759a9f0d0ffef6dd2af0615b02428ada9027dea3dba15",
 	  "size": "1386014"
         },
         {
           "host": "x86_64-apple-darwin",
-	  "url": "https://www.Zoubworld.com/software/arduino/CMSIS-Atmel-1.0.0-Zoubworld-1.tar.gz",
+	  "url": "http://lfbn-1-14132-125.w90-12.abo.wanadoo.fr/~zoubworld_Arduino/files/Release/CMSIS-Atmel-1.0.0-Zoubworld-1.tar.gz",
 	  "archiveFileName": "CMSIS-Atmel-1.0.0-mattairtech-1.tar.gz",
 	  "checksum": "SHA-256:ab100e3336b61f23f10759a9f0d0ffef6dd2af0615b02428ada9027dea3dba15",
 	  "size": "1386014"

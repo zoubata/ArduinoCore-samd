@@ -60,7 +60,7 @@ extern void UHD_Pipe_Send(uint32_t ul_pipe, uint32_t ul_token_type);
 extern uint32_t UHD_Pipe_Is_Transfer_Complete(uint32_t ul_pipe, uint32_t ul_token_type);
 
 #ifdef __cplusplus
-}
+}// extern "C" {
 #endif
 
 #endif /* USB_HOST_H_INCLUDED */

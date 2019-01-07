@@ -17,12 +17,13 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  */
 
-#ifndef _SPI_H_INCLUDED
-#define _SPI_H_INCLUDED
 
 #include <Arduino.h>
 #include <WVariant.h>
+#include <Variant.h>
 #include "sam.h"
+#ifndef _SPI_H_INCLUDED
+#define _SPI_H_INCLUDED
 
 // SPI_HAS_TRANSACTION means SPI has
 //   - beginTransaction()
@@ -30,6 +31,7 @@
 //   - usingInterrupt()
 //   - SPISetting(clock, bitOrder, dataMode)
 #define SPI_HAS_TRANSACTION 1
+#define SPI_HAS_NOTUSINGINTERRUPT 1
 
 #define SPI_MODE0 0x02
 #define SPI_MODE1 0x00
@@ -51,12 +53,16 @@
 class SPISettings {
   public:
   SPISettings(uint32_t clock, BitOrder bitOrder, uint8_t dataMode) {
+    #if (defined(__ICCARM__) || defined(__AARM__))
+#else
     if (__builtin_constant_p(clock)) {
       init_AlwaysInline(clock, bitOrder, dataMode);
-    } else {
+    } else 
+#endif
+    {
       init_MightInline(clock, bitOrder, dataMode);
     }
-  }
+  }  
 
   // Default speed set to 4MHz, SPI mode set to MODE 0 and Bit order set to MSB first.
   SPISettings() { init_AlwaysInline(4000000, MSBFIRST, SPI_MODE0); }
@@ -101,9 +107,10 @@ class SPIClass {
   byte transfer(uint8_t data);
   uint16_t transfer16(uint16_t data);
   void transfer(void *buf, size_t count);
-
+  int enabled();
   // Transaction Functions
   void usingInterrupt(int interruptNumber);
+  void notUsingInterrupt(int interruptNumber);
   void beginTransaction(SPISettings settings);
   void endTransaction(void);
 
@@ -135,9 +142,10 @@ class SPIClass {
   char interruptSave;
   uint32_t interruptMask;
 };
-
 #if SPI_INTERFACES_COUNT > 0
-  extern SPIClass SPI;
+#define SPI SPI0
+  extern SPIClass SPI0;
+
 #endif
 #if SPI_INTERFACES_COUNT > 1
   extern SPIClass SPI1;

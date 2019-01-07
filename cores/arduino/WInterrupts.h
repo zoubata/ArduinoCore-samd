@@ -33,6 +33,9 @@ extern "C" {
 
 #define DEFAULT 1
 #define EXTERNAL 0
+#define EXTINT_NONE ((uint32_t)-1)
+/* return the interrupt handler only if handler is free*/
+EExt_Interrupts digitalPinToInterrupt(uint32_t pin);
 
 typedef void (*voidFuncPtr)(void);
 
@@ -40,7 +43,7 @@ typedef void (*voidFuncPtr)(void);
  * \brief Specifies a named Interrupt Service Routine (ISR) to call when an interrupt occurs.
  *        Replaces any previous function that was attached to the interrupt.
  */
-void attachInterrupt(uint32_t pin, voidFuncPtr callback, uint32_t mode);
+int attachInterrupt(uint32_t pin, voidFuncPtr callback, uint32_t mode);
 
 /*
  * \brief Turns off the given interrupt.
@@ -48,7 +51,7 @@ void attachInterrupt(uint32_t pin, voidFuncPtr callback, uint32_t mode);
 void detachInterrupt(uint32_t pin);
 
 #ifdef __cplusplus
-}
+}// extern "C" {
 #endif
 
 #endif

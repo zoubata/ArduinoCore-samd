@@ -19,7 +19,7 @@
 #pragma once
 
 #include <stdint.h>
-#include "sam.h"
+//#include "sam.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -75,7 +75,7 @@ typedef enum _eAnalogReference
   AR_INTERNAL = AR_INTERNAL_INTVCC0,
   AR_INTERNAL2V23 = AR_INTERNAL_INTVCC0,	// 2.23V only when Vcc = 3.3V
   AR_INTERNAL1V65 = AR_INTERNAL_INTVCC1,	// 1.65V only when Vcc = 3.3V
-  AR_EXTERNAL = AR_EXTERNAL_REFA,
+  AR_EXTERNAL = AR_EXTERNAL_REFA
 } eAnalogReference ;
 
 
@@ -121,5 +121,5 @@ extern void analogWriteResolution(int res);
 extern void analogOutputInit( void ) ;
 
 #ifdef __cplusplus
-}
+}// extern "C" {
 #endif
