@@ -185,6 +185,7 @@
         </option>
         <option>
           <name>CCDefines</name>
+          <state>DEBUG</state>
           <state>F_CPU=48000000L </state>
           <state>ARDUINO=10805 </state>
           <state>ARDUINO_SAMD_ZERO </state>
@@ -2321,6 +2322,12 @@
   </file>
   <file>
     <name>$PROJ_DIR$\..\..\..\..\..\..\..\..\..\..\Documents\Arduino\libraries\Rosserial_Arduino_Library\src\duration.cpp</name>
+  </file>
+  <file>
+    <name>$PROJ_DIR$\linker_scripts\iar\flash.icf</name>
+  </file>
+  <file>
+    <name>$PROJ_DIR$\linker_scripts\iar\flashETB.icf</name>
   </file>
   <file>
     <name>$PROJ_DIR$\..\..\cores\arduino\hooks.c</name>

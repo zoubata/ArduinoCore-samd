@@ -205,10 +205,10 @@ LEDRX_off();
   LED_on();
   #endif
   LEDRX_init();
-  LEDRX_off();
+  LEDRX_on();
   LEDTX_init();
-  LEDTX_off();
-
+  LEDTX_on();
+//while(1);
   /* Start the sys tick (20 us) */
   SysTick_Config(VARIANT_MCK / 50000);
 

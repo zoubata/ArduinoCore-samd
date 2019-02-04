@@ -169,7 +169,7 @@
  * not suspended), where it will calibrate against the USB SOF signal.
  */
 #ifndef CLOCKCONFIG_CLOCK_SOURCE
-  #if (SAMC21)
+  #if (SAMC21 || SAMC20)
 #define CLOCKCONFIG_CLOCK_SOURCE	CLOCKCONFIG_INTERNAL
   #else
     #define CLOCKCONFIG_CLOCK_SOURCE	CLOCKCONFIG_INTERNAL_USB
@@ -211,7 +211,7 @@
 #define USB_VENDOR_STRINGS_ENABLED
 #define STRING_PRODUCT "Arduino Pilo"
 
-#if (!SAMC21)
+#if (!SAMC)
 /* If USB CDC is used, then the USB vendor ID (VID) and product ID (PID) must be set. */
 #define USB_VID_HIGH   0x23
 #define USB_VID_LOW    0x41
@@ -307,23 +307,50 @@
  * is running, the fading will be twice as fast as the SAM-BA interface (USB CDC or UART).
  * Size: ~160B. Enabled by default.
  */
-#define BOARD_LED_FADE_ENABLED
+#if PILO_REV>=0XB1
+  /*
+   * If the LED PORT is defined, then the LED on the associated pin is enabled.
+   * Polarity can be either LED_POLARITY_HIGH_ON or LED_POLARITY_LOW_ON.
+   * By default, only BOARD_LED is enabled.
+   */
 
-/*
- * If the LED PORT is defined, then the LED on the associated pin is enabled.
- * Polarity can be either LED_POLARITY_HIGH_ON or LED_POLARITY_LOW_ON.
- * By default, only BOARD_LED is enabled.
- */
-#define BOARD_LED_PORT                    (0)
-#define BOARD_LED_PIN                     (19)
-#define BOARD_LED_POLARITY	LED_POLARITY_HIGH_ON
+  #if !defined( BOOT_FTDI )
+    #define BOARD_LED_FADE_ENABLED
+    #define BOARD_LED_PORT                    (0)
+    #define BOARD_LED_PIN                     (30)
+    #define BOARD_LED_POLARITY	LED_POLARITY_HIGH_ON
+   #else
+    /*
+     * If the LED PORT is defined, then the LED on the associated pin is enabled.
+     * Polarity can be either LED_POLARITY_HIGH_ON or LED_POLARITY_LOW_ON.
+     * By default, only BOARD_LED is enabled.
+     */
+    #define BOARD_LED_FADE_ENABLED
+    #define BOARD_LED_PORT                    (0)
+    #define BOARD_LED_PIN                     (19)
+    #define BOARD_LED_POLARITY	LED_POLARITY_HIGH_ON
+  #endif
 
-//#define BOARD_LEDRX_PORT                  (1)
-//#define BOARD_LEDRX_PIN                   (3)
-//#define BOARD_LEDRX_POLARITY	LED_POLARITY_LOW_ON
+#else
+  #if !defined( BOOT_FTDI )
+          #define BOARD_LEDRX_PORT                  (0)
+          #define BOARD_LEDRX_PIN                   (30)
+          #define BOARD_LEDRX_POLARITY	LED_POLARITY_LOW_ON
 
-//#define BOARD_LEDTX_PORT                  (0)
-//#define BOARD_LEDTX_PIN                   (27)
-//#define BOARD_LEDTX_POLARITY	LED_POLARITY_LOW_ON
+          #define BOARD_LEDTX_PORT                  (0)
+          #define BOARD_LEDTX_PIN                   (31)
+          #define BOARD_LEDTX_POLARITY	LED_POLARITY_HIGH_ON
+  #else
+  /*
+   * If the LED PORT is defined, then the LED on the associated pin is enabled.
+   * Polarity can be either LED_POLARITY_HIGH_ON or LED_POLARITY_LOW_ON.
+   * By default, only BOARD_LED is enabled.
+   */
+  #define BOARD_LED_FADE_ENABLED
+  #define BOARD_LED_PORT                    (0)
+  #define BOARD_LED_PIN                     (19)
+  #define BOARD_LED_POLARITY	LED_POLARITY_HIGH_ON
 
+  #endif
+#endif
 #endif // _BOARD_DEFINITIONS_H_

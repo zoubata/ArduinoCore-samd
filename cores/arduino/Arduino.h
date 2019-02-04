@@ -22,6 +22,16 @@
 
 #define ZOUBWORLD_CORE
 
+/** @name interrupt priority
+*/
+/** @{*/
+#define  NVIC_PRIO_LOWEST ((1<<__NVIC_PRIO_BITS) - 1)
+#define  NVIC_PRIO_LOW ((1<<__NVIC_PRIO_BITS) - 2)
+#define  NVIC_PRIO_MED ((1<<__NVIC_PRIO_BITS) - 3)
+#define  NVIC_PRIO_HIGH 1
+#define  NVIC_PRIO_HIGHEST 0
+/** @}*/
+
 #include <stdbool.h>
 #include <stdint.h>
 #include <stdlib.h>

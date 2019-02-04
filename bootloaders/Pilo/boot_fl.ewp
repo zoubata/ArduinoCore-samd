@@ -318,13 +318,18 @@
         </option>
         <option>
           <name>CCIncludePath2</name>
-          <state> </state>
-          <state>$PROJ_DIR$/../../../../../../arduino/tools/CMSIS/4.5.0/CMSIS/Include/</state>
+          <state></state>
           <state>$PROJ_DIR$/../../../../../../zoubworld_Arduino/hardware/samd/src/</state>
           <state>$PROJ_DIR$/../../../../../../zoubworld_Arduino/tools/CMSIS-Atmel/CMSIS/Device/ATMEL/</state>
           <state>$PROJ_DIR$/../../../../../../zoubworld_Arduino/tools/CMSIS-Atmel/src/CMSIS/Device/ATMEL/</state>
           <state>$PROJ_DIR$/../../../../../../zoubworld_Arduino/hardware/samd/src/variants/Pilo</state>
           <state>$PROJ_DIR$/../../../../../../zoubworld_Arduino/hardware/samd/src/cores/arduino</state>
+          <state>$PROJ_DIR$/../../../../../../zoubworld_Arduino/tools/CMSIS-Atmel/1.1.7-Zoubworld/CMSIS/Include/</state>
+          <state>$PROJ_DIR$/../../../../../../zoubworld_Arduino/hardware/samd/1.6.33/</state>
+          <state>$PROJ_DIR$/../../../../../../zoubworld_Arduino/tools/CMSIS-Atmel/CMSIS/Device/ATMEL/</state>
+          <state>$PROJ_DIR$/../../../../../../zoubworld_Arduino/tools/CMSIS-Atmel/1.1.7-Zoubworld/CMSIS/Device/ATMEL/</state>
+          <state>$PROJ_DIR$/../../../../../../zoubworld_Arduino/hardware/samd/1.6.33/variants/Pilo</state>
+          <state>$PROJ_DIR$/../../../../../../zoubworld_Arduino/hardware/samd/1.6.33/cores/arduino</state>
         </option>
         <option>
           <name>CCStdIncCheck</name>

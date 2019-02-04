@@ -21,6 +21,7 @@
 #include "sam.h"
 #include "variant.h"
 
+#include "Arduino.h"
 #include <stdio.h>
 
 /**
@@ -408,7 +409,7 @@ void SystemInit( void )
 
   
   for(int i=0;i<PERIPH_COUNT_IRQn;i++)
-      NVIC_SetPriority (i, ((1<<__NVIC_PRIO_BITS) - 1));  /* set Priority low */
+      NVIC_SetPriority (i, NVIC_PRIO_LOWEST);  /* set Priority low */
  
 
 }

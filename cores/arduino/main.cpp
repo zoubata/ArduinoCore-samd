@@ -46,14 +46,15 @@ REG_MTB_POSITION = ((uint32_t) (mtb - REG_MTB_BASE)) & 0xFFFFFFF8;
 REG_MTB_FLOW = ((uint32_t) mtb + TRACE_BUFFER_SIZE * sizeof(uint32_t)) & 0xFFFFFFF8;
 REG_MTB_MASTER = 0x80000000 + 6;
 }
+*/
 void enableMTB2()
 {
-REG_MTB_POSITION = ((uint32_t) (0x20004000 )) & 0xFFFFFFF8;
+REG_MTB_POSITION = ((uint32_t) (0x20006000 )) & 0xFFFFFFF8;
 REG_MTB_FLOW = ((uint32_t) 0x20007FFF) & 0xFFFFFFF8;
 REG_MTB_MASTER = 0x80000000 + 6;
 }
 
-*/
+
 void initVariant() __attribute__((weak));
 void initVariant() { }
 
@@ -76,7 +77,7 @@ void init_debug() ;
 int main( void )
 {
   init_debug() ;
-//enableMTB2();		
+enableMTB2();		
   SystemInit();// init of system clock
   init(); // wire init for sercom/timer/analog
   __libc_init_array();// to setup symbols :

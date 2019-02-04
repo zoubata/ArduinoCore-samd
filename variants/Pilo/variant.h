@@ -18,6 +18,8 @@
 
 #ifndef _VARIANT_ARDUINO_PILO_
 #define _VARIANT_ARDUINO_PILO_
+
+
 #include "variant_pins.h"
 
 // The definitions here needs a SAMD core >=1.6.10

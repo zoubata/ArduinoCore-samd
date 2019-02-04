@@ -17,6 +17,7 @@
 */
 
 #include "Uart.h"
+#include <assert.h>
 #include "Arduino.h"
 #include "wiring_private.h"
 #define NO_RTS_PIN -1
@@ -108,11 +109,28 @@ void Uart::IrqHandler()
     sercom->acknowledgeUARTError();
     if (sercom->isBufferOverflowErrorUART()) 
     {
-    volatile int i=0;
-    i++;
+#ifdef DEBUG
+      assert(false);
+#endif
+      
     }
-    // TODO: if (sercom->isFrameErrorUART()) ....
-    // TODO: if (sercom->isParityErrorUART()) ....
+    // TODO: 
+    if (sercom->isFrameErrorUART())
+    {
+      //....      
+#ifdef DEBUG
+//      assert(false);
+#endif
+    }
+    // TODO: 
+    if (sercom->isParityErrorUART()) 
+    {
+      //....
+      
+#ifdef DEBUG
+//      assert(false);
+#endif
+    }
     sercom->clearStatusUART();
   }
   // in case of new data comming during irq because interupt handler was called later after the 1st data.

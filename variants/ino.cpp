@@ -30,7 +30,8 @@
 //#include "C:\Users\M43507\Documents\Arduino\robot\pilo\20181118_motor2-servo\20181118_motor2-servo.ino"
 //#include "C:\Users\M43507\Documents\Arduino\libraries\Adafruit-PWM-Servo-Driver-Library\examples\servo\servo.ino";
 //#include "C:\Users\M43507\Documents\Arduino\libraries\ZServoPCA9685\examples\servo\servo.ino"
-#include "C:\Users\M43507\Documents\Arduino\libraries\ZMotor2\examples\Zmotor2\Zmotor2.ino"
+//#include "C:\Users\M43507\Documents\Arduino\libraries\ZMotor2\examples\Zmotor2\Zmotor2.ino"
+#include "C:\Users\M43507\Documents\Arduino\robot\pilo\20190203_motor2-servo\20190203_motor2-servo.ino"
 
 /*
 USB_VID=0x16D0 
@@ -67,7 +68,8 @@ USB_PRODUCT="Pilo Rev A0"
 //#include "C:\Users\M43507\Documents\Arduino\libraries\ZOpticalSensor\examples\getMeasure\getMeasure.ino"
 //#include "C:\Users\M43507\Documents\Arduino\libraries\ZOpticalSensor\examples\getMeasureROS\getMeasureROS.ino"
 //#include "C:\Temp\robot\git\intern\robot1\arduino\codePierre\sketch_apr08e_Captor_ZMOTOR3\sketch_apr08e_Captor_ZMOTOR3.ino"
-#include "C:\Users\M43507\Documents\Arduino\robot\captor\telecommandev1\telecommandev1.ino"
+//#include "C:\Users\M43507\Documents\Arduino\robot\captor\telecommandev1\telecommandev1.ino"
+#include "C:\Users\M43507\Documents\Arduino\robot\captor\telecommandev2\telecommandev2.ino"
 
 #elif defined(BOARD_ID_Line)
 #include "C:\Temp\robot\git\intern\robot1\arduino\codePierre\sketch_mar31a_UNO_7SEG_LED.ino\sketch_mar31a_UNO_7SEG_LED.ino.ino"
