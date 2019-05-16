@@ -26,7 +26,7 @@
 // using a ring buffer (I think), in which head is the index of the location
 // to which to write the next incoming character and tail is the index of the
 // location from which to read.
-#define SERIAL_BUFFER_SIZE 128
+#define SERIAL_BUFFER_SIZE 256
 //#define SERIAL_BUFFER_SIZE ((HSRAM_SIZE/20)/SERCOM_INST_NUM)//5% of memory
 
 template <int N>

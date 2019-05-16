@@ -120,7 +120,7 @@ void Uart::IrqHandler()
     if (sercom->isBufferOverflowErrorUART()) 
     {
 #ifdef DEBUG
-      assert(false);
+  PV    assert(false);
 #endif
       
     }
