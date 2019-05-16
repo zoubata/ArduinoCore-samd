@@ -77,7 +77,7 @@ void init_debug() ;
 int main( void )
 {
   init_debug() ;
-enableMTB2();		
+//enableMTB2();		
   SystemInit();// init of system clock
   init(); // wire init for sercom/timer/analog
   __libc_init_array();// to setup symbols :

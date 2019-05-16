@@ -255,20 +255,20 @@ extern "C"
 {
 void SERCOM0_Handler()
 {
-  if (Serial0.enabled()) 
+  if (Serial0.isIrq()) 
       Serial0.IrqHandler();
   else
-	   if (Serial0B.enabled()) 
+	   if (Serial0B.isIrq()) 
       Serial0B.IrqHandler();
   else
-	  if (Wire0.enabled()) 
+	  if (Wire0.isIrq()) 
       WIRE0_IT_HANDLER();
-  if (Serial0_BIS.enabled()) 
+  if (Serial0_BIS.isIrq()) 
       Serial0_BIS.IrqHandler();
-  else if (Serial0_BIS_B.enabled()) 
+  else if (Serial0_BIS_B.isIrq()) 
       Serial0_BIS_B.IrqHandler();
   else
-	  if (Wire0_BIS.enabled()) 
+	  if (Wire0_BIS.isIrq()) 
       WIRE0_BIS_IT_HANDLER();
 }
 }// extern "C" {
@@ -294,12 +294,12 @@ extern "C"
 {
 void SERCOM1_Handler()
 {
-  if (Serial1.enabled()) 
+  if (Serial1.isIrq()) 
       Serial1.IrqHandler();
-   else  if (Serial1B.enabled()) 
+   else  if (Serial1B.isIrq()) 
       Serial1B.IrqHandler();
      #if defined(BOARD_ID_engi)
-    else if (SerialFTDI.enabled()) 
+    else if (SerialFTDI.isIrq()) 
       SerialFTDI.IrqHandler();
 #endif
   else
@@ -315,9 +315,9 @@ extern "C"
 {
 void SERCOM2_Handler()
 {
-  if (Serial2.enabled()) 
+  if (Serial2.isIrq()) 
       Serial2.IrqHandler();
-   else  if (Serial2B.enabled()) 
+   else  if (Serial2B.isIrq()) 
       Serial2B.IrqHandler();
   else
       WIRE2_IT_HANDLER();
@@ -331,9 +331,9 @@ extern "C"
 {
 void SERCOM3_Handler()
 {
-  if (Serial3.enabled()) 
+  if (Serial3.isIrq()) 
       Serial3.IrqHandler();
-  else  if (Serial3B.enabled()) 
+  else  if (Serial3B.isIrq()) 
       Serial3B.IrqHandler();
   else
       WIRE3_IT_HANDLER();
@@ -346,9 +346,9 @@ extern "C"
 {
 void SERCOM4_Handler()
 {
-  if (Serial4.enabled()) 
+  if (Serial4.isIrq()) 
       Serial4.IrqHandler();
-    else if (Serial4B.enabled()) 
+    else if (Serial4B.isIrq()) 
       Serial4B.IrqHandler();
   else
       WIRE4_IT_HANDLER();
@@ -362,9 +362,9 @@ extern "C"
 {
 void SERCOM5_Handler()
 {
-  if (Serial5.enabled()) 
+  if (Serial5.isIrq()) 
       Serial5.IrqHandler();
-  else if (Serial5B.enabled()) 
+  else if (Serial5B.isIrq()) 
       Serial5B.IrqHandler();
   
 

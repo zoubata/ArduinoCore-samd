@@ -40,6 +40,7 @@ class Uart : public HardwareSerial
     void flush();
 	void waitTxEnd();
     int enabled();
+    bool isIrq();
     size_t write(const uint8_t data);
 #if ! defined(__ICCARM__)
    using Print::write; // pull in write(str) and write(buf, size) from Print

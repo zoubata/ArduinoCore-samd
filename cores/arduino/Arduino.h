@@ -72,7 +72,7 @@ typedef uint16_t word;
 extern "C" 
 {
 #endif // __cplusplus
-
+#include <wdt.h>
 
 
 #define clockCyclesPerMicrosecond() ( SystemCoreClock / 1000000L )

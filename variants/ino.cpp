@@ -31,7 +31,18 @@
 //#include "C:\Users\M43507\Documents\Arduino\libraries\Adafruit-PWM-Servo-Driver-Library\examples\servo\servo.ino";
 //#include "C:\Users\M43507\Documents\Arduino\libraries\ZServoPCA9685\examples\servo\servo.ino"
 //#include "C:\Users\M43507\Documents\Arduino\libraries\ZMotor2\examples\Zmotor2\Zmotor2.ino"
-#include "C:\Users\M43507\Documents\Arduino\robot\pilo\20190203_motor2-servo\20190203_motor2-servo.ino"
+//#include "C:\Users\M43507\Documents\Arduino\robot\pilo\20190203_motor2-servo\20190203_motor2-servo.ino"
+//#include "C:\Users\M43507\Documents\Arduino\robot\pilo\20190303_motor2-servo\20190303_motor2-servo.ino"
+//#include "C:\Users\M43507\Documents\Arduino\libraries\RGB-matrix-Panel\examples\plasma_32x32\plasma_32x32.ino"
+//#include "C:\Users\M43507\Documents\Arduino\robot\pilo\20190317_matrix\20190317_matrix.ino"
+//#include "C:\Users\M43507\Documents\Arduino\robot\pilo\20190318_matrix\20190318_matrix.ino"
+//#include "C:\Users\M43507\Documents\Arduino\robot\pilo\20190320_matrix\20190320_matrix.ino"
+//#include "C:\Users\M43507\Documents\Arduino\robot\pilo\20190331_motor2-servo\20190331_motor2-servo.ino";
+
+//#include "C:\Users\M43507\Documents\Arduino\robot\pilo\20190417_motor2-servo-LCD-switch\20190417_motor2-servo-LCD-switch.ino";
+//#include "C:\Users\M43507\Documents\Arduino\robot\pilo\20190512_motor2-servo-LCD\20190512_motor2-servo-LCD.ino";
+#include "C:\Users\M43507\Documents\Arduino\robot\pilo\20190515_motor2-servo-LCD-switch\20190515_motor2-servo-LCD-switch.ino";
+
 
 /*
 USB_VID=0x16D0 
@@ -69,7 +80,14 @@ USB_PRODUCT="Pilo Rev A0"
 //#include "C:\Users\M43507\Documents\Arduino\libraries\ZOpticalSensor\examples\getMeasureROS\getMeasureROS.ino"
 //#include "C:\Temp\robot\git\intern\robot1\arduino\codePierre\sketch_apr08e_Captor_ZMOTOR3\sketch_apr08e_Captor_ZMOTOR3.ino"
 //#include "C:\Users\M43507\Documents\Arduino\robot\captor\telecommandev1\telecommandev1.ino"
-#include "C:\Users\M43507\Documents\Arduino\robot\captor\telecommandev2\telecommandev2.ino"
+//#include "C:\Users\M43507\Documents\Arduino\robot\captor\telecommandev2\telecommandev2.ino"
+//#include "C:\Users\M43507\Documents\Arduino\robot\captor\telecommandev3\telecommandev3.ino"
+//#include "C:\Users\M43507\Documents\Arduino\robot\captor\telecommandev2019_03_18\telecommandev2019_03_18.ino"
+//#include "C:\Users\M43507\Documents\Arduino\robot\captor\telecommandev2019_03_31\telecommandev2019_03_31.ino"
+#include "C:\Users\M43507\Documents\Arduino\robot\captor\telecommandev2019_05_12\telecommandev2019_05_12.ino"
+
+
+//#include "C:\Users\M43507\Documents\Arduino\robot\captor\debug_ros_0\debug_ros_0.ino"
 
 #elif defined(BOARD_ID_Line)
 #include "C:\Temp\robot\git\intern\robot1\arduino\codePierre\sketch_mar31a_UNO_7SEG_LED.ino\sketch_mar31a_UNO_7SEG_LED.ino.ino"

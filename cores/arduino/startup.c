@@ -82,7 +82,8 @@ void SystemInit( void )
 #if (SAMD)
   NVMCTRL->CTRLB.bit.RWS = NVMCTRL_CTRLB_RWS_HALF_Val ;	// one wait state
 #elif (SAML21 || SAMC21)
-  NVMCTRL->CTRLB.reg |= NVMCTRL_CTRLB_RWS_DUAL ; // two wait states
+ // NVMCTRL->CTRLB.reg |= NVMCTRL_CTRLB_RWS_DUAL ; // two wait states
+    NVMCTRL->CTRLB.reg |= NVMCTRL_CTRLB_RWS(0x3) ;
 #endif
 
   /* Turn on the digital interface clock */
@@ -409,7 +410,7 @@ void SystemInit( void )
 
   
   for(int i=0;i<PERIPH_COUNT_IRQn;i++)
-      NVIC_SetPriority (i, NVIC_PRIO_LOWEST);  /* set Priority low */
+      NVIC_SetPriority ((IRQn_Type)i, NVIC_PRIO_LOWEST);  /* set Priority low */
  
 
 }

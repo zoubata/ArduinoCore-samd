@@ -43,7 +43,7 @@ class RingBufferN
 	void clear();
 	int read_char();
 	int available();
-	int availableForStore();
+	signed int availableForStore();
 	int peek();
 	bool isFull();
 
@@ -124,12 +124,12 @@ int RingBufferN<N>::available()
 template <int N>
 signed int RingBufferN<N>::availableForStore()
 {
-
+signed int r=0;
  if (_iHead >= _iTail)
-    return N - 1 - _iHead + _iTail;
+    r= N - 1 - _iHead + _iTail;
   else
-    return _iTail - _iHead - 1;
-
+    r= _iTail - _iHead - 1;
+return r;
 }
 
 template <int N>

@@ -16,7 +16,7 @@ define symbol __ICFEDIT_region_NVM_LAST_PAGES_END__           = 0x2fff;
 
 /*-Sizes-*/
 define symbol __ICFEDIT_size_cstack__ = 0x1000;
-define symbol __ICFEDIT_size_heap__   = 0x1000;
+define symbol __ICFEDIT_size_heap__   = 0x2000;
 /**** End of ICF editor section. ###ICF###*/
 
 

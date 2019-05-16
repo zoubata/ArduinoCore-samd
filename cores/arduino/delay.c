@@ -73,6 +73,8 @@ void delay( unsigned long ms )
 
   do
   {
+  //  if (_ulTickCount%128==0)// if counting
+  //    wdt_clr();
     yield() ;
   } while ( _ulTickCount - start < ms ) ;
 }

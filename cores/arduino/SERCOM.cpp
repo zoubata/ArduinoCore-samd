@@ -191,7 +191,7 @@ void SERCOM::flushUART()
 void SERCOM::clearStatusUART()
 {
   //Reset (with 0) the STATUS register
-  sercom->USART.STATUS.reg = SERCOM_USART_STATUS_RESETVALUE;
+  sercom->USART.STATUS.reg = SERCOM_USART_STATUS_MASK;
 }
 
 bool SERCOM::availableDataUART()
@@ -207,6 +207,11 @@ bool SERCOM::isUARTError()
   #else
     return sercom->USART.INTFLAG.bit.ERROR;
   #endif
+}
+
+bool SERCOM::isIrq()
+{
+    return sercom->USART.INTFLAG.reg!=0;//same for UASRT/SPI/I2C
 }
 
 void SERCOM::acknowledgeUARTError()

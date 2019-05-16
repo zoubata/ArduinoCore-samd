@@ -25,6 +25,7 @@
 
 
 #include "variant.h"
+#include <assert.h>
 
 
 /*
@@ -194,10 +195,20 @@ Uart Serial3B_3( SERCOM_INSTANCE_SERIAL_B3,(uint8_t) PIN_SERIAL_B3_RX, (uint8_t)
 
 
 
+
 #ifdef __cplusplus
 extern "C"
 {
 #endif 
+  
+//sercom 3 ->serial1  so wire1
+void SYSTEM_Handler()
+{
+ assert(0);
+} 
+  
+  
+  
 //sercom 3 ->serial1  so wire1
 void SERCOM3_Handler()
 {

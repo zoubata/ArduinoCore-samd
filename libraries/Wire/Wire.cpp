@@ -50,7 +50,7 @@ int TwoWire::enabled()
      pinMode(_uc_pinSDA, INPUT_PULLDOWN);
      pinMode(_uc_pinSCL, INPUT_PULLDOWN);
    }
-      delay(1);
+      delay(10);
   bool r= (digitalRead(_uc_pinSDA)==HIGH) &&
 (digitalRead(_uc_pinSCL)==HIGH);
 
@@ -189,8 +189,10 @@ size_t TwoWire::write(uint8_t ucData)
   {
     return 0 ;
   }
-
+  noInterrupts();// txBuffer isn't atomic, and it could be modify by interrupt handler at same time by this function, creating a corruption
   txBuffer.store_char( ucData ) ;
+  interrupts();
+  
 
   return 1 ;
 }
@@ -216,7 +218,11 @@ int TwoWire::available(void)
 
 int TwoWire::read(void)
 {
-  return rxBuffer.read_char();
+   noInterrupts();// rxBuffer isn't atomic, and it could be modify by interrupt handler at same time by this function, creating a corruption
+ signed  int c = rxBuffer.read_char();
+interrupts();
+
+  return c;
 }
 
 int TwoWire::peek(void)
@@ -238,6 +244,13 @@ void TwoWire::onReceive(void(*function)(int))
 void TwoWire::onRequest(void(*function)(void))
 {
   onRequestCallback = function;
+}
+
+bool TwoWire::isIrq()
+{
+  if(enabled())
+    return sercom->isIrq();
+  return false;
 }
 
 void TwoWire::onService(void)

@@ -83,9 +83,19 @@ void Uart::flush()
   sercom->flushUART();
 }
 
+bool Uart::isIrq()
+{
+  if(enabled())
+    return sercom->isIrq();
+  return false;
+}
+
+///IRQ HANDLER
 void Uart::IrqHandler()
 {
-  while (sercom->availableDataUART()) {
+/*while*/
+  if (sercom->availableDataUART()) {
+    
     rxBuffer.store_char(sercom->readDataUART());
     if (uc_pinRTS != NO_RTS_PIN) {
       // RX buffer space is below the threshold, de-assert RTS
@@ -119,7 +129,7 @@ void Uart::IrqHandler()
     {
       //....      
 #ifdef DEBUG
-//      assert(false);
+     assert(false);
 #endif
     }
     // TODO: 
@@ -133,8 +143,21 @@ void Uart::IrqHandler()
     }
     sercom->clearStatusUART();
   }
-  // in case of new data comming during irq because interupt handler was called later after the 1st data.
+/*  // in case of new data comming during irq because interupt handler was called later after the 1st data.
   while (sercom->availableDataUART()) {
+    rxBuffer.store_char(sercom->readDataUART());
+    if (uc_pinRTS != NO_RTS_PIN) {
+      // RX buffer space is below the threshold, de-assert RTS
+      if (rxBuffer.availableForStore() < RTS_RX_THRESHOLD) {
+        *pul_outsetRTS = ul_pinMaskRTS;
+      }
+    }
+  }
+*/
+  //if an other receive data happen process it now instead of pop context and push it again.
+  // usefull for 1Mbps and upper.(I squizz error processing it will happen on next call)
+    if (sercom->availableDataUART()) {
+    
     rxBuffer.store_char(sercom->readDataUART());
     if (uc_pinRTS != NO_RTS_PIN) {
       // RX buffer space is below the threshold, de-assert RTS
@@ -172,11 +195,12 @@ void Uart::waitTxEnd()
 }
 int Uart::read()
 {
-  int c = rxBuffer.read_char();
-
+ noInterrupts();// rxBuffer isn't atomic, and it could be modify by interrupt handler at same time by this function, creating a corruption
+ signed  int c = rxBuffer.read_char();
+interrupts();
   if (uc_pinRTS != NO_RTS_PIN) {
     // if there is enough space in the RX buffer, assert RTS
-    if (rxBuffer.availableForStore() > RTS_RX_THRESHOLD) {
+    if (rxBuffer.availableForStore() < (signed int) RTS_RX_THRESHOLD) {
       *pul_outclrRTS = ul_pinMaskRTS;
     }
   }
@@ -210,10 +234,11 @@ size_t Uart::write(const uint8_t data)
       IrqHandler(); // process iar in case of int disable because we are inside a irq
       }
     }
-
+    noInterrupts();// txBuffer isn't atomic, and it could be modify by interrupt handler at same time by this function, creating a corruption
     txBuffer.store_char(data);
+    sercom->enableDataRegisterEmptyInterruptUART();// to be sure that interrupt event will happen after the enable
+    interrupts();
 
-     sercom->enableDataRegisterEmptyInterruptUART();
   }
 
   return 1;

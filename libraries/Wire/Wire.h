@@ -42,6 +42,7 @@ class TwoWire : public Stream
     void end();
     void setClock(uint32_t);
 	int enabled();
+        bool isIrq();
   bool testLine(void);
     void beginTransmission(uint8_t);
     uint8_t endTransmission(bool stopBit);

@@ -112,9 +112,18 @@ extern "C"
  * The RX and TX LEDs are not present.
  * You may optionally add them to any free pins.
  */
-#define PIN_LED_13           (28u)
+  //V1 : #define PIN_LED_13           (28u)
+// V1 : #define LED_BUILTIN          PIN_LED_13
 
-#define LED_BUILTIN          PIN_LED_13
+#define LED_TOP          LED_GREEN
+#define LED_BOTTOM          LED_RED
+#define LED_GREEN          14
+#define LED_RED          15
+
+
+#define LED_BUILTIN          LED_TOP
+  
+
 /**/
 /*
  * Analog pins

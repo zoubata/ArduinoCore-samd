@@ -164,6 +164,7 @@ class SERCOM
 		bool isBufferOverflowErrorUART( void ) ;
 		bool isFrameErrorUART( void ) ;
 		bool isParityErrorUART( void ) ;
+                bool isIrq( void ) ;
 		bool isDataRegisterEmptyUART( void ) ;
 		uint8_t readDataUART( void ) ;
 		int writeDataUART(uint8_t data) ;

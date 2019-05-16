@@ -154,6 +154,7 @@ void analogReadResolution(int res)
   syncADC();
 }
 
+
 void analogWriteResolution(int res)
 {
   _writeResolution = res;
@@ -214,7 +215,7 @@ void analogReference(eAnalogReference mode)
   } else if (mode > 5) {		// Values above 5 are used for the Supply Controller reference (AR_INTREF)
     SUPC->VREF.reg &= ~SUPC_VREF_SEL_Msk;
     SUPC->VREF.reg |= SUPC_VREF_SEL(mode - 6);	// 
-    mode = 0;
+    mode =(eAnalogReference) 0;
   }
   #if (SAML21)
   ADC->REFCTRL.bit.REFSEL = mode;
