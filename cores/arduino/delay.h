@@ -25,7 +25,7 @@
 extern "C" {
 #endif
 
-
+   
 #define __inline__ inline
 /**
  * \brief Returns the number of milliseconds since the Arduino board began running the current program.
@@ -106,6 +106,21 @@ static __inline__ void delayMicroseconds( unsigned int usec )
   // https://gcc.gnu.org/onlinedocs/gcc/Extended-Asm.html#Volatile
 }
 
+
+
+/**  The use case is :
+{
+  DELAYLOOP( 100) 
+  {
+    loop1();
+  }
+}
+*/
+#define DELAYLOOP(ms)             \
+ uint32_t start = millis(  ) ;          \
+  while ( millis(  )  - start < ms )      \
+   
+    
 #ifdef __cplusplus
 }// extern "C" {
 #endif

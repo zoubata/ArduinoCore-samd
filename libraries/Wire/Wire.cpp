@@ -45,13 +45,22 @@ int TwoWire::enabled()
 }
 
    bool TwoWire::testLine(void) {
+     bool r=true;
+     
   if (!initialized)
   {
      pinMode(_uc_pinSDA, INPUT_PULLDOWN);
-     pinMode(_uc_pinSCL, INPUT_PULLDOWN);
+     pinMode(_uc_pinSCL, INPUT_PULLDOWN); 
+     delay(10);
+     r&= (digitalRead(_uc_pinSDA)==HIGH) &&
+(digitalRead(_uc_pinSCL)==HIGH);
+
+     pinMode(_uc_pinSDA, INPUT_PULLUP);
+     pinMode(_uc_pinSCL, INPUT_PULLUP); 
+   
    }
-      delay(10);
-  bool r= (digitalRead(_uc_pinSDA)==HIGH) &&
+       delay(10);// wait to be sure that line is up from previous operation(pull up config or previous write on line)
+  r&= (digitalRead(_uc_pinSDA)==HIGH) &&
 (digitalRead(_uc_pinSCL)==HIGH);
 
    return r;

@@ -41,7 +41,7 @@
 
 //#include "C:\Users\M43507\Documents\Arduino\robot\pilo\20190417_motor2-servo-LCD-switch\20190417_motor2-servo-LCD-switch.ino";
 //#include "C:\Users\M43507\Documents\Arduino\robot\pilo\20190512_motor2-servo-LCD\20190512_motor2-servo-LCD.ino";
-#include "C:\Users\M43507\Documents\Arduino\robot\pilo\20190515_motor2-servo-LCD-switch\20190515_motor2-servo-LCD-switch.ino";
+#include "C:\Users\M43507\Documents\Arduino\robot\pilo\20190518_motor2-servo-LCD-switch\20190518_motor2-servo-LCD-switch.ino";
 
 
 /*
@@ -84,7 +84,13 @@ USB_PRODUCT="Pilo Rev A0"
 //#include "C:\Users\M43507\Documents\Arduino\robot\captor\telecommandev3\telecommandev3.ino"
 //#include "C:\Users\M43507\Documents\Arduino\robot\captor\telecommandev2019_03_18\telecommandev2019_03_18.ino"
 //#include "C:\Users\M43507\Documents\Arduino\robot\captor\telecommandev2019_03_31\telecommandev2019_03_31.ino"
-#include "C:\Users\M43507\Documents\Arduino\robot\captor\telecommandev2019_05_12\telecommandev2019_05_12.ino"
+//#include "C:\Users\M43507\Documents\Arduino\robot\captor\telecommandev2019_05_12\telecommandev2019_05_12.ino"
+//#include "C:\Users\M43507\Documents\Arduino\robot\captor\telecommandev2019_05_18\telecommandev2019_05_18.ino"
+//#include "C:\Users\M43507\Documents\Arduino\robot\captor\telecommandev2019_05_30\telecommandev2019_05_30.ino"
+#include "C:\Users\M43507\Documents\Arduino\robot\captor\telecommandev2019_06_08\telecommandev2019_06_08.ino"
+
+
+
 
 
 //#include "C:\Users\M43507\Documents\Arduino\robot\captor\debug_ros_0\debug_ros_0.ino"
