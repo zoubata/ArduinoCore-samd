@@ -75,11 +75,12 @@ compiler.readelf.cmd=arm-none-eabi-readelf
 build.extra_flags=
 
 # These can be overridden in platform.local.txt
-compiler.c.extra_flags="-I{runtime.tools.CMSIS-Atmel.path}/CMSIS/Device/ATMEL/"  -D{build.clockconfig} -D{build.boardconfig} -D{build.usbcom} -D{build.serialcom_uart} -D{build.serialcom_wire} -D{build.serialcom_spi} -D{build.bootloader_size}
+compiler.c.extra_flags="-I{runtime.platform.path}/variants/{Pilo.build.variant}/" "-I{runtime.tools.CMSIS-Atmel.path}/CMSIS/Device/ATMEL/"  -D{build.clockconfig} -D{build.rosoption} -D{build.boardconfig} -D{build.usbcom} -D{build.serialcom_uart} -D{build.serialcom_wire} -D{build.serialcom_spi} -D{build.bootloader_size}
 compiler.c.elf.extra_flags=
 #compiler.c.elf.extra_flags=-v
-compiler.cpp.extra_flags="-I{runtime.tools.CMSIS-Atmel.path}/CMSIS/Device/ATMEL/"  -D{build.clockconfig} -D{build.boardconfig} -D{build.usbcom} -D{build.serialcom_uart} -D{build.serialcom_wire} -D{build.serialcom_spi} -D{build.bootloader_size} "-I{runtime.platform.path}/cores/ASF/sam0/utils/" "-I{runtime.platform.path}/cores/ASF/sam0/utils/preprocessor/" "-I{runtime.platform.path}/cores/arduino/avr/"
-compiler.S.extra_flags="-I{runtime.tools.CMSIS-Atmel.path}/CMSIS/Device/ATMEL/"  -D{build.clockconfig} -D{build.boardconfig} -D{build.usbcom} -D{build.serialcom_uart} -D{build.serialcom_wire} -D{build.serialcom_spi} -D{build.bootloader_size}
+compiler.cpp.extra_flags="-I{runtime.tools.CMSIS-Atmel.path}/CMSIS/Device/ATMEL/"  -D{build.clockconfig} -D{build.boardconfig} -D{build.rosoption} -D{build.usbcom} -D{build.serialcom_uart} -D{build.serialcom_wire} -D{build.serialcom_spi} -D{build.bootloader_size} "-I{runtime.platform.path}/cores/ASF/sam0/utils/" "-I{runtime.platform.path}/cores/ASF/sam0/utils/preprocessor/" "-I{runtime.platform.path}/cores/arduino/avr/"
+compiler.S.extra_flags="-I{runtime.tools.CMSIS-Atmel.path}/CMSIS/Device/ATMEL/"  -D{build.clockconfig} -D{build.rosoption}  -D{build.boardconfig} -D{build.usbcom} -D{build.serialcom_uart} -D{build.serialcom_wire} -D{build.serialcom_spi} -D{build.bootloader_size}
+
 compiler.ar.extra_flags=
 compiler.elf2hex.extra_flags=
 

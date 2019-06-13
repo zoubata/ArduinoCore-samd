@@ -2353,7 +2353,7 @@
         <name>$PROJ_DIR$\..\..\..\..\..\..\..\..\..\..\Documents\Arduino\libraries\PID_AutoTune_v0\PID_AutoTune_v0.cpp</name>
     </file>
     <file>
-        <name>$PROJ_DIR$\..\..\..\..\..\..\..\..\..\..\Documents\Arduino\libraries\PID\PID_v1.cpp</name>
+        <name>$PROJ_DIR$\..\..\..\..\..\..\..\..\..\..\Documents\Arduino\libraries\ZPID\PID_v1.cpp</name>
     </file>
     <file>
         <name>$PROJ_DIR$\..\..\cores\arduino\PinExtender.cpp</name>

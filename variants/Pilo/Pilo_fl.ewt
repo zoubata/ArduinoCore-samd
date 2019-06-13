@@ -2365,7 +2365,7 @@
         <name>$PROJ_DIR$\..\..\cores\arduino\new.cpp</name>
     </file>
     <file>
-        <name>$PROJ_DIR$\..\..\..\..\..\..\..\..\..\..\Documents\Arduino\libraries\PID\PID_v1.cpp</name>
+        <name>$PROJ_DIR$\..\..\..\..\..\..\..\..\..\..\Documents\Arduino\libraries\ZPID\PID_v1.cpp</name>
     </file>
     <file>
         <name>$PROJ_DIR$\..\..\cores\arduino\PinExtender.cpp</name>

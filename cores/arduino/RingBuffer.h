@@ -1,5 +1,4 @@
-
-/** @file RingBuffer.h
+/*
   Copyright (c) 2014 Arduino.  All right reserved.
 
   This library is free software; you can redistribute it and/or
@@ -16,18 +15,21 @@
   License along with this library; if not, write to the Free Software
   Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 */
+
 #ifdef __cplusplus
+
 #ifndef _RING_BUFFER_
 #define _RING_BUFFER_
 
 #include <stdint.h>
-#include <sam.h>
+
 // Define constants and variables for buffering incoming serial data.  We're
 // using a ring buffer (I think), in which head is the index of the location
 // to which to write the next incoming character and tail is the index of the
 // location from which to read.
+#ifndef SERIAL_BUFFER_SIZE
 #define SERIAL_BUFFER_SIZE 256
-//#define SERIAL_BUFFER_SIZE ((HSRAM_SIZE/20)/SERCOM_INST_NUM)//5% of memory
+#endif
 
 template <int N>
 class RingBufferN
@@ -40,16 +42,16 @@ class RingBufferN
   public:
     RingBufferN( void ) ;
     void store_char( uint8_t c ) ;
-	void clear();
-	int read_char();
-	int available();
-	signed int availableForStore();
-	int peek();
-	bool isFull();
+    void clear();
+    int read_char();
+    int available();
+    int availableForStore();
+    int peek();
+    bool isFull();
 
   private:
-	int nextIndex(int index);
-} ;
+    int nextIndex(int index);
+};
 
 typedef RingBufferN<SERIAL_BUFFER_SIZE> RingBuffer;
 
@@ -64,7 +66,6 @@ RingBufferN<N>::RingBufferN( void )
 template <int N>
 void RingBufferN<N>::store_char( uint8_t c )
 {
-  // __disable_irq();
   int i = nextIndex(_iHead);
 
   // if we should be storing the received character into the location
@@ -73,23 +74,16 @@ void RingBufferN<N>::store_char( uint8_t c )
   // and so we don't write the character or advance the head.
   if ( i != _iTail )
   {
-    
     _aucBuffer[_iHead] = c ;
     _iHead = i ;
-  //   __enable_irq();
-  } else
-  {
-
   }
 }
 
 template <int N>
 void RingBufferN<N>::clear()
 {
- //  __disable_irq();
   _iHead = 0;
   _iTail = 0;
-  // __enable_irq();
 }
 
 template <int N>
@@ -98,38 +92,30 @@ int RingBufferN<N>::read_char()
   if(_iTail == _iHead)
     return -1;
 
-//   __disable_irq();
   uint8_t value = _aucBuffer[_iTail];
   _iTail = nextIndex(_iTail);
-// __enable_irq();
+
   return value;
 }
 
 template <int N>
 int RingBufferN<N>::available()
 {
- //  __disable_irq();
   int delta = _iHead - _iTail;
 
   if(delta < 0)
-    delta= N + delta;
+    return N + delta;
   else
-    delta= delta;
-  
-  // __enable_irq();
-   
-   return delta;
+    return delta;
 }
 
 template <int N>
-signed int RingBufferN<N>::availableForStore()
+int RingBufferN<N>::availableForStore()
 {
-signed int r=0;
- if (_iHead >= _iTail)
-    r= N - 1 - _iHead + _iTail;
+  if (_iHead >= _iTail)
+    return N - 1 - _iHead + _iTail;
   else
-    r= _iTail - _iHead - 1;
-return r;
+    return _iTail - _iHead - 1;
 }
 
 template <int N>

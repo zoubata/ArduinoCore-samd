@@ -97,7 +97,7 @@ void Uart::IrqHandler()
   if (sercom->availableDataUART()) {
     
     rxBuffer.store_char(sercom->readDataUART());
-    if (uc_pinRTS != NO_RTS_PIN) {
+    if (uc_pinRTS != (uint8_t)NO_RTS_PIN) {
       // RX buffer space is below the threshold, de-assert RTS
       if (rxBuffer.availableForStore() < RTS_RX_THRESHOLD) {
         *pul_outsetRTS = ul_pinMaskRTS;
@@ -159,7 +159,7 @@ void Uart::IrqHandler()
     if (sercom->availableDataUART()) {
     
     rxBuffer.store_char(sercom->readDataUART());
-    if (uc_pinRTS != NO_RTS_PIN) {
+    if (uc_pinRTS != (uint8_t)NO_RTS_PIN) {
       // RX buffer space is below the threshold, de-assert RTS
       if (rxBuffer.availableForStore() < RTS_RX_THRESHOLD) {
         *pul_outsetRTS = ul_pinMaskRTS;
@@ -198,7 +198,7 @@ int Uart::read()
  noInterrupts();// rxBuffer isn't atomic, and it could be modify by interrupt handler at same time by this function, creating a corruption
  signed  int c = rxBuffer.read_char();
 interrupts();
-  if (uc_pinRTS != NO_RTS_PIN) {
+  if (uc_pinRTS != (uint8_t)NO_RTS_PIN) {
     // if there is enough space in the RX buffer, assert RTS
     if (rxBuffer.availableForStore() < (signed int) RTS_RX_THRESHOLD) {
       *pul_outclrRTS = ul_pinMaskRTS;
